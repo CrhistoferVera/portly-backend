@@ -1,0 +1,84 @@
+package com.portly.controller;
+
+import com.portly.domain.entity.Usuario;
+import com.portly.service.*;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+
+@RestController
+@RequestMapping("/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final LinkedInOAuthService linkedInService;
+    private final GitHubOAuthService   gitHubService;
+    private final UsuarioService       usuarioService;
+    private final JwtService           jwtService;
+
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
+    // ─── LinkedIn ────────────────────────────────────────────────────
+
+    /** Redirige al usuario a la pantalla de autorización de LinkedIn. */
+    @GetMapping("/linkedin")
+    public void linkedInLogin(HttpServletResponse response) throws IOException {
+        response.sendRedirect(linkedInService.getAuthorizationUrl());
+    }
+
+    /** Recibe el code de LinkedIn, lo procesa y redirige al frontend con el JWT. */
+    @GetMapping("/linkedin/callback")
+    public void linkedInCallback(@RequestParam("code") String code,
+                                 @RequestParam(value = "error", required = false) String error,
+                                 HttpServletResponse response) throws IOException {
+        if (error != null) {
+            response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
+            return;
+        }
+        try {
+            String accessToken     = linkedInService.exchangeCodeForToken(code);
+            OAuthUserInfo userInfo = linkedInService.fetchUserInfo(accessToken);
+            Usuario usuario        = usuarioService.findOrCreate(userInfo);
+            String jwt             = jwtService.generateToken(
+                    usuario.getUsuarioId(), usuario.getEmail(), usuario.getRol());
+
+            response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
+        } catch (Exception e) {
+            response.sendRedirect(frontendUrl + "/auth/error?reason=linkedin_error");
+        }
+    }
+
+    // ─── GitHub ──────────────────────────────────────────────────────
+
+    /** Redirige al usuario a la pantalla de autorización de GitHub. */
+    @GetMapping("/github")
+    public void gitHubLogin(HttpServletResponse response) throws IOException {
+        response.sendRedirect(gitHubService.getAuthorizationUrl());
+    }
+
+    /** Recibe el code de GitHub, lo procesa y redirige al frontend con el JWT. */
+    @GetMapping("/github/callback")
+    public void gitHubCallback(@RequestParam("code") String code,
+                               @RequestParam(value = "error", required = false) String error,
+                               HttpServletResponse response) throws IOException {
+        if (error != null) {
+            response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
+            return;
+        }
+        try {
+            String accessToken     = gitHubService.exchangeCodeForToken(code);
+            OAuthUserInfo userInfo = gitHubService.fetchUserInfo(accessToken);
+            Usuario usuario        = usuarioService.findOrCreate(userInfo);
+            String jwt             = jwtService.generateToken(
+                    usuario.getUsuarioId(), usuario.getEmail(), usuario.getRol());
+
+            response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
+        } catch (Exception e) {
+            response.sendRedirect(frontendUrl + "/auth/error?reason=github_error");
+        }
+    }
+}
