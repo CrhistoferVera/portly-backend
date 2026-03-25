@@ -1,0 +1,55 @@
+name: CI — Build & Test
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - 'features/**'
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and test
+        run: ./mvnw test --no-transfer-progress
+        env:
+          # Base de datos
+          DB_URL:        ${{ secrets.DB_URL }}
+          DB_USERNAME:   ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD:   ${{ secrets.DB_PASSWORD }}
+          # JWT
+          JWT_SECRET:    ${{ secrets.JWT_SECRET }}
+          # OAuth (valores dummy para que el contexto arranque)
+          LINKEDIN_CLIENT_ID:     ${{ secrets.LINKEDIN_CLIENT_ID }}
+          LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
+          GITHUB_CLIENT_ID:       ${{ secrets.GH_CLIENT_ID }}
+          GITHUB_CLIENT_SECRET:   ${{ secrets.GH_CLIENT_SECRET }}
+          # App
+          FRONTEND_URL: http://localhost:5173
+          SERVER_PORT:  8080
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 7
