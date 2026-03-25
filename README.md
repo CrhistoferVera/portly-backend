@@ -1,4 +1,4 @@
-🍃 Spring Boot Project: Nombre del Proyecto
+🍃 Spring Boot Project: Portly Backend
 Una breve descripción de lo que hace el sistema (por ejemplo: "API REST para la gestión de portafolios académicos y perfiles profesionales").
 
 🚀 Requisitos Previos
