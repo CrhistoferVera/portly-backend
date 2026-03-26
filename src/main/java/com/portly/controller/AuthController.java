@@ -21,6 +21,7 @@ public class AuthController {
 
     private final LinkedInOAuthService linkedInService;
     private final GitHubOAuthService   gitHubService;
+    private final GoogleOAuthService   googleService;
     private final UsuarioService       usuarioService;
     private final AuthService          authService;
     private final JwtService           jwtService;
@@ -93,6 +94,36 @@ public class AuthController {
             response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
         } catch (Exception e) {
             response.sendRedirect(frontendUrl + "/auth/error?reason=github_error");
+        }
+    }
+
+    // ─── Google ──────────────────────────────────────────────────────
+
+    /** Redirige al usuario a la pantalla de autorización de Google. */
+    @GetMapping("/google")
+    public void googleLogin(HttpServletResponse response) throws IOException {
+        response.sendRedirect(googleService.getAuthorizationUrl());
+    }
+
+    /** Recibe el code de Google, lo procesa y redirige al frontend con el JWT. */
+    @GetMapping("/google/callback")
+    public void googleCallback(@RequestParam("code") String code,
+                               @RequestParam(value = "error", required = false) String error,
+                               HttpServletResponse response) throws IOException {
+        if (error != null) {
+            response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
+            return;
+        }
+        try {
+            String accessToken     = googleService.exchangeCodeForToken(code);
+            OAuthUserInfo userInfo = googleService.fetchUserInfo(accessToken);
+            Usuario usuario        = usuarioService.findOrCreate(userInfo);
+            String jwt             = jwtService.generateToken(
+                    usuario.getUsuarioId(), usuario.getEmail(), usuario.getRol());
+
+            response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
+        } catch (Exception e) {
+            response.sendRedirect(frontendUrl + "/auth/error?reason=google_error");
         }
     }
 }
