@@ -1,25 +1,32 @@
 package com.portly.controller;
 
-import com.portly.domain.entity.Usuario;
-import com.portly.dto.AuthResponse;
-import com.portly.dto.RegisterRequest;
-import com.portly.service.*;
-
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
-
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.portly.domain.entity.Usuario;
+import com.portly.dto.AuthResponse;
 import com.portly.dto.LoginRequest;
+import com.portly.dto.RegisterRequest;
+import com.portly.service.AuthService;
+import com.portly.service.GitHubOAuthService;
+import com.portly.service.GoogleOAuthService;
+import com.portly.service.JwtService;
+import com.portly.service.LinkedInOAuthService;
+import com.portly.service.OAuthUserInfo;
+import com.portly.service.UsuarioService;
+
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 
 @RestController
@@ -37,7 +44,7 @@ public class AuthController {
     @Value("${app.frontend-url}")
     private String frontendUrl;
 
-    // ─── Registro con email y contraseña ─────────────────────────────
+    // ─── Registro y loggeo con email y contraseña ─────────────────────────────
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -46,8 +53,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid  @RequestBody LoginRequest body) {
-        return entity;
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest body) {
+        return ResponseEntity.status(HttpStatus.OK).body(authService.login(body));  
     }
     
 
