@@ -4,15 +4,23 @@ import com.portly.domain.entity.Usuario;
 import com.portly.dto.AuthResponse;
 import com.portly.dto.RegisterRequest;
 import com.portly.service.*;
+
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import com.portly.dto.LoginRequest;
+
 
 @RestController
 @RequestMapping("/auth")
@@ -36,6 +44,12 @@ public class AuthController {
         AuthResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid  @RequestBody LoginRequest body) {
+        return entity;
+    }
+    
 
     // ─── LinkedIn ────────────────────────────────────────────────────
 
