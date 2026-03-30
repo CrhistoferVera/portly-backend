@@ -16,6 +16,10 @@ import com.portly.domain.entity.Usuario;
 import com.portly.dto.AuthResponse;
 import com.portly.dto.LoginRequest;
 import com.portly.dto.RegisterRequest;
+import com.portly.dto.ForgotPasswordRequest;
+import com.portly.dto.VerifyCodeRequest;
+import com.portly.dto.ResetPasswordRequest;
+
 import com.portly.service.AuthService;
 import com.portly.service.GitHubOAuthService;
 import com.portly.service.GoogleOAuthService;
@@ -27,7 +31,7 @@ import com.portly.service.UsuarioService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -146,5 +150,24 @@ public class AuthController {
         } catch (Exception e) {
             response.sendRedirect(frontendUrl + "/auth/error?reason=google_error");
         }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.solicitarRecuperacionPassword(request.getEmail());
+        // Devolvemos un JSON simple de éxito
+        return ResponseEntity.ok(Map.of("message", "Código de recuperación enviado al correo."));
+    }
+
+    @PostMapping("/verify-code")
+    public ResponseEntity<?> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
+        authService.verificarCodigo(request.getEmail(), request.getCodigo());
+        return ResponseEntity.ok(Map.of("message", "Código verificado correctamente."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.restablecerPassword(request.getEmail(), request.getCodigo(), request.getNuevaPassword());
+        return ResponseEntity.ok(Map.of("message", "Contraseña restablecida correctamente."));
     }
 }
