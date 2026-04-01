@@ -155,7 +155,6 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         authService.solicitarRecuperacionPassword(request.getEmail());
-        // Devolvemos un JSON simple de éxito
         return ResponseEntity.ok(Map.of("message", "Código de recuperación enviado al correo."));
     }
 
@@ -165,9 +164,9 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Código verificado correctamente."));
     }
 
-    @PostMapping("/reset-password")
-    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-        authService.restablecerPassword(request.getEmail(), request.getCodigo(), request.getNuevaPassword());
-        return ResponseEntity.ok(Map.of("message", "Contraseña restablecida correctamente."));
-    }
+        @PostMapping("/reset-password")
+        public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+            authService.restablecerPassword(request.getEmail(), request.getCodigo(), request.getNuevaPassword());
+            return ResponseEntity.ok(Map.of("message", "Contraseña restablecida correctamente."));
+        }
 }
