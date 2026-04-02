@@ -34,18 +34,19 @@ jobs:
       - name: Build and test
         run: ./mvnw test --no-transfer-progress
         env:
-          # Base de datos
+          # Las variables de BD, JWT y OAuth se sobreescriben por
+          # src/test/resources/application.properties (H2 en memoria).
+          # Se definen aquí solo como fallback o para futuros tests de integración.
           DB_URL:        ${{ secrets.DB_URL }}
           DB_USERNAME:   ${{ secrets.DB_USERNAME }}
           DB_PASSWORD:   ${{ secrets.DB_PASSWORD }}
-          # JWT
           JWT_SECRET:    ${{ secrets.JWT_SECRET }}
-          # OAuth (valores dummy para que el contexto arranque)
           LINKEDIN_CLIENT_ID:     ${{ secrets.LINKEDIN_CLIENT_ID }}
           LINKEDIN_CLIENT_SECRET: ${{ secrets.LINKEDIN_CLIENT_SECRET }}
           GITHUB_CLIENT_ID:       ${{ secrets.GH_CLIENT_ID }}
           GITHUB_CLIENT_SECRET:   ${{ secrets.GH_CLIENT_SECRET }}
-          # App
+          GOOGLE_CLIENT_ID:       ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET:   ${{ secrets.GOOGLE_CLIENT_SECRET }}
           FRONTEND_URL: http://localhost:5173
           SERVER_PORT:  8080
 
