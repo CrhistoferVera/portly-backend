@@ -30,15 +30,10 @@ public class AuthService {
 
     private final UsuarioRepository       usuarioRepository;
     private final PerfilUsuarioRepository perfilUsuarioRepository;
-<<<<<<< HEAD
-    private final PasswordEncoder      passwordEncoder;
-    private final JwtService           jwtService;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
     private final CodigoRecuperacionRepository codigoRecuperacionRepository;
     private final EmailService emailService;
-=======
-    private final PasswordEncoder         passwordEncoder;
-    private final JwtService              jwtService;
->>>>>>> origin/dev
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -93,7 +88,7 @@ public class AuthService {
                 .orElseThrow(() -> new EmailDoesNotExistException(email));
 
       
-        codigoRecuperacionRepository.deleteByUsuario(usuario);
+        codigoRecuperacionRepository.deleteByUsuario_IdUsuario(usuario.getIdUsuario());
 
         String codigo = generarCodigoSeisDigitos();
 
@@ -110,7 +105,7 @@ public class AuthService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new EmailDoesNotExistException(email));
 
-        CodigoRecuperacion codigoGuardado = codigoRecuperacionRepository.findByUsuarioAndCodigo(usuario, codigo)
+        CodigoRecuperacion codigoGuardado = codigoRecuperacionRepository.findByCodigoAndUsuario_IdUsuario(codigo, usuario.getIdUsuario())
                 .orElseThrow(() -> new InvalidCodeException());
 
         if (codigoGuardado.getFechaExpiracion().isBefore(LocalDateTime.now())) {
@@ -123,12 +118,12 @@ public class AuthService {
         verificarCodigo(email, codigo);
         Usuario usuario = usuarioRepository.findByEmail(email).get();
 
-        if (passwordEncoder.matches(nuevaPassword, usuario.getPasswordHash())) {
+        if (passwordEncoder.matches(nuevaPassword, usuario.getContrasenaEncriptada())) {
             throw new IllegalArgumentException("La nueva contraseña no puede ser igual a la actual."); 
         }
-        usuario.setPasswordHash(passwordEncoder.encode(nuevaPassword));
-        usuarioRepository.save(usuario); 
-        codigoRecuperacionRepository.deleteByUsuario(usuario);
+        usuario.setContrasenaEncriptada(passwordEncoder.encode(nuevaPassword));
+        usuarioRepository.save(usuario);
+        codigoRecuperacionRepository.deleteByUsuario_IdUsuario(usuario.getIdUsuario());
     }
 
     private String generarCodigoSeisDigitos() {
