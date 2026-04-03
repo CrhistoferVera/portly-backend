@@ -1,11 +1,11 @@
 package com.portly.service;
 
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 public class GitHubOAuthService {
 
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
 
     @Value("${github.client-id}")
     private String clientId;
@@ -44,14 +43,13 @@ public class GitHubOAuthService {
     public String exchangeCodeForToken(String code) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        Map<String, String> body = Map.of(
-                "client_id", clientId,
-                "client_secret", clientSecret,
-                "code", code,
-                "redirect_uri", redirectUri
-        );
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("client_id",     clientId);
+        body.add("client_secret", clientSecret);
+        body.add("code",          code);
+        body.add("redirect_uri",  redirectUri);
 
         ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(
                 TOKEN_URL, new HttpEntity<>(body, headers), (Class<Map<String, Object>>) (Class<?>) Map.class);
@@ -142,7 +140,7 @@ public class GitHubOAuthService {
             List<Map<String, Object>> repos = resp.getBody();
             if (repos == null || repos.isEmpty()) return null;
 
-                    List<Map<String, Object>> topRepos = repos.stream()
+            List<Map<String, Object>> topRepos = repos.stream()
                     .sorted((a, b) -> {
                         int starsA = ((Number) a.getOrDefault("stargazers_count", 0)).intValue();
                         int starsB = ((Number) b.getOrDefault("stargazers_count", 0)).intValue();
@@ -152,17 +150,36 @@ public class GitHubOAuthService {
                     .map(r -> {
                         Map<String, Object> repo = new java.util.HashMap<>();
                         repo.put("name",        r.getOrDefault("name", ""));
-                        repo.put("description", r.get("description")); // puede ser null
+                        repo.put("description", r.get("description"));
                         repo.put("url",         r.getOrDefault("html_url", ""));
                         repo.put("stars",       r.getOrDefault("stargazers_count", 0));
-                        repo.put("language",    r.get("language")); // puede ser null
+                        repo.put("language",    r.get("language"));
                         return repo;
                     })
                     .collect(Collectors.toList());
 
-            return objectMapper.writeValueAsString(topRepos);
+            // Serializar manualmente a JSON sin depender de ObjectMapper como bean
+            StringBuilder sb = new StringBuilder("[");
+            for (int i = 0; i < topRepos.size(); i++) {
+                Map<String, Object> r = topRepos.get(i);
+                sb.append("{");
+                sb.append("\"name\":").append(jsonStr(r.get("name"))).append(",");
+                sb.append("\"description\":").append(jsonStr(r.get("description"))).append(",");
+                sb.append("\"url\":").append(jsonStr(r.get("url"))).append(",");
+                sb.append("\"stars\":").append(r.get("stars")).append(",");
+                sb.append("\"language\":").append(jsonStr(r.get("language")));
+                sb.append("}");
+                if (i < topRepos.size() - 1) sb.append(",");
+            }
+            sb.append("]");
+            return sb.toString();
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private String jsonStr(Object value) {
+        if (value == null) return "null";
+        return "\"" + value.toString().replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
     }
 }
