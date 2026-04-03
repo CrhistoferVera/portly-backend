@@ -19,15 +19,15 @@ public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "usuario_id", nullable = false, updatable = false)
-    private UUID usuarioId;
+    @Column(name = "id_usuario", nullable = false, updatable = false)
+    private UUID idUsuario;
 
     @Column(name = "email", nullable = false, length = 150, unique = true)
     private String email;
 
     @JsonIgnore
-    @Column(name = "password_hash", length = 255)
-    private String passwordHash;
+    @Column(name = "contrasena_encriptada", length = 255)
+    private String contrasenaEncriptada;
 
     @Column(name = "rol", nullable = false, length = 20)
     private String rol;
@@ -35,14 +35,14 @@ public class Usuario {
     @Column(name = "estado", nullable = false, length = 20)
     private String estado;
 
-    @Column(name = "email_verificado", nullable = false)
-    private Boolean emailVerificado;
+    @Column(name = "correo_verificado", nullable = false)
+    private Boolean correoVerificado;
 
-    @Column(name = "fecha_registro", nullable = false)
-    private LocalDateTime fechaRegistro;
+    @Column(name = "fecha_creacion", nullable = false)
+    private LocalDateTime fechaCreacion;
 
-    @Column(name = "ultimo_acceso")
-    private LocalDateTime ultimoAcceso;
+    @Column(name = "fecha_ultimo_acceso")
+    private LocalDateTime fechaUltimoAcceso;
 
 
     @JsonManagedReference("usuario-proveedores")
