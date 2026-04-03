@@ -17,10 +17,10 @@ public class ExperienciaRequest {
     @NotBlank(message = "El cargo es obligatorio")
     private String cargo;
 
-    private String modalidad;
+    private String modalidadTrabajo;
 
     @NotNull(message = "La fecha de inicio es obligatoria")
-    private LocalDate fechaIni;
+    private LocalDate fechaInicio;
 
     private LocalDate fechaFin;
 
