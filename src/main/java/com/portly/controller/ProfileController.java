@@ -27,7 +27,7 @@ public class ProfileController {
     }
 
     // PUT /api/profile
-    // Actualizar datos del perfil: nombres, apellidos, titularProfesional, sobreMi, fotoUrl, pais, ciudad
+    // Actualizar datos del perfil: nombre, apellido, titularProfesional, acercaDeMi, enlaceFoto, pais, ciudad
     @PutMapping("/profile")
     public ResponseEntity<UsuarioProfileResponse> actualizarPerfil(
             Authentication authentication,
