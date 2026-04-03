@@ -9,9 +9,9 @@ import java.util.UUID;
 
 public interface ProveedorOauthRepository extends JpaRepository<ProveedorOauth, Integer> {
 
-    List<ProveedorOauth> findByUsuario_UsuarioId(UUID usuarioId);
+    List<ProveedorOauth> findByUsuario_IdUsuario(UUID idUsuario);
 
-    Optional<ProveedorOauth> findByUsuario_UsuarioIdAndProveedor(UUID usuarioId, String proveedor);
+    Optional<ProveedorOauth> findByUsuario_IdUsuarioAndNombreProveedor(UUID idUsuario, String nombreProveedor);
 
-    Optional<ProveedorOauth> findByProveedorAndProveedorUserId(String proveedor, String proveedorUserId);
+    Optional<ProveedorOauth> findByNombreProveedorAndIdUsuarioProveedor(String nombreProveedor, String idUsuarioProveedor);
 }

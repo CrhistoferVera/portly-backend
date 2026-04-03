@@ -28,12 +28,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UsuarioRepository    usuarioRepository;
+    private final UsuarioRepository       usuarioRepository;
     private final PerfilUsuarioRepository perfilUsuarioRepository;
+<<<<<<< HEAD
     private final PasswordEncoder      passwordEncoder;
     private final JwtService           jwtService;
     private final CodigoRecuperacionRepository codigoRecuperacionRepository;
     private final EmailService emailService;
+=======
+    private final PasswordEncoder         passwordEncoder;
+    private final JwtService              jwtService;
+>>>>>>> origin/dev
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -47,42 +52,39 @@ public class AuthService {
 
         Usuario usuario = Usuario.builder()
                 .email(request.getCorreoElectronico())
-                .passwordHash(passwordEncoder.encode(request.getContrasena()))
+                .contrasenaEncriptada(passwordEncoder.encode(request.getContrasena()))
                 .rol("usuario")
                 .estado("activo")
-                .emailVerificado(false)
-                .fechaRegistro(LocalDateTime.now())
+                .correoVerificado(false)
+                .fechaCreacion(LocalDateTime.now())
                 .build();
         usuario = usuarioRepository.save(usuario);
 
         PerfilUsuario perfil = PerfilUsuario.builder()
                 .usuario(usuario)
-                .nombres(request.getNombre())
-                .apellidos(request.getApellido())
+                .nombre(request.getNombre())
+                .apellido(request.getApellido())
                 .titularProfesional(request.getProfesion())
-                .sobreMi(request.getBiografia())
-                .cvAutomatico(false)
-                .actualizadoEn(LocalDateTime.now())
+                .acercaDeMi(request.getBiografia())
+                .fechaActualizacion(LocalDateTime.now())
                 .build();
         perfilUsuarioRepository.save(perfil);
 
         return generateTokenResponse(usuario);
     }
 
-
-    public AuthResponse login(LoginRequest body){
+    public AuthResponse login(LoginRequest body) {
         Usuario usuario = usuarioRepository.findByEmail(body.getCorreoElectronico())
-            .orElseThrow(()-> new EmailDoesNotExistException(body.getCorreoElectronico()));
-        if(!passwordEncoder.matches(body.getContraseña(), usuario.getPasswordHash())){
+            .orElseThrow(() -> new EmailDoesNotExistException(body.getCorreoElectronico()));
+        if (!passwordEncoder.matches(body.getContraseña(), usuario.getContrasenaEncriptada())) {
             throw new PasswordMismatchException();
         }
         return generateTokenResponse(usuario);
     }
 
-
-    public AuthResponse generateTokenResponse(Usuario usuario){
-        String token= jwtService.generateToken(usuario.getUsuarioId(), usuario.getEmail(), usuario.getRol());
-        return new AuthResponse(token, usuario.getUsuarioId(), usuario.getEmail(), usuario.getRol());
+    public AuthResponse generateTokenResponse(Usuario usuario) {
+        String token = jwtService.generateToken(usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
+        return new AuthResponse(token, usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
     }
 
     @Transactional

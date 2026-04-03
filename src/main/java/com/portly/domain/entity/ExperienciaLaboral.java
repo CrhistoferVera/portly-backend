@@ -16,12 +16,12 @@ public class ExperienciaLaboral {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_exp_laboral", nullable = false)
-    private Integer idExpLaboral;
+    @Column(name = "id_experiencia_laboral", nullable = false)
+    private Integer idExperienciaLaboral;
 
     @JsonBackReference("usuario-experiencias")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false,
+    @JoinColumn(name = "id_usuario", nullable = false,
                 foreignKey = @ForeignKey(name = "fk_exp_laboral_usuario"))
     private Usuario usuario;
 
@@ -31,11 +31,11 @@ public class ExperienciaLaboral {
     @Column(name = "cargo", nullable = false, length = 100)
     private String cargo;
 
-    @Column(name = "modalidad", length = 20)
-    private String modalidad;
+    @Column(name = "modalidad_trabajo", length = 20)
+    private String modalidadTrabajo;
 
-    @Column(name = "fecha_ini", nullable = false)
-    private LocalDate fechaIni;
+    @Column(name = "fecha_inicio", nullable = false)
+    private LocalDate fechaInicio;
 
     @Column(name = "fecha_fin")
     private LocalDate fechaFin;

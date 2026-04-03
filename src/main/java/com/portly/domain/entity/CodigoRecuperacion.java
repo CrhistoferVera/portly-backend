@@ -14,15 +14,16 @@ public class CodigoRecuperacion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Integer id;
 
-    @JsonBackReference("usuario-codigos-recuperacion")
+    @JsonBackReference("usuario-codigos")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false,
-     foreignKey = @ForeignKey(name = "fk_codigo_recuperacion_usuario"))
+    @JoinColumn(name = "id_usuario", nullable = false,
+                foreignKey = @ForeignKey(name = "fk_codigo_recuperacion_usuario"))
     private Usuario usuario;
 
-    @Column(nullable = false, length = 6)
+    @Column(name = "codigo", nullable = false, length = 255)
     private String codigo;
 
     @Column(name = "fecha_expiracion", nullable = false)

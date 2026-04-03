@@ -27,6 +27,7 @@ import com.portly.service.JwtService;
 import com.portly.service.LinkedInOAuthService;
 import com.portly.service.OAuthUserInfo;
 import com.portly.service.UsuarioService;
+import com.portly.service.PasswordRecoveryService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -44,6 +45,7 @@ public class AuthController {
     private final UsuarioService       usuarioService;
     private final AuthService          authService;
     private final JwtService           jwtService;
+    private final PasswordRecoveryService recoveryService;
 
     @Value("${app.frontend-url}")
     private String frontendUrl;
@@ -84,7 +86,7 @@ public class AuthController {
             OAuthUserInfo userInfo = linkedInService.fetchUserInfo(accessToken);
             Usuario usuario        = usuarioService.findOrCreate(userInfo);
             String jwt             = jwtService.generateToken(
-                    usuario.getUsuarioId(), usuario.getEmail(), usuario.getRol());
+                    usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
 
             response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
         } catch (Exception e) {
@@ -114,7 +116,7 @@ public class AuthController {
             OAuthUserInfo userInfo = gitHubService.fetchUserInfo(accessToken);
             Usuario usuario        = usuarioService.findOrCreate(userInfo);
             String jwt             = jwtService.generateToken(
-                    usuario.getUsuarioId(), usuario.getEmail(), usuario.getRol());
+                    usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
 
             response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
         } catch (Exception e) {
@@ -144,7 +146,7 @@ public class AuthController {
             OAuthUserInfo userInfo = googleService.fetchUserInfo(accessToken);
             Usuario usuario        = usuarioService.findOrCreate(userInfo);
             String jwt             = jwtService.generateToken(
-                    usuario.getUsuarioId(), usuario.getEmail(), usuario.getRol());
+                    usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
 
             response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
         } catch (Exception e) {
@@ -152,21 +154,30 @@ public class AuthController {
         }
     }
 
+
+    // POST /auth/forgot-password  Body: { "email": "..." }
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        authService.solicitarRecuperacionPassword(request.getEmail());
-        return ResponseEntity.ok(Map.of("message", "Código de recuperación enviado al correo."));
+    public ResponseEntity<?> forgotPassword(@RequestBody java.util.Map<String, String> body) {
+        String email = body.get("email");
+        String codigo = recoveryService.generarCodigo(email);
+        // TODO: enviar codigo por email. Por ahora se devuelve para pruebas.
+        return ResponseEntity.ok(java.util.Map.of(
+                "message", "Codigo enviado al correo.",
+                "codigo", codigo
+        ));
     }
 
+    // POST /auth/verify-code  Body: { "email": "...", "codigo": "..." }
     @PostMapping("/verify-code")
-    public ResponseEntity<?> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
-        authService.verificarCodigo(request.getEmail(), request.getCodigo());
-        return ResponseEntity.ok(Map.of("message", "Código verificado correctamente."));
+    public ResponseEntity<?> verifyCode(@RequestBody java.util.Map<String, String> body) {
+        recoveryService.verificarCodigo(body.get("email"), body.get("codigo"));
+        return ResponseEntity.ok(java.util.Map.of("message", "Codigo verificado correctamente."));
     }
 
-        @PostMapping("/reset-password")
-        public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-            authService.restablecerPassword(request.getEmail(), request.getCodigo(), request.getNuevaPassword());
-            return ResponseEntity.ok(Map.of("message", "Contraseña restablecida correctamente."));
-        }
+    // POST /auth/reset-password  Body: { "email": "...", "codigo": "...", "nuevaPassword": "..." }
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody java.util.Map<String, String> body) {
+        recoveryService.resetearContrasena(body.get("email"), body.get("codigo"), body.get("nuevaPassword"));
+        return ResponseEntity.ok(java.util.Map.of("message", "Contrasena actualizada correctamente."));
+    }
 }

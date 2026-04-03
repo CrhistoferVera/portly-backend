@@ -13,27 +13,27 @@ import java.util.UUID;
 @Builder
 public class UsuarioProfileResponse {
 
-    private UUID      usuarioId;
+    private UUID      idUsuario;
     private String    email;
     private String    rol;
     private String    estado;
-    private Boolean   emailVerificado;
-    private LocalDateTime fechaRegistro;
-    private LocalDateTime ultimoAcceso;
+    private Boolean   correoVerificado;
+    private LocalDateTime fechaCreacion;
+    private LocalDateTime fechaUltimoAcceso;
 
-    // datos par perfil 
-    private String nombres;
-    private String apellidos;
+    // datos del perfil
+    private String nombre;
+    private String apellido;
     private String titularProfesional;
-    private String sobreMi;
-    private String fotoUrl;
+    private String acercaDeMi;
+    private String enlaceFoto;
     private String pais;
     private String ciudad;
 
-    // proveedores OAuth vinculados por el momento linkedIn y GitHub lo que me tocaba le falta al de google quien sera
+    // proveedores OAuth vinculados (LinkedIn, GitHub, Google)
     private List<ProveedorDto> proveedores;
 
-    // enlaces
+    // enlaces profesionales
     private List<EnlaceDto> enlaces;
 
     // experiencia laboral
@@ -42,25 +42,25 @@ public class UsuarioProfileResponse {
 
     @Data @Builder
     public static class ProveedorDto {
-        private String proveedor;
-        private String usernameExterno;
-        private LocalDateTime ultimaSync;
-        private String metadatos; // JSON de repos de GitHub, etc.
+        private String nombreProveedor;
+        private String nombreUsuarioExterno;
+        private LocalDateTime fechaUltimaSincronizacion;
+        private String metadatos;
     }
 
     @Data @Builder
     public static class EnlaceDto {
-        private String plataforma;
-        private String urlPerfil;
-        private Boolean visible;
+        private String plataformaProfesional;
+        private String direccionEnlace;
+        private Boolean esVisible;
     }
 
     @Data @Builder
     public static class ExperienciaDto {
         private String  empresa;
         private String  cargo;
-        private String  modalidad;
-        private LocalDate fechaIni;
+        private String  modalidadTrabajo;
+        private LocalDate fechaInicio;
         private LocalDate fechaFin;
         private String  descripcion;
         private Boolean esEmpleoActual;

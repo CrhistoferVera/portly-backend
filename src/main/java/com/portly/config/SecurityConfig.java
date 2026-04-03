@@ -16,7 +16,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+<<<<<<< HEAD
 import java.util.Arrays;
+=======
+>>>>>>> origin/dev
 import java.util.List;
 
 @Configuration
@@ -29,8 +32,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+<<<<<<< HEAD
             // 1. Enciende el CORS en Spring Security (Jala el @Bean de abajo automáticamente)
             .cors(Customizer.withDefaults()) 
+=======
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+>>>>>>> origin/dev
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
@@ -51,6 +58,7 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+<<<<<<< HEAD
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Aquí pones la URL de tu frontend en React (Suele ser 5173 en Vite o 3000 en Create React App)
@@ -71,3 +79,16 @@ public class SecurityConfig {
         return source;
     }
 }
+=======
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+}
+>>>>>>> origin/dev
