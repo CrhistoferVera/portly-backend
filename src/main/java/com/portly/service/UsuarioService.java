@@ -12,15 +12,15 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class UsuarioService {
 
-    private final UsuarioRepository usuarioRepository;
-    private final ProveedorOauthRepository proveedorOauthRepository;
-    private final PerfilUsuarioRepository perfilUsuarioRepository;
-    private final EnlaceProfesionalRepository enlaceProfesionalRepository;
+    private final UsuarioRepository           usuarioRepository;
+    private final ProveedorOauthRepository    proveedorRepository;
+    private final PerfilUsuarioRepository     perfilRepository;
+    private final EnlaceProfesionalRepository enlaceRepository;
 
     @Transactional
     public Usuario findOrCreate(OAuthUserInfo info) {
-        ProveedorOauth proveedor = proveedorOauthRepository
-                .findByProveedorAndProveedorUserId(info.getProveedor(), info.getProveedorUserId())
+        ProveedorOauth proveedor = proveedorRepository
+                .findByNombreProveedorAndIdUsuarioProveedor(info.getProveedor(), info.getProveedorUserId())
                 .orElse(null);
 
         Usuario usuario;
@@ -35,64 +35,60 @@ public class UsuarioService {
                         .email(info.getEmail())
                         .rol("usuario")
                         .estado("activo")
-                        .emailVerificado(true)
-                        .fechaRegistro(LocalDateTime.now())
+                        .correoVerificado(true)
+                        .fechaCreacion(LocalDateTime.now())
                         .build();
                 usuario = usuarioRepository.save(usuario);
 
-   
                 PerfilUsuario perfil = PerfilUsuario.builder()
                         .usuario(usuario)
-                        .nombres(info.getNombres())
-                        .apellidos(info.getApellidos() != null ? info.getApellidos() : "")
+                        .nombre(info.getNombres())
+                        .apellido(info.getApellidos() != null ? info.getApellidos() : "")
                         .titularProfesional(info.getTitularProfesional())
-                        .fotoUrl(info.getFotoUrl())
-                        .cvAutomatico(false)
-                        .actualizadoEn(LocalDateTime.now())
+                        .enlaceFoto(info.getFotoUrl())
+                        .fechaActualizacion(LocalDateTime.now())
                         .build();
-                perfilUsuarioRepository.save(perfil);
+                perfilRepository.save(perfil);
 
-                
                 if (info.getUrlPerfil() != null) {
                     EnlaceProfesional enlace = EnlaceProfesional.builder()
                             .usuario(usuario)
-                            .plataforma(info.getProveedor())
-                            .urlPerfil(info.getUrlPerfil())
-                            .visible(true)
+                            .plataformaProfesional(info.getProveedor())
+                            .direccionEnlace(info.getUrlPerfil())
+                            .esVisible(true)
                             .build();
-                    enlaceProfesionalRepository.save(enlace);
+                    enlaceRepository.save(enlace);
                 }
             } else {
-                
-                perfilUsuarioRepository.findByUsuario_UsuarioId(usuario.getUsuarioId())
+                perfilRepository.findByUsuario_IdUsuario(usuario.getIdUsuario())
                         .ifPresent(perfil -> {
-                            if (perfil.getFotoUrl() == null && info.getFotoUrl() != null)
-                                perfil.setFotoUrl(info.getFotoUrl());
+                            if (perfil.getEnlaceFoto() == null && info.getFotoUrl() != null)
+                                perfil.setEnlaceFoto(info.getFotoUrl());
                             if (perfil.getTitularProfesional() == null && info.getTitularProfesional() != null)
                                 perfil.setTitularProfesional(info.getTitularProfesional());
-                            perfil.setActualizadoEn(LocalDateTime.now());
-                            perfilUsuarioRepository.save(perfil);
+                            perfil.setFechaActualizacion(LocalDateTime.now());
+                            perfilRepository.save(perfil);
                         });
             }
 
             proveedor = ProveedorOauth.builder()
                     .usuario(usuario)
-                    .proveedor(info.getProveedor())
-                    .proveedorUserId(info.getProveedorUserId())
-                    .usernameExterno(info.getUsernameExterno())
-                    .accessToken(info.getAccessToken())
-                    .creadoEn(LocalDateTime.now())
+                    .nombreProveedor(info.getProveedor())
+                    .idUsuarioProveedor(info.getProveedorUserId())
+                    .nombreUsuarioExterno(info.getUsernameExterno())
+                    .claveAccesoProveedor(info.getAccessToken())
+                    .fechaCreacion(LocalDateTime.now())
                     .build();
         }
 
-        proveedor.setAccessToken(info.getAccessToken());
-        if (info.getUsernameExterno() != null) proveedor.setUsernameExterno(info.getUsernameExterno());
-        if (info.getRefreshToken() != null) proveedor.setRefreshToken(info.getRefreshToken());
-        if (info.getMetadatos() != null) proveedor.setMetadatos(info.getMetadatos());
-        proveedor.setUltimaSync(LocalDateTime.now());
-        proveedorOauthRepository.save(proveedor);
+        proveedor.setClaveAccesoProveedor(info.getAccessToken());
+        if (info.getUsernameExterno() != null) proveedor.setNombreUsuarioExterno(info.getUsernameExterno());
+        if (info.getRefreshToken() != null)    proveedor.setClaveActualizacion(info.getRefreshToken());
+        if (info.getMetadatos() != null)       proveedor.setMetadatos(info.getMetadatos());
+        proveedor.setFechaUltimaSincronizacion(LocalDateTime.now());
+        proveedorRepository.save(proveedor);
 
-        usuario.setUltimoAcceso(LocalDateTime.now());
+        usuario.setFechaUltimoAcceso(LocalDateTime.now());
         return usuarioRepository.save(usuario);
     }
 }

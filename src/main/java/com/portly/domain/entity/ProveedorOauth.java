@@ -8,10 +8,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-    name = "proveedor_oauth",
+    name = "autenticacion_externa",
     uniqueConstraints = @UniqueConstraint(
-        name = "proveedor_oauth_usuario_proveedor_unique",
-        columnNames = {"usuario_id", "proveedor"}
+        name = "autenticacion_externa_usuario_proveedor_unique",
+        columnNames = {"id_usuario", "nombre_proveedor"}
     )
 )
 @Data
@@ -22,40 +22,40 @@ public class ProveedorOauth {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private Integer id;
+    @Column(name = "id_proveedor", nullable = false)
+    private Integer idProveedor;
 
     @JsonBackReference("usuario-proveedores")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false,
-                foreignKey = @ForeignKey(name = "fk_proveedor_oauth_usuario"))
+    @JoinColumn(name = "id_usuario", nullable = false,
+                foreignKey = @ForeignKey(name = "fk_autenticacion_externa_usuario"))
     private Usuario usuario;
 
-    @Column(name = "proveedor", nullable = false, length = 30)
-    private String proveedor;
+    @Column(name = "nombre_proveedor", nullable = false, length = 30)
+    private String nombreProveedor;
 
-    @Column(name = "proveedor_user_id", nullable = false, length = 255)
-    private String proveedorUserId;
+    @Column(name = "id_usuario_proveedor", nullable = false, length = 255)
+    private String idUsuarioProveedor;
 
-    @Column(name = "username_externo", length = 100)
-    private String usernameExterno;
+    @Column(name = "nombre_usuario_externo", length = 100)
+    private String nombreUsuarioExterno;
 
-    @Column(name = "access_token", nullable = false, columnDefinition = "TEXT")
-    private String accessToken;
+    @Column(name = "clave_acceso_proveedor", nullable = false, columnDefinition = "TEXT")
+    private String claveAccesoProveedor;
 
-    @Column(name = "refresh_token", columnDefinition = "TEXT")
-    private String refreshToken;
+    @Column(name = "clave_actualizacion", columnDefinition = "TEXT")
+    private String claveActualizacion;
 
-    @Column(name = "expira_token")
-    private LocalDateTime expiraToken;
+    @Column(name = "fecha_expiracion_clave")
+    private LocalDateTime fechaExpiracionClave;
 
-    @Column(name = "creado_en", nullable = false)
-    private LocalDateTime creadoEn;
+    @Column(name = "fecha_creacion", nullable = false)
+    private LocalDateTime fechaCreacion;
 
-    @Column(name = "ultima_sync")
-    private LocalDateTime ultimaSync;
+    @Column(name = "fecha_ultima_sincronizacion")
+    private LocalDateTime fechaUltimaSincronizacion;
 
-    /** pa los repos */
+    // JSON con los repos de GitHub u otros metadatos del proveedor
     @Column(name = "metadatos", columnDefinition = "TEXT")
     private String metadatos;
 }

@@ -9,14 +9,14 @@ import lombok.Data;
 public class ActualizarPerfilRequest {
 
     @NotBlank(message = "El nombre es obligatorio")
-    private String nombres;
+    private String nombre;
 
     @NotBlank(message = "El apellido es obligatorio")
-    private String apellidos;
+    private String apellido;
 
     private String titularProfesional;
-    private String sobreMi;
-    private String fotoUrl;
+    private String acercaDeMi;
+    private String enlaceFoto;
     private String pais;
     private String ciudad;
 }

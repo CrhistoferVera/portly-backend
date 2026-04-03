@@ -10,7 +10,7 @@ import java.util.UUID;
 public class AuthResponse {
 
     private String token;
-    private UUID   usuarioId;
+    private UUID   idUsuario;
     private String email;
     private String rol;
 }
