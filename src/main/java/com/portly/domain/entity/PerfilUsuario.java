@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
     name = "perfil_usuario",
     uniqueConstraints = @UniqueConstraint(
         name = "perfil_usuario_usuario_unique",
-        columnNames = {"usuario_id"}
+        columnNames = {"id_usuario"}
     )
 )
 @Data
@@ -22,29 +22,29 @@ public class PerfilUsuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_perfil", nullable = false)
-    private Integer idPerfil;
+    @Column(name = "id_perfil_usuario", nullable = false)
+    private Integer idPerfilUsuario;
 
     @JsonBackReference("usuario-perfil")
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false, unique = true,
+    @JoinColumn(name = "id_usuario", nullable = false, unique = true,
                 foreignKey = @ForeignKey(name = "fk_perfil_usuario_usuario"))
     private Usuario usuario;
 
-    @Column(name = "nombres", nullable = false, length = 100)
-    private String nombres;
+    @Column(name = "nombre", nullable = false, length = 100)
+    private String nombre;
 
-    @Column(name = "apellidos", nullable = false, length = 100)
-    private String apellidos;
+    @Column(name = "apellido", nullable = false, length = 100)
+    private String apellido;
 
     @Column(name = "titular_profesional", length = 150)
     private String titularProfesional;
 
-    @Column(name = "sobre_mi", columnDefinition = "TEXT")
-    private String sobreMi;
+    @Column(name = "acerca_de_mi", columnDefinition = "TEXT")
+    private String acercaDeMi;
 
-    @Column(name = "foto_url", length = 255)
-    private String fotoUrl;
+    @Column(name = "enlace_foto", length = 255)
+    private String enlaceFoto;
 
     @Column(name = "pais", length = 100)
     private String pais;
@@ -52,9 +52,6 @@ public class PerfilUsuario {
     @Column(name = "ciudad", length = 100)
     private String ciudad;
 
-    @Column(name = "cv_automatico", nullable = false)
-    private Boolean cvAutomatico;
-
-    @Column(name = "actualizado_en", nullable = false)
-    private LocalDateTime actualizadoEn;
+    @Column(name = "fecha_actualizacion", nullable = false)
+    private LocalDateTime fechaActualizacion;
 }
