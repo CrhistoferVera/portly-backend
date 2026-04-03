@@ -80,10 +80,8 @@ public class LinkedInOAuthService {
             throw new RuntimeException("LinkedIn no devolvió datos del usuario");
         }
 
-        // TODO: quitar este log cuando termines de probar
-        log.info("===== LINKEDIN USERINFO RESPONSE =====");
-        userData.forEach((k, v) -> log.info("  {} = {}", k, v));
-        log.info("======================================");
+
+
 
         String sub        = (String) userData.get("sub");             // ID único interno de LinkedIn
         String email      = (String) userData.get("email");

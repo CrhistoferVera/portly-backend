@@ -91,4 +91,45 @@ public class UsuarioService {
         usuario.setFechaUltimoAcceso(LocalDateTime.now());
         return usuarioRepository.save(usuario);
     }
+
+    /**
+     * Vincula un proveedor OAuth al usuario ACTUAL (identificado por su UUID).
+     * A diferencia de findOrCreate, NO busca/crea por email del proveedor.
+     */
+    @Transactional
+    public void linkProviderToUser(java.util.UUID userId, OAuthUserInfo info) {
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Verificar si ya tiene este proveedor vinculado
+        ProveedorOauth existing = proveedorRepository
+                .findByNombreProveedorAndIdUsuarioProveedor(info.getProveedor(), info.getProveedorUserId())
+                .orElse(null);
+
+        if (existing != null) {
+            // El proveedor ya está vinculado a alguien
+            if (!existing.getUsuario().getIdUsuario().equals(userId)) {
+                throw new RuntimeException("Esta cuenta de " + info.getProveedor() + " ya está vinculada a otro usuario.");
+            }
+            // Ya vinculado al mismo usuario, actualizar tokens
+            existing.setClaveAccesoProveedor(info.getAccessToken());
+            if (info.getRefreshToken() != null) existing.setClaveActualizacion(info.getRefreshToken());
+            existing.setFechaUltimaSincronizacion(LocalDateTime.now());
+            proveedorRepository.save(existing);
+            return;
+        }
+
+        // Crear nueva vinculación
+        ProveedorOauth proveedor = ProveedorOauth.builder()
+                .usuario(usuario)
+                .nombreProveedor(info.getProveedor())
+                .idUsuarioProveedor(info.getProveedorUserId())
+                .nombreUsuarioExterno(info.getUsernameExterno())
+                .claveAccesoProveedor(info.getAccessToken())
+                .fechaCreacion(LocalDateTime.now())
+                .fechaUltimaSincronizacion(LocalDateTime.now())
+                .build();
+        if (info.getMetadatos() != null) proveedor.setMetadatos(info.getMetadatos());
+        proveedorRepository.save(proveedor);
+    }
 }

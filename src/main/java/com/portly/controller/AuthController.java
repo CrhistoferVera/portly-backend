@@ -72,6 +72,7 @@ public class AuthController {
     @GetMapping("/linkedin/callback")
     public void linkedInCallback(@RequestParam("code") String code,
                                  @RequestParam(value = "error", required = false) String error,
+                                 @RequestParam(value = "state", required = false) String state,
                                  HttpServletResponse response) throws IOException {
         if (error != null) {
             response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
@@ -80,6 +81,14 @@ public class AuthController {
         try {
             String accessToken     = linkedInService.exchangeCodeForToken(code);
             OAuthUserInfo userInfo = linkedInService.fetchUserInfo(accessToken);
+
+            if (state != null && state.startsWith("LINK:")) {
+                java.util.UUID userId = java.util.UUID.fromString(state.substring(5));
+                usuarioService.linkProviderToUser(userId, userInfo);
+                response.sendRedirect(frontendUrl + "/profile?linked=linkedin");
+                return;
+            }
+
             Usuario usuario        = usuarioService.findOrCreate(userInfo);
             String jwt             = jwtService.generateToken(
                     usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
@@ -102,6 +111,7 @@ public class AuthController {
     @GetMapping("/github/callback")
     public void gitHubCallback(@RequestParam("code") String code,
                                @RequestParam(value = "error", required = false) String error,
+                               @RequestParam(value = "state", required = false) String state,
                                HttpServletResponse response) throws IOException {
         if (error != null) {
             response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
@@ -110,6 +120,14 @@ public class AuthController {
         try {
             String accessToken     = gitHubService.exchangeCodeForToken(code);
             OAuthUserInfo userInfo = gitHubService.fetchUserInfo(accessToken);
+
+            if (state != null && state.startsWith("LINK:")) {
+                java.util.UUID userId = java.util.UUID.fromString(state.substring(5));
+                usuarioService.linkProviderToUser(userId, userInfo);
+                response.sendRedirect(frontendUrl + "/profile?linked=github");
+                return;
+            }
+
             Usuario usuario        = usuarioService.findOrCreate(userInfo);
             String jwt             = jwtService.generateToken(
                     usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
@@ -132,6 +150,7 @@ public class AuthController {
     @GetMapping("/google/callback")
     public void googleCallback(@RequestParam("code") String code,
                                @RequestParam(value = "error", required = false) String error,
+                               @RequestParam(value = "state", required = false) String state,
                                HttpServletResponse response) throws IOException {
         if (error != null) {
             response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
@@ -140,6 +159,15 @@ public class AuthController {
         try {
             String accessToken     = googleService.exchangeCodeForToken(code);
             OAuthUserInfo userInfo = googleService.fetchUserInfo(accessToken);
+
+            // Si es vinculación, asociar al usuario actual
+            if (state != null && state.startsWith("LINK:")) {
+                java.util.UUID userId = java.util.UUID.fromString(state.substring(5));
+                usuarioService.linkProviderToUser(userId, userInfo);
+                response.sendRedirect(frontendUrl + "/profile?linked=google");
+                return;
+            }
+
             Usuario usuario        = usuarioService.findOrCreate(userInfo);
             String jwt             = jwtService.generateToken(
                     usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
@@ -148,6 +176,35 @@ public class AuthController {
         } catch (Exception e) {
             response.sendRedirect(frontendUrl + "/auth/error?reason=google_error");
         }
+    }
+
+    // ─── Vinculación de proveedores (desde perfil) ──────────────────
+
+    /** Vincula LinkedIn al usuario actual. Requiere ?token=JWT */
+    @GetMapping("/link/linkedin")
+    public void linkLinkedIn(@RequestParam("token") String token,
+                             HttpServletResponse response) throws IOException {
+        java.util.UUID userId = jwtService.extractUsuarioId(token);
+        String authUrl = linkedInService.getAuthorizationUrl() + "&state=LINK:" + userId;
+        response.sendRedirect(authUrl);
+    }
+
+    /** Vincula GitHub al usuario actual. Requiere ?token=JWT */
+    @GetMapping("/link/github")
+    public void linkGitHub(@RequestParam("token") String token,
+                           HttpServletResponse response) throws IOException {
+        java.util.UUID userId = jwtService.extractUsuarioId(token);
+        String authUrl = gitHubService.getAuthorizationUrl() + "&state=LINK:" + userId;
+        response.sendRedirect(authUrl);
+    }
+
+    /** Vincula Google al usuario actual. Requiere ?token=JWT */
+    @GetMapping("/link/google")
+    public void linkGoogle(@RequestParam("token") String token,
+                           HttpServletResponse response) throws IOException {
+        java.util.UUID userId = jwtService.extractUsuarioId(token);
+        String authUrl = googleService.getAuthorizationUrl() + "&state=LINK:" + userId;
+        response.sendRedirect(authUrl);
     }
 
 
