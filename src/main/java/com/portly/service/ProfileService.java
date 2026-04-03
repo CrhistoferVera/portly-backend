@@ -24,68 +24,62 @@ public class ProfileService {
     private final EnlaceProfesionalRepository enlaceRepository;
     private final ExperienciaLaboralRepository experienciaRepository;
 
-    // ------------------------------------------------------------
     // GET /api/profile — Obtener perfil completo del usuario autenticado
-    // ------------------------------------------------------------
     @Transactional(readOnly = true)
-    public UsuarioProfileResponse getProfile(UUID usuarioId) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
+    public UsuarioProfileResponse getProfile(UUID idUsuario) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        PerfilUsuario perfil = perfilRepository.findByUsuario_UsuarioId(usuarioId).orElse(null);
+        PerfilUsuario perfil = perfilRepository.findByUsuario_IdUsuario(idUsuario).orElse(null);
 
-        List<ProveedorOauth>     proveedores = proveedorRepository.findByUsuario_UsuarioId(usuarioId);
-        List<EnlaceProfesional>  enlaces     = enlaceRepository.findByUsuario_UsuarioId(usuarioId)
-                .stream().filter(EnlaceProfesional::getVisible).collect(Collectors.toList());
-        List<ExperienciaLaboral> exps        = experienciaRepository.findByUsuario_UsuarioId(usuarioId);
+        List<ProveedorOauth>     proveedores = proveedorRepository.findByUsuario_IdUsuario(idUsuario);
+        List<EnlaceProfesional>  enlaces     = enlaceRepository.findByUsuario_IdUsuario(idUsuario)
+                .stream().filter(EnlaceProfesional::getEsVisible).collect(Collectors.toList());
+        List<ExperienciaLaboral> exps        = experienciaRepository.findByUsuario_IdUsuario(idUsuario);
 
         return buildResponse(usuario, perfil, proveedores, enlaces, exps);
     }
 
-    // ------------------------------------------------------------
     // PUT /api/profile — Actualizar datos del perfil del usuario autenticado
-    // ------------------------------------------------------------
     @Transactional
-    public UsuarioProfileResponse actualizarPerfil(UUID usuarioId, ActualizarPerfilRequest request) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
+    public UsuarioProfileResponse actualizarPerfil(UUID idUsuario, ActualizarPerfilRequest request) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
-        PerfilUsuario perfil = perfilRepository.findByUsuario_UsuarioId(usuarioId)
+        PerfilUsuario perfil = perfilRepository.findByUsuario_IdUsuario(idUsuario)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Perfil no encontrado"));
 
-        perfil.setNombres(request.getNombres());
-        perfil.setApellidos(request.getApellidos());
+        perfil.setNombre(request.getNombre());
+        perfil.setApellido(request.getApellido());
         perfil.setTitularProfesional(request.getTitularProfesional());
-        perfil.setSobreMi(request.getSobreMi());
-        perfil.setFotoUrl(request.getFotoUrl());
+        perfil.setAcercaDeMi(request.getAcercaDeMi());
+        perfil.setEnlaceFoto(request.getEnlaceFoto());
         perfil.setPais(request.getPais());
         perfil.setCiudad(request.getCiudad());
-        perfil.setActualizadoEn(LocalDateTime.now());
+        perfil.setFechaActualizacion(LocalDateTime.now());
 
         perfilRepository.save(perfil);
 
-        List<ProveedorOauth>     proveedores = proveedorRepository.findByUsuario_UsuarioId(usuarioId);
-        List<EnlaceProfesional>  enlaces     = enlaceRepository.findByUsuario_UsuarioId(usuarioId)
-                .stream().filter(EnlaceProfesional::getVisible).collect(Collectors.toList());
-        List<ExperienciaLaboral> exps        = experienciaRepository.findByUsuario_UsuarioId(usuarioId);
+        List<ProveedorOauth>     proveedores = proveedorRepository.findByUsuario_IdUsuario(idUsuario);
+        List<EnlaceProfesional>  enlaces     = enlaceRepository.findByUsuario_IdUsuario(idUsuario)
+                .stream().filter(EnlaceProfesional::getEsVisible).collect(Collectors.toList());
+        List<ExperienciaLaboral> exps        = experienciaRepository.findByUsuario_IdUsuario(idUsuario);
 
         return buildResponse(usuario, perfil, proveedores, enlaces, exps);
     }
 
-    // ------------------------------------------------------------
     // POST /api/profile/experiencia — Agregar experiencia laboral
-    // ------------------------------------------------------------
     @Transactional
-    public UsuarioProfileResponse.ExperienciaDto agregarExperiencia(UUID usuarioId, ExperienciaRequest request) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
+    public UsuarioProfileResponse.ExperienciaDto agregarExperiencia(UUID idUsuario, ExperienciaRequest request) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
         ExperienciaLaboral exp = ExperienciaLaboral.builder()
                 .usuario(usuario)
                 .empresa(request.getEmpresa())
                 .cargo(request.getCargo())
-                .modalidad(request.getModalidad())
-                .fechaIni(request.getFechaIni())
+                .modalidadTrabajo(request.getModalidadTrabajo())
+                .fechaInicio(request.getFechaInicio())
                 .fechaFin(request.getFechaFin())
                 .descripcion(request.getDescripcion())
                 .esEmpleoActual(request.getEsEmpleoActual())
@@ -95,23 +89,20 @@ public class ProfileService {
         return toExperienciaDto(exp);
     }
 
-    // ------------------------------------------------------------
     // PUT /api/profile/experiencia/{id} — Editar experiencia laboral
-    // ------------------------------------------------------------
     @Transactional
-    public UsuarioProfileResponse.ExperienciaDto actualizarExperiencia(UUID usuarioId, Integer idExp, ExperienciaRequest request) {
+    public UsuarioProfileResponse.ExperienciaDto actualizarExperiencia(UUID idUsuario, Integer idExp, ExperienciaRequest request) {
         ExperienciaLaboral exp = experienciaRepository.findById(idExp)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Experiencia no encontrada"));
 
-        // Verificar que la experiencia pertenece al usuario autenticado
-        if (!exp.getUsuario().getUsuarioId().equals(usuarioId)) {
+        if (!exp.getUsuario().getIdUsuario().equals(idUsuario)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para editar esta experiencia");
         }
 
         exp.setEmpresa(request.getEmpresa());
         exp.setCargo(request.getCargo());
-        exp.setModalidad(request.getModalidad());
-        exp.setFechaIni(request.getFechaIni());
+        exp.setModalidadTrabajo(request.getModalidadTrabajo());
+        exp.setFechaInicio(request.getFechaInicio());
         exp.setFechaFin(request.getFechaFin());
         exp.setDescripcion(request.getDescripcion());
         exp.setEsEmpleoActual(request.getEsEmpleoActual());
@@ -120,80 +111,72 @@ public class ProfileService {
         return toExperienciaDto(exp);
     }
 
-    // ------------------------------------------------------------
     // DELETE /api/profile/experiencia/{id} — Eliminar experiencia laboral
-    // ------------------------------------------------------------
     @Transactional
-    public void eliminarExperiencia(UUID usuarioId, Integer idExp) {
+    public void eliminarExperiencia(UUID idUsuario, Integer idExp) {
         ExperienciaLaboral exp = experienciaRepository.findById(idExp)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Experiencia no encontrada"));
 
-        if (!exp.getUsuario().getUsuarioId().equals(usuarioId)) {
+        if (!exp.getUsuario().getIdUsuario().equals(idUsuario)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para eliminar esta experiencia");
         }
 
         experienciaRepository.delete(exp);
     }
 
-    // ------------------------------------------------------------
     // POST /api/profile/enlace — Agregar enlace profesional
-    // ------------------------------------------------------------
     @Transactional
-    public UsuarioProfileResponse.EnlaceDto agregarEnlace(UUID usuarioId, EnlaceRequest request) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
+    public UsuarioProfileResponse.EnlaceDto agregarEnlace(UUID idUsuario, EnlaceRequest request) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
         EnlaceProfesional enlace = EnlaceProfesional.builder()
                 .usuario(usuario)
-                .plataforma(request.getPlataforma())
-                .urlPerfil(request.getUrlPerfil())
-                .visible(request.getVisible() != null ? request.getVisible() : true)
+                .plataformaProfesional(request.getPlataformaProfesional())
+                .direccionEnlace(request.getDireccionEnlace())
+                .esVisible(request.getEsVisible() != null ? request.getEsVisible() : true)
                 .build();
 
         enlaceRepository.save(enlace);
         return toEnlaceDto(enlace);
     }
 
-    // ------------------------------------------------------------
     // DELETE /api/profile/enlace/{id} — Eliminar enlace profesional
-    // ------------------------------------------------------------
     @Transactional
-    public void eliminarEnlace(UUID usuarioId, Integer idEnlace) {
+    public void eliminarEnlace(UUID idUsuario, Integer idEnlace) {
         EnlaceProfesional enlace = enlaceRepository.findById(idEnlace)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enlace no encontrado"));
 
-        if (!enlace.getUsuario().getUsuarioId().equals(usuarioId)) {
+        if (!enlace.getUsuario().getIdUsuario().equals(idUsuario)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para eliminar este enlace");
         }
 
         enlaceRepository.delete(enlace);
     }
 
-    // ------------------------------------------------------------
     // Metodos privados de mapeo
-    // ------------------------------------------------------------
     private UsuarioProfileResponse buildResponse(Usuario usuario, PerfilUsuario perfil,
             List<ProveedorOauth> proveedores, List<EnlaceProfesional> enlaces, List<ExperienciaLaboral> exps) {
         return UsuarioProfileResponse.builder()
-                .usuarioId(usuario.getUsuarioId())
+                .idUsuario(usuario.getIdUsuario())
                 .email(usuario.getEmail())
                 .rol(usuario.getRol())
                 .estado(usuario.getEstado())
-                .emailVerificado(usuario.getEmailVerificado())
-                .fechaRegistro(usuario.getFechaRegistro())
-                .ultimoAcceso(usuario.getUltimoAcceso())
-                .nombres(perfil != null ? perfil.getNombres() : null)
-                .apellidos(perfil != null ? perfil.getApellidos() : null)
+                .correoVerificado(usuario.getCorreoVerificado())
+                .fechaCreacion(usuario.getFechaCreacion())
+                .fechaUltimoAcceso(usuario.getFechaUltimoAcceso())
+                .nombre(perfil != null ? perfil.getNombre() : null)
+                .apellido(perfil != null ? perfil.getApellido() : null)
                 .titularProfesional(perfil != null ? perfil.getTitularProfesional() : null)
-                .sobreMi(perfil != null ? perfil.getSobreMi() : null)
-                .fotoUrl(perfil != null ? perfil.getFotoUrl() : null)
+                .acercaDeMi(perfil != null ? perfil.getAcercaDeMi() : null)
+                .enlaceFoto(perfil != null ? perfil.getEnlaceFoto() : null)
                 .pais(perfil != null ? perfil.getPais() : null)
                 .ciudad(perfil != null ? perfil.getCiudad() : null)
                 .proveedores(proveedores.stream().map(p ->
                         UsuarioProfileResponse.ProveedorDto.builder()
-                                .proveedor(p.getProveedor())
-                                .usernameExterno(p.getUsernameExterno())
-                                .ultimaSync(p.getUltimaSync())
+                                .nombreProveedor(p.getNombreProveedor())
+                                .nombreUsuarioExterno(p.getNombreUsuarioExterno())
+                                .fechaUltimaSincronizacion(p.getFechaUltimaSincronizacion())
                                 .metadatos(p.getMetadatos())
                                 .build()
                 ).collect(Collectors.toList()))
@@ -206,8 +189,8 @@ public class ProfileService {
         return UsuarioProfileResponse.ExperienciaDto.builder()
                 .empresa(ex.getEmpresa())
                 .cargo(ex.getCargo())
-                .modalidad(ex.getModalidad())
-                .fechaIni(ex.getFechaIni())
+                .modalidadTrabajo(ex.getModalidadTrabajo())
+                .fechaInicio(ex.getFechaInicio())
                 .fechaFin(ex.getFechaFin())
                 .descripcion(ex.getDescripcion())
                 .esEmpleoActual(ex.getEsEmpleoActual())
@@ -216,9 +199,9 @@ public class ProfileService {
 
     private UsuarioProfileResponse.EnlaceDto toEnlaceDto(EnlaceProfesional e) {
         return UsuarioProfileResponse.EnlaceDto.builder()
-                .plataforma(e.getPlataforma())
-                .urlPerfil(e.getUrlPerfil())
-                .visible(e.getVisible())
+                .plataformaProfesional(e.getPlataformaProfesional())
+                .direccionEnlace(e.getDireccionEnlace())
+                .esVisible(e.getEsVisible())
                 .build();
     }
 }
