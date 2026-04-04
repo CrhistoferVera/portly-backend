@@ -13,7 +13,7 @@ public class EmailService {
     private final JavaMailSender mailSender;
 
     // Spring inyectará aquí el correo que pusiste en las variables de entorno
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.username:}")
     private String correoRemitente;
 
     public void enviarCodigoRecuperacion(String destino, String codigo) {
