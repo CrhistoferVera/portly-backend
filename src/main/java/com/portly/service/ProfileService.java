@@ -53,9 +53,16 @@ public class ProfileService {
         perfil.setApellido(request.getApellido());
         perfil.setTitularProfesional(request.getTitularProfesional());
         perfil.setAcercaDeMi(request.getAcercaDeMi());
-        perfil.setEnlaceFoto(request.getEnlaceFoto());
-        perfil.setPais(request.getPais());
-        perfil.setCiudad(request.getCiudad());
+        
+        if (request.getEnlaceFoto() != null) {
+            perfil.setEnlaceFoto(request.getEnlaceFoto());
+        }
+        if (request.getPais() != null) {
+            perfil.setPais(request.getPais());
+        }
+        if (request.getCiudad() != null) {
+            perfil.setCiudad(request.getCiudad());
+        }
         perfil.setFechaActualizacion(LocalDateTime.now());
 
         perfilRepository.save(perfil);
