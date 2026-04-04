@@ -60,4 +60,8 @@ public class Usuario {
     @JsonManagedReference("usuario-enlaces")
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EnlaceProfesional> enlaces;
+
+    @JsonManagedReference("usuario-codigos-recuperacion")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CodigoRecuperacion> codigosRecuperacion;
 }
