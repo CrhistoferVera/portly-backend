@@ -1,16 +1,19 @@
 package com.portly.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 import java.util.Objects;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GoogleOAuthService implements OAuthProvider {
@@ -61,8 +64,10 @@ public class GoogleOAuthService implements OAuthProvider {
 
         Map<String, Object> tokenResponse = response.getBody();
         if (tokenResponse == null || !tokenResponse.containsKey("access_token")) {
+            log.error("Google no devolvió access_token. Respuesta: {}", tokenResponse);
             throw new RuntimeException("Google no devolvió access_token");
         }
+        log.info("Token de Google obtenido correctamente");
         return (String) tokenResponse.get("access_token");
     }
 
@@ -72,12 +77,19 @@ public class GoogleOAuthService implements OAuthProvider {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
 
-        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                USERINFO_URL, HttpMethod.GET, new HttpEntity<>(headers),
-                (Class<Map<String, Object>>) (Class<?>) Map.class);
+        ResponseEntity<Map<String, Object>> response;
+        try {
+            response = restTemplate.exchange(
+                    USERINFO_URL, HttpMethod.GET, new HttpEntity<>(headers),
+                    (Class<Map<String, Object>>) (Class<?>) Map.class);
+        } catch (RestClientException ex) {
+            log.error("Error al obtener datos de usuario de Google: {}", ex.getMessage());
+            throw new RuntimeException("No se pudo obtener la información del usuario de Google", ex);
+        }
 
         Map<String, Object> userData = Objects.requireNonNull(response.getBody(),
                 "Google no devolvió datos del usuario");
+        log.info("Datos de usuario obtenidos de Google: email={}", userData.get("email"));
 
         String sub       = (String) userData.get("sub");
         String email     = (String) userData.get("email");

@@ -1,16 +1,19 @@
 package com.portly.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GitHubOAuthService implements OAuthProvider {
@@ -59,8 +62,10 @@ public class GitHubOAuthService implements OAuthProvider {
 
         Map<String, Object> tokenResponse = response.getBody();
         if (tokenResponse == null || !tokenResponse.containsKey("access_token")) {
-            throw new RuntimeException("GitHub no devolvió access_token: " + tokenResponse);
+            log.error("GitHub no devolvió access_token");
+            throw new RuntimeException("GitHub no devolvió access_token");
         }
+        log.info("Token de GitHub obtenido correctamente");
         return (String) tokenResponse.get("access_token");
     }
 
@@ -127,7 +132,8 @@ public class GitHubOAuthService implements OAuthProvider {
                     .map(e -> (String) e.get("email"))
                     .findFirst()
                     .orElse(null);
-        } catch (Exception e) {
+        } catch (RestClientException | NullPointerException ex) {
+            log.warn("No se pudo obtener el email primario de GitHub: {}", ex.getMessage());
             return null;
         }
     }
@@ -176,7 +182,8 @@ public class GitHubOAuthService implements OAuthProvider {
             }
             sb.append("]");
             return sb.toString();
-        } catch (Exception e) {
+        } catch (RestClientException | NullPointerException ex) {
+            log.warn("No se pudo obtener los repositorios de GitHub: {}", ex.getMessage());
             return null;
         }
     }

@@ -1,12 +1,15 @@
 package com.portly.service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.stereotype.Service;
 import org.springframework.scheduling.annotation.Async;
-import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailService {
@@ -19,17 +22,26 @@ public class EmailService {
 
     @Async
     public void enviarCodigoRecuperacion(String destino, String codigo) {
-        SimpleMailMessage mensaje = new SimpleMailMessage();
-        
-        // Usamos la variable inyectada en lugar de texto fijo
-        mensaje.setFrom(correoRemitente); 
-        mensaje.setTo(destino);
-        mensaje.setSubject("Código de Recuperación - Portly");
-        mensaje.setText("Hola,\n\nHas solicitado restablecer tu contraseña en Portly.\n"
-                + "Tu código de verificación de 6 dígitos es: " + codigo + "\n\n"
-                + "Este código expirará en 10 minutos.\n"
-                + "Si no solicitaste este cambio, ignora este correo.");
+        log.info("Enviando código de recuperación: destino={}", destino);
+        try {
+            SimpleMailMessage mensaje = new SimpleMailMessage();
+            mensaje.setFrom(correoRemitente);
+            mensaje.setTo(destino);
+            mensaje.setSubject("Código de Recuperación - Portly");
+            mensaje.setText("""
+                    Hola,
 
-        mailSender.send(mensaje);
+                    Has solicitado restablecer tu contraseña en Portly.
+                    Tu código de verificación de 6 dígitos es: %s
+
+                    Este código expirará en 10 minutos.
+                    Si no solicitaste este cambio, ignora este correo.
+                    """.formatted(codigo));
+            mailSender.send(mensaje);
+            log.info("Código de recuperación enviado correctamente: destino={}", destino);
+        } catch (MailException ex) {
+            log.error("Error al enviar email de recuperación: destino={}, error={}", destino, ex.getMessage());
+            throw ex;
+        }
     }
 }
