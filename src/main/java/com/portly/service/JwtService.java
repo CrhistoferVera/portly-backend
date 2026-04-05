@@ -1,8 +1,10 @@
 package com.portly.service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -11,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class JwtService {
 
@@ -39,7 +42,8 @@ public class JwtService {
         try {
             parseClaims(token);
             return true;
-        } catch (Exception e) {
+        } catch (JwtException ex) {
+            log.warn("Token JWT inválido o expirado: {}", ex.getMessage());
             return false;
         }
     }

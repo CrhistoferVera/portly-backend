@@ -4,6 +4,7 @@ import com.portly.domain.entity.*;
 import com.portly.domain.repository.*;
 import com.portly.dto.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProfileService {
@@ -67,6 +69,7 @@ public class ProfileService {
         perfil.setFechaActualizacion(LocalDateTime.now());
 
         perfilRepository.save(perfil);
+        log.info("Perfil actualizado: idUsuario={}", idUsuario);
 
         List<ProveedorOauth>     proveedores = proveedorRepository.findByUsuario_IdUsuario(idUsuario);
         List<EnlaceProfesional>  enlaces     = enlaceRepository.findByUsuario_IdUsuario(idUsuario)
@@ -94,6 +97,7 @@ public class ProfileService {
                 .build();
 
         experienciaRepository.save(exp);
+        log.info("Experiencia agregada: idUsuario={}", idUsuario);
         return toExperienciaDto(exp);
     }
 
@@ -114,6 +118,7 @@ public class ProfileService {
         exp.setEsEmpleoActual(request.getEsEmpleoActual());
 
         experienciaRepository.save(exp);
+        log.info("Experiencia actualizada: idExp={}, idUsuario={}", idExp, idUsuario);
         return toExperienciaDto(exp);
     }
 
@@ -126,6 +131,7 @@ public class ProfileService {
         verificarPropietario(exp.getUsuario().getIdUsuario(), idUsuario, "eliminar esta experiencia");
 
         experienciaRepository.delete(exp);
+        log.info("Experiencia eliminada: idExp={}, idUsuario={}", idExp, idUsuario);
     }
 
     // POST /api/profile/enlace — Agregar enlace profesional
@@ -142,6 +148,7 @@ public class ProfileService {
                 .build();
 
         enlaceRepository.save(enlace);
+        log.info("Enlace agregado: idUsuario={}, plataforma={}", idUsuario, request.getPlataformaProfesional());
         return toEnlaceDto(enlace);
     }
 
@@ -154,6 +161,7 @@ public class ProfileService {
         verificarPropietario(enlace.getUsuario().getIdUsuario(), idUsuario, "eliminar este enlace");
 
         enlaceRepository.delete(enlace);
+        log.info("Enlace eliminado: idEnlace={}, idUsuario={}", idEnlace, idUsuario);
     }
 
     // Extrae un campo de perfil de forma segura cuando perfil puede ser null
