@@ -23,7 +23,9 @@ import com.portly.exception.PasswordMismatchException;
 import com.portly.exception.InvalidCodeException;
 import com.portly.exception.CodeExpiredException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -54,6 +56,7 @@ public class AuthService {
                 .fechaCreacion(LocalDateTime.now())
                 .build();
         usuario = usuarioRepository.save(usuario);
+        log.info("Nuevo usuario registrado: email={}", request.getCorreoElectronico());
 
         PerfilUsuario perfil = PerfilUsuario.builder()
                 .usuario(usuario)
@@ -72,8 +75,10 @@ public class AuthService {
         Usuario usuario = usuarioRepository.findByEmail(body.getCorreoElectronico())
             .orElseThrow(() -> new EmailDoesNotExistException(body.getCorreoElectronico()));
         if (!passwordEncoder.matches(body.getContraseña(), usuario.getContrasenaEncriptada())) {
+            log.warn("Intento de login fallido: email={}", body.getCorreoElectronico());
             throw new PasswordMismatchException();
         }
+        log.info("Login exitoso: email={}", body.getCorreoElectronico());
         return generateTokenResponse(usuario);
     }
 
@@ -99,6 +104,7 @@ public class AuthService {
                 .build();
         codigoRecuperacionRepository.save(codigoRecuperacion);
         emailService.enviarCodigoRecuperacion(usuario.getEmail(), codigo);
+        log.info("Código de recuperación enviado: email={}", email);
     }
 
     public void verificarCodigo(String email, String codigo) {
@@ -106,9 +112,13 @@ public class AuthService {
                 .orElseThrow(() -> new EmailDoesNotExistException(email));
 
         CodigoRecuperacion codigoGuardado = codigoRecuperacionRepository.findByCodigoAndUsuario_IdUsuario(codigo, usuario.getIdUsuario())
-                .orElseThrow(() -> new InvalidCodeException());
+                .orElseThrow(() -> {
+                    log.warn("Código de recuperación incorrecto: email={}", email);
+                    return new InvalidCodeException();
+                });
 
         if (codigoGuardado.getFechaExpiracion().isBefore(LocalDateTime.now())) {
+            log.warn("Código de recuperación expirado: email={}", email);
             throw new CodeExpiredException();
         }
     }
@@ -124,6 +134,7 @@ public class AuthService {
         usuario.setContrasenaEncriptada(passwordEncoder.encode(nuevaPassword));
         usuarioRepository.save(usuario);
         codigoRecuperacionRepository.deleteByUsuario_IdUsuario(usuario.getIdUsuario());
+        log.info("Contraseña restablecida: email={}", email);
     }
 
     private String generarCodigoSeisDigitos() {

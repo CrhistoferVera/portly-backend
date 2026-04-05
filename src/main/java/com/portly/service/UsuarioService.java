@@ -3,11 +3,13 @@ package com.portly.service;
 import com.portly.domain.entity.*;
 import com.portly.domain.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
@@ -39,6 +41,7 @@ public class UsuarioService {
                         .fechaCreacion(LocalDateTime.now())
                         .build();
                 usuario = usuarioRepository.save(usuario);
+                log.info("Nuevo usuario creado via OAuth: proveedor={}, email={}", info.getProveedor(), info.getEmail());
 
                 PerfilUsuario perfil = PerfilUsuario.builder()
                         .usuario(usuario)
@@ -89,6 +92,7 @@ public class UsuarioService {
         proveedorRepository.save(proveedor);
 
         usuario.setFechaUltimoAcceso(LocalDateTime.now());
+        log.info("Login OAuth exitoso: proveedor={}, email={}", info.getProveedor(), info.getEmail());
         return usuarioRepository.save(usuario);
     }
 
@@ -109,6 +113,7 @@ public class UsuarioService {
         if (existing != null) {
             // El proveedor ya está vinculado a alguien
             if (!existing.getUsuario().getIdUsuario().equals(userId)) {
+                log.warn("Intento de vincular cuenta OAuth ya en uso: proveedor={}, usuarioId={}", info.getProveedor(), userId);
                 throw new RuntimeException("Esta cuenta de " + info.getProveedor() + " ya está vinculada a otro usuario.");
             }
             // Ya vinculado al mismo usuario, actualizar tokens
@@ -131,5 +136,6 @@ public class UsuarioService {
                 .build();
         if (info.getMetadatos() != null) proveedor.setMetadatos(info.getMetadatos());
         proveedorRepository.save(proveedor);
+        log.info("Proveedor OAuth vinculado: proveedor={}, usuarioId={}", info.getProveedor(), userId);
     }
 }

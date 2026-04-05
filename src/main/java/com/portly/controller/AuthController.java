@@ -27,13 +27,14 @@ import com.portly.service.JwtService;
 import com.portly.service.LinkedInOAuthService;
 import com.portly.service.OAuthUserInfo;
 import com.portly.service.UsuarioService;
-import com.portly.service.PasswordRecoveryService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -45,8 +46,6 @@ public class AuthController {
     private final UsuarioService       usuarioService;
     private final AuthService          authService;
     private final JwtService           jwtService;
-    private final PasswordRecoveryService recoveryService;
-
     @Value("${app.frontend-url}")
     private String frontendUrl;
 
@@ -79,6 +78,7 @@ public class AuthController {
                                  @RequestParam(value = "state", required = false) String state,
                                  HttpServletResponse response) throws IOException {
         if (error != null) {
+            log.warn("OAuth LinkedIn rechazado: reason={}", error);
             response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
             return;
         }
@@ -99,6 +99,7 @@ public class AuthController {
 
             response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
         } catch (Exception e) {
+            log.error("Error en callback OAuth LinkedIn: {}", e.getMessage());
             response.sendRedirect(frontendUrl + "/auth/error?reason=linkedin_error");
         }
     }
@@ -118,6 +119,7 @@ public class AuthController {
                                @RequestParam(value = "state", required = false) String state,
                                HttpServletResponse response) throws IOException {
         if (error != null) {
+            log.warn("OAuth GitHub rechazado: reason={}", error);
             response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
             return;
         }
@@ -138,6 +140,7 @@ public class AuthController {
 
             response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
         } catch (Exception e) {
+            log.error("Error en callback OAuth GitHub: {}", e.getMessage());
             response.sendRedirect(frontendUrl + "/auth/error?reason=github_error");
         }
     }
@@ -157,6 +160,7 @@ public class AuthController {
                                @RequestParam(value = "state", required = false) String state,
                                HttpServletResponse response) throws IOException {
         if (error != null) {
+            log.warn("OAuth Google rechazado: reason={}", error);
             response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
             return;
         }
@@ -178,6 +182,7 @@ public class AuthController {
 
             response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
         } catch (Exception e) {
+            log.error("Error en callback OAuth Google: {}", e.getMessage());
             response.sendRedirect(frontendUrl + "/auth/error?reason=google_error");
         }
     }
