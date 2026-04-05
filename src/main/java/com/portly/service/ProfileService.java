@@ -8,8 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +28,7 @@ public class ProfileService {
     private final ProveedorOauthRepository    proveedorRepository;
     private final EnlaceProfesionalRepository enlaceRepository;
     private final ExperienciaLaboralRepository experienciaRepository;
+    private final CloudinaryService           cloudinaryService;
 
     // GET /api/profile — Obtener perfil completo del usuario autenticado
     @Transactional(readOnly = true)
@@ -71,6 +74,30 @@ public class ProfileService {
         perfilRepository.save(perfil);
         log.info("Perfil actualizado: idUsuario={}", idUsuario);
 
+        List<ProveedorOauth>     proveedores = proveedorRepository.findByUsuario_IdUsuario(idUsuario);
+        List<EnlaceProfesional>  enlaces     = enlaceRepository.findByUsuario_IdUsuario(idUsuario)
+                .stream().filter(EnlaceProfesional::getEsVisible).collect(Collectors.toList());
+        List<ExperienciaLaboral> exps        = experienciaRepository.findByUsuario_IdUsuario(idUsuario);
+
+        return buildResponse(usuario, perfil, proveedores, enlaces, exps);
+    }
+
+    @Transactional
+    public UsuarioProfileResponse subirAvatar(UUID idUsuario, MultipartFile file) {
+        PerfilUsuario perfil = perfilRepository.findByUsuario_IdUsuario(idUsuario)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Perfil no encontrado"));
+
+        try {
+            String url = cloudinaryService.uploadImage(file, "portly/avatars");
+            perfil.setEnlaceFoto(url);
+            perfil.setFechaActualizacion(LocalDateTime.now());
+            perfilRepository.save(perfil);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al subir imagen");
+        }
+
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
         List<ProveedorOauth>     proveedores = proveedorRepository.findByUsuario_IdUsuario(idUsuario);
         List<EnlaceProfesional>  enlaces     = enlaceRepository.findByUsuario_IdUsuario(idUsuario)
                 .stream().filter(EnlaceProfesional::getEsVisible).collect(Collectors.toList());
