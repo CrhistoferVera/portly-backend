@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -155,6 +156,11 @@ public class ProfileService {
         enlaceRepository.delete(enlace);
     }
 
+    // Extrae un campo de perfil de forma segura cuando perfil puede ser null
+    private <T> T fromPerfil(PerfilUsuario perfil, Function<PerfilUsuario, T> getter) {
+        return perfil != null ? getter.apply(perfil) : null;
+    }
+
     // Verifica que el recurso pertenezca al usuario autenticado
     private void verificarPropietario(UUID propietario, UUID solicitante, String accion) {
         if (!propietario.equals(solicitante)) {
@@ -173,13 +179,13 @@ public class ProfileService {
                 .correoVerificado(usuario.getCorreoVerificado())
                 .fechaCreacion(usuario.getFechaCreacion())
                 .fechaUltimoAcceso(usuario.getFechaUltimoAcceso())
-                .nombre(perfil != null ? perfil.getNombre() : null)
-                .apellido(perfil != null ? perfil.getApellido() : null)
-                .titularProfesional(perfil != null ? perfil.getTitularProfesional() : null)
-                .acercaDeMi(perfil != null ? perfil.getAcercaDeMi() : null)
-                .enlaceFoto(perfil != null ? perfil.getEnlaceFoto() : null)
-                .pais(perfil != null ? perfil.getPais() : null)
-                .ciudad(perfil != null ? perfil.getCiudad() : null)
+                .nombre(fromPerfil(perfil, PerfilUsuario::getNombre))
+                .apellido(fromPerfil(perfil, PerfilUsuario::getApellido))
+                .titularProfesional(fromPerfil(perfil, PerfilUsuario::getTitularProfesional))
+                .acercaDeMi(fromPerfil(perfil, PerfilUsuario::getAcercaDeMi))
+                .enlaceFoto(fromPerfil(perfil, PerfilUsuario::getEnlaceFoto))
+                .pais(fromPerfil(perfil, PerfilUsuario::getPais))
+                .ciudad(fromPerfil(perfil, PerfilUsuario::getCiudad))
                 .proveedores(proveedores.stream().map(p ->
                         UsuarioProfileResponse.ProveedorDto.builder()
                                 .nombreProveedor(p.getNombreProveedor())

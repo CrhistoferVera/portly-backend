@@ -17,18 +17,43 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<Map<String, String>> handleEmailAlreadyExists(EmailAlreadyExistsException ex) {
-        log.warn("Registro rechazado - email duplicado: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(Map.of("error", ex.getMessage()));
+        return warnResponse(HttpStatus.CONFLICT, "Registro rechazado - email duplicado: {}", ex);
     }
 
     @ExceptionHandler(PasswordMismatchException.class)
     public ResponseEntity<Map<String, String>> handlePasswordMismatch(PasswordMismatchException ex) {
-        log.warn("Credenciales inválidas: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", ex.getMessage()));
+        return warnResponse(HttpStatus.BAD_REQUEST, "Credenciales inválidas: {}", ex);
+    }
+
+    @ExceptionHandler(EmailDoesNotExistException.class)
+    public ResponseEntity<Map<String, String>> handleEmailError(EmailDoesNotExistException ex) {
+        return warnResponse(HttpStatus.BAD_REQUEST, "Email no encontrado: {}", ex);
+    }
+
+    @ExceptionHandler(InvalidCodeException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidCode(InvalidCodeException ex) {
+        return warnResponse(HttpStatus.BAD_REQUEST, "Código de recuperación inválido: {}", ex);
+    }
+
+    @ExceptionHandler(CodeExpiredException.class)
+    public ResponseEntity<Map<String, String>> handleCodeExpired(CodeExpiredException ex) {
+        return warnResponse(HttpStatus.BAD_REQUEST, "Código de recuperación expirado: {}", ex);
+    }
+
+    @ExceptionHandler(SamePasswordException.class)
+    public ResponseEntity<Map<String, String>> handleSamePassword(SamePasswordException ex) {
+        return warnResponse(HttpStatus.BAD_REQUEST, "Intento de reutilización de contraseña: {}", ex);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+        return warnResponse(HttpStatus.BAD_REQUEST, "Argumento ilegal: {}", ex);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> handleRuntime(RuntimeException ex) {
+        log.error("Error de runtime no controlado: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -38,56 +63,13 @@ public class GlobalExceptionHandler {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
         log.warn("Validación fallida: campos={}", errors.keySet());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(errors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
     }
 
-    @ExceptionHandler(EmailDoesNotExistException.class)
-    public ResponseEntity<Map<String, String>> handleEmailError(EmailDoesNotExistException ex){
-        log.warn("Email no encontrado: {}", ex.getMessage());
-        return ResponseEntity
-            .status(HttpStatus.BAD_REQUEST)
-            .body(Map.of("message", ex.getMessage()));
-    }
+    // ─── Helpers ──────────────────────────────────────────────────────────────
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, String>> handleRuntime(RuntimeException ex) {
-        log.error("Error de runtime no controlado: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("message", ex.getMessage()));
-    }
-
-    @ExceptionHandler(InvalidCodeException.class)
-    public ResponseEntity<Map<String, String>> handleInvalidCode(InvalidCodeException ex) {
-        log.warn("Código de recuperación inválido: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", ex.getMessage()));
-    }
-
-    @ExceptionHandler(CodeExpiredException.class)
-    public ResponseEntity<Map<String, String>> handleCodeExpired(CodeExpiredException ex) {
-        log.warn("Código de recuperación expirado: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", ex.getMessage()));
-    }
-
-    @ExceptionHandler(SamePasswordException.class)
-    public ResponseEntity<Map<String, String>> handleSamePassword(SamePasswordException ex) {
-        log.warn("Intento de reutilización de contraseña: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", ex.getMessage()));
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
-        log.warn("Argumento ilegal: {}", ex.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", ex.getMessage()));
+    private ResponseEntity<Map<String, String>> warnResponse(HttpStatus status, String logMsg, Exception ex) {
+        log.warn(logMsg, ex.getMessage());
+        return ResponseEntity.status(status).body(Map.of("message", ex.getMessage()));
     }
 }
