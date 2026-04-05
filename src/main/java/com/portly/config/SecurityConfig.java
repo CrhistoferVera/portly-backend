@@ -54,7 +54,11 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Aquí pones la URL de tu frontend en React (Suele ser 5173 en Vite o 3000 en Create React App)
-        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000")); 
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "https://portly-frontend-three.vercel.app"
+        ));
         
         // Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
