@@ -22,6 +22,7 @@ import com.portly.exception.EmailDoesNotExistException;
 import com.portly.exception.PasswordMismatchException;
 import com.portly.exception.InvalidCodeException;
 import com.portly.exception.CodeExpiredException;
+import com.portly.exception.SamePasswordException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -129,7 +130,7 @@ public class AuthService {
         Usuario usuario = usuarioRepository.findByEmail(email).get();
 
         if (passwordEncoder.matches(nuevaPassword, usuario.getContrasenaEncriptada())) {
-            throw new IllegalArgumentException("La nueva contraseña no puede ser igual a la actual."); 
+            throw new SamePasswordException();
         }
         usuario.setContrasenaEncriptada(passwordEncoder.encode(nuevaPassword));
         usuarioRepository.save(usuario);
