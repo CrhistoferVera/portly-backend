@@ -144,7 +144,7 @@ public class AuthController {
                                      HttpServletResponse response, OAuthProvider provider) throws IOException {
         if (error != null) {
             log.warn("OAuth {} rechazado: reason={}", provider.getProviderName(), error);
-            response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
+            response.sendRedirect(frontendUrl + "/register");
             return;
         }
         try {
@@ -164,7 +164,7 @@ public class AuthController {
             response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
         } catch (Exception e) {
             log.error("Error en callback OAuth {}: {}", provider.getProviderName(), e.getMessage());
-            response.sendRedirect(frontendUrl + "/auth/error?reason=" + provider.getProviderName() + "_error");
+            response.sendRedirect(frontendUrl + "/register");
         }
     }
 
