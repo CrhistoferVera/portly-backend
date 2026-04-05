@@ -74,7 +74,7 @@ public class AuthController {
 
     /** Recibe el code de LinkedIn, lo procesa y redirige al frontend con el JWT. */
     @GetMapping("/linkedin/callback")
-    public void linkedInCallback(@RequestParam("code") String code,
+    public void linkedInCallback(@RequestParam(value = "code", required = false) String code,
                                  @RequestParam(value = "error", required = false) String error,
                                  @RequestParam(value = "state", required = false) String state,
                                  HttpServletResponse response) throws IOException {
@@ -91,7 +91,7 @@ public class AuthController {
 
     /** Recibe el code de GitHub, lo procesa y redirige al frontend con el JWT. */
     @GetMapping("/github/callback")
-    public void gitHubCallback(@RequestParam("code") String code,
+    public void gitHubCallback(@RequestParam(value = "code", required = false) String code,
                                @RequestParam(value = "error", required = false) String error,
                                @RequestParam(value = "state", required = false) String state,
                                HttpServletResponse response) throws IOException {
@@ -108,7 +108,7 @@ public class AuthController {
 
     /** Recibe el code de Google, lo procesa y redirige al frontend con el JWT. */
     @GetMapping("/google/callback")
-    public void googleCallback(@RequestParam("code") String code,
+    public void googleCallback(@RequestParam(value = "code", required = false) String code,
                                @RequestParam(value = "error", required = false) String error,
                                @RequestParam(value = "state", required = false) String state,
                                HttpServletResponse response) throws IOException {
