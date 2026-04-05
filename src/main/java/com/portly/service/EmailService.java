@@ -1,47 +1,47 @@
 package com.portly.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
+@Slf4j
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    @Value("${brevo.api.key}")
+    private String brevoApiKey;
 
-    // Spring inyectará aquí el correo que pusiste en las variables de entorno
-    @Value("${spring.mail.username:}")
+    @Value("${spring.mail.username}")
     private String correoRemitente;
+
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @Async
     public void enviarCodigoRecuperacion(String destino, String codigo) {
         log.info("Enviando código de recuperación: destino={}", destino);
         try {
-            SimpleMailMessage mensaje = new SimpleMailMessage();
-            mensaje.setFrom(correoRemitente);
-            mensaje.setTo(destino);
-            mensaje.setSubject("Código de Recuperación - Portly");
-            mensaje.setText("""
-                    Hola,
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("api-key", brevoApiKey);
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
-                    Has solicitado restablecer tu contraseña en Portly.
-                    Tu código de verificación de 6 dígitos es: %s
+            String body = """
+                {
+                    "sender": {"name": "Portly", "email": "%s"},
+                    "to": [{"email": "%s"}],
+                    "subject": "Código de Recuperación - Portly",
+                    "textContent": "Hola,\\n\\nHas solicitado restablecer tu contraseña en Portly.\\nTu código de verificación de 6 dígitos es: %s\\n\\nEste código expirará en 10 minutos.\\nSi no solicitaste este cambio, ignora este correo."
+                }
+                """.formatted(correoRemitente, destino, codigo);
 
-                    Este código expirará en 10 minutos.
-                    Si no solicitaste este cambio, ignora este correo.
-                    """.formatted(codigo));
-            mailSender.send(mensaje);
-            log.info("Código de recuperación enviado correctamente: destino={}", destino);
-        } catch (MailException ex) {
-            log.error("Error al enviar email de recuperación: destino={}, error={}", destino, ex.getMessage());
-            throw ex;
+            HttpEntity<String> entity = new HttpEntity<>(body, headers);
+            restTemplate.postForEntity("https://api.brevo.com/v3/smtp/email", entity, String.class);
+            log.info("Código enviado correctamente: destino={}", destino);
+        } catch (Exception ex) {
+            log.error("Error al enviar email: destino={}, error={}", destino, ex.getMessage());
+            throw new RuntimeException(ex);
         }
     }
 }
