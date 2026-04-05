@@ -73,8 +73,7 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest body) {
-        Usuario usuario = usuarioRepository.findByEmail(body.getCorreoElectronico())
-            .orElseThrow(() -> new EmailDoesNotExistException(body.getCorreoElectronico()));
+        Usuario usuario = buscarUsuarioPorEmail(body.getCorreoElectronico());
         if (!passwordEncoder.matches(body.getContraseña(), usuario.getContrasenaEncriptada())) {
             log.warn("Intento de login fallido: email={}", body.getCorreoElectronico());
             throw new PasswordMismatchException();
@@ -90,10 +89,8 @@ public class AuthService {
 
     @Transactional
     public void solicitarRecuperacionPassword(String email) {
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new EmailDoesNotExistException(email));
+        Usuario usuario = buscarUsuarioPorEmail(email);
 
-      
         codigoRecuperacionRepository.deleteByUsuario_IdUsuario(usuario.getIdUsuario());
 
         String codigo = generarCodigoSeisDigitos();
@@ -109,8 +106,7 @@ public class AuthService {
     }
 
     public void verificarCodigo(String email, String codigo) {
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new EmailDoesNotExistException(email));
+        Usuario usuario = buscarUsuarioPorEmail(email);
 
         CodigoRecuperacion codigoGuardado = codigoRecuperacionRepository.findByCodigoAndUsuario_IdUsuario(codigo, usuario.getIdUsuario())
                 .orElseThrow(() -> {
@@ -127,7 +123,7 @@ public class AuthService {
    @Transactional
     public void restablecerPassword(String email, String codigo, String nuevaPassword) {
         verificarCodigo(email, codigo);
-        Usuario usuario = usuarioRepository.findByEmail(email).get();
+        Usuario usuario = buscarUsuarioPorEmail(email);
 
         if (passwordEncoder.matches(nuevaPassword, usuario.getContrasenaEncriptada())) {
             throw new SamePasswordException();
@@ -138,9 +134,14 @@ public class AuthService {
         log.info("Contraseña restablecida: email={}", email);
     }
 
+    private Usuario buscarUsuarioPorEmail(String email) {
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new EmailDoesNotExistException(email));
+    }
+
     private String generarCodigoSeisDigitos() {
         SecureRandom random = new SecureRandom();
-        int numero = 100000 + random.nextInt(900000); 
+        int numero = 100000 + random.nextInt(900000);
         return String.valueOf(numero);
     }
 }

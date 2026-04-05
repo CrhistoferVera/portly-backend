@@ -30,7 +30,10 @@ public class RegisterRequest {
     private String biografia;
 
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
+    @Pattern(
+        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!#$*\\-./~]).{8,}$",
+        message = "Mínimo 8 caracteres, una mayúscula, una minúscula, un número y un símbolo (!#$*-/~)"
+    )
     private String contrasena;
 
     @NotBlank(message = "La confirmación de contraseña es obligatoria")

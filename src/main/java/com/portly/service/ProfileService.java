@@ -102,9 +102,7 @@ public class ProfileService {
         ExperienciaLaboral exp = experienciaRepository.findById(idExp)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Experiencia no encontrada"));
 
-        if (!exp.getUsuario().getIdUsuario().equals(idUsuario)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para editar esta experiencia");
-        }
+        verificarPropietario(exp.getUsuario().getIdUsuario(), idUsuario, "editar esta experiencia");
 
         exp.setEmpresa(request.getEmpresa());
         exp.setCargo(request.getCargo());
@@ -124,9 +122,7 @@ public class ProfileService {
         ExperienciaLaboral exp = experienciaRepository.findById(idExp)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Experiencia no encontrada"));
 
-        if (!exp.getUsuario().getIdUsuario().equals(idUsuario)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para eliminar esta experiencia");
-        }
+        verificarPropietario(exp.getUsuario().getIdUsuario(), idUsuario, "eliminar esta experiencia");
 
         experienciaRepository.delete(exp);
     }
@@ -154,11 +150,16 @@ public class ProfileService {
         EnlaceProfesional enlace = enlaceRepository.findById(idEnlace)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enlace no encontrado"));
 
-        if (!enlace.getUsuario().getIdUsuario().equals(idUsuario)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para eliminar este enlace");
-        }
+        verificarPropietario(enlace.getUsuario().getIdUsuario(), idUsuario, "eliminar este enlace");
 
         enlaceRepository.delete(enlace);
+    }
+
+    // Verifica que el recurso pertenezca al usuario autenticado
+    private void verificarPropietario(UUID propietario, UUID solicitante, String accion) {
+        if (!propietario.equals(solicitante)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para " + accion);
+        }
     }
 
     // Metodos privados de mapeo
