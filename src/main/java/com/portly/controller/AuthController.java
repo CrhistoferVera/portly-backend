@@ -187,9 +187,15 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Código verificado correctamente."));
     }
 
-        @PostMapping("/reset-password")
-        public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-            authService.restablecerPassword(request.getEmail(), request.getCodigo(), request.getNuevaPassword());
-            return ResponseEntity.ok(Map.of("message", "Contraseña restablecida correctamente."));
-        }
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.restablecerPassword(request.getEmail(), request.getCodigo(), request.getNuevaPassword());
+        return ResponseEntity.ok(Map.of("message", "Contraseña restablecida correctamente."));
+    }
+
+    @PostMapping("/verify-account-link")
+    public ResponseEntity<Map<String, Boolean>> checkAccountStatus(@Valid @RequestBody ForgotPasswordRequest request) {
+        boolean isOAuthWithoutPassword = authService.checkOAuthAccountWithoutPassword(request.getEmail());
+        return ResponseEntity.ok(Map.of("isOAuthWithoutPassword", isOAuthWithoutPassword));
+    }
 }

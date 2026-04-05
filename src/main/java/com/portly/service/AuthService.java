@@ -120,7 +120,12 @@ public class AuthService {
         }
     }
 
-   @Transactional
+    public boolean checkOAuthAccountWithoutPassword(String email) {
+        Usuario usuario = buscarUsuarioPorEmail(email);
+        return usuario.getContrasenaEncriptada() == null || usuario.getContrasenaEncriptada().isEmpty();
+    }
+
+    @Transactional
     public void restablecerPassword(String email, String codigo, String nuevaPassword) {
         verificarCodigo(email, codigo);
         Usuario usuario = buscarUsuarioPorEmail(email);
