@@ -14,7 +14,10 @@ import java.util.Map;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class LinkedInOAuthService {
+public class LinkedInOAuthService implements OAuthProvider {
+
+    @Override
+    public String getProviderName() { return "linkedin"; }
 
     private final RestTemplate restTemplate;
 

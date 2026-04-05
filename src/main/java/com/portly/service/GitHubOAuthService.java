@@ -13,7 +13,10 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class GitHubOAuthService {
+public class GitHubOAuthService implements OAuthProvider {
+
+    @Override
+    public String getProviderName() { return "github"; }
 
     private final RestTemplate restTemplate;
 

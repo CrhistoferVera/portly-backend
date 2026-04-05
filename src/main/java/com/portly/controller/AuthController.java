@@ -25,6 +25,7 @@ import com.portly.service.GitHubOAuthService;
 import com.portly.service.GoogleOAuthService;
 import com.portly.service.JwtService;
 import com.portly.service.LinkedInOAuthService;
+import com.portly.service.OAuthProvider;
 import com.portly.service.OAuthUserInfo;
 import com.portly.service.UsuarioService;
 
@@ -77,31 +78,7 @@ public class AuthController {
                                  @RequestParam(value = "error", required = false) String error,
                                  @RequestParam(value = "state", required = false) String state,
                                  HttpServletResponse response) throws IOException {
-        if (error != null) {
-            log.warn("OAuth LinkedIn rechazado: reason={}", error);
-            response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
-            return;
-        }
-        try {
-            String accessToken     = linkedInService.exchangeCodeForToken(code);
-            OAuthUserInfo userInfo = linkedInService.fetchUserInfo(accessToken);
-
-            if (state != null && state.startsWith("LINK:")) {
-                java.util.UUID userId = java.util.UUID.fromString(state.substring(5));
-                usuarioService.linkProviderToUser(userId, userInfo);
-                response.sendRedirect(frontendUrl + "/profile?linked=linkedin");
-                return;
-            }
-
-            Usuario usuario        = usuarioService.findOrCreate(userInfo);
-            String jwt             = jwtService.generateToken(
-                    usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
-
-            response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
-        } catch (Exception e) {
-            log.error("Error en callback OAuth LinkedIn: {}", e.getMessage());
-            response.sendRedirect(frontendUrl + "/auth/error?reason=linkedin_error");
-        }
+        handleOAuthCallback(code, error, state, response, linkedInService);
     }
 
     // ─── GitHub ──────────────────────────────────────────────────────
@@ -118,31 +95,7 @@ public class AuthController {
                                @RequestParam(value = "error", required = false) String error,
                                @RequestParam(value = "state", required = false) String state,
                                HttpServletResponse response) throws IOException {
-        if (error != null) {
-            log.warn("OAuth GitHub rechazado: reason={}", error);
-            response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
-            return;
-        }
-        try {
-            String accessToken     = gitHubService.exchangeCodeForToken(code);
-            OAuthUserInfo userInfo = gitHubService.fetchUserInfo(accessToken);
-
-            if (state != null && state.startsWith("LINK:")) {
-                java.util.UUID userId = java.util.UUID.fromString(state.substring(5));
-                usuarioService.linkProviderToUser(userId, userInfo);
-                response.sendRedirect(frontendUrl + "/profile?linked=github");
-                return;
-            }
-
-            Usuario usuario        = usuarioService.findOrCreate(userInfo);
-            String jwt             = jwtService.generateToken(
-                    usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
-
-            response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
-        } catch (Exception e) {
-            log.error("Error en callback OAuth GitHub: {}", e.getMessage());
-            response.sendRedirect(frontendUrl + "/auth/error?reason=github_error");
-        }
+        handleOAuthCallback(code, error, state, response, gitHubService);
     }
 
     // ─── Google ──────────────────────────────────────────────────────
@@ -159,32 +112,7 @@ public class AuthController {
                                @RequestParam(value = "error", required = false) String error,
                                @RequestParam(value = "state", required = false) String state,
                                HttpServletResponse response) throws IOException {
-        if (error != null) {
-            log.warn("OAuth Google rechazado: reason={}", error);
-            response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
-            return;
-        }
-        try {
-            String accessToken     = googleService.exchangeCodeForToken(code);
-            OAuthUserInfo userInfo = googleService.fetchUserInfo(accessToken);
-
-            // Si es vinculación, asociar al usuario actual
-            if (state != null && state.startsWith("LINK:")) {
-                java.util.UUID userId = java.util.UUID.fromString(state.substring(5));
-                usuarioService.linkProviderToUser(userId, userInfo);
-                response.sendRedirect(frontendUrl + "/profile?linked=google");
-                return;
-            }
-
-            Usuario usuario        = usuarioService.findOrCreate(userInfo);
-            String jwt             = jwtService.generateToken(
-                    usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
-
-            response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
-        } catch (Exception e) {
-            log.error("Error en callback OAuth Google: {}", e.getMessage());
-            response.sendRedirect(frontendUrl + "/auth/error?reason=google_error");
-        }
+        handleOAuthCallback(code, error, state, response, googleService);
     }
 
     // ─── Vinculación de proveedores (desde perfil) ──────────────────
@@ -193,27 +121,57 @@ public class AuthController {
     @GetMapping("/link/linkedin")
     public void linkLinkedIn(@RequestParam("token") String token,
                              HttpServletResponse response) throws IOException {
-        java.util.UUID userId = jwtService.extractUsuarioId(token);
-        String authUrl = linkedInService.getAuthorizationUrl() + "&state=LINK:" + userId;
-        response.sendRedirect(authUrl);
+        handleOAuthLink(token, response, linkedInService);
     }
 
     /** Vincula GitHub al usuario actual. Requiere ?token=JWT */
     @GetMapping("/link/github")
     public void linkGitHub(@RequestParam("token") String token,
                            HttpServletResponse response) throws IOException {
-        java.util.UUID userId = jwtService.extractUsuarioId(token);
-        String authUrl = gitHubService.getAuthorizationUrl() + "&state=LINK:" + userId;
-        response.sendRedirect(authUrl);
+        handleOAuthLink(token, response, gitHubService);
     }
 
     /** Vincula Google al usuario actual. Requiere ?token=JWT */
     @GetMapping("/link/google")
     public void linkGoogle(@RequestParam("token") String token,
                            HttpServletResponse response) throws IOException {
+        handleOAuthLink(token, response, googleService);
+    }
+
+    // ─── Métodos privados compartidos ────────────────────────────────
+
+    private void handleOAuthCallback(String code, String error, String state,
+                                     HttpServletResponse response, OAuthProvider provider) throws IOException {
+        if (error != null) {
+            log.warn("OAuth {} rechazado: reason={}", provider.getProviderName(), error);
+            response.sendRedirect(frontendUrl + "/auth/error?reason=" + error);
+            return;
+        }
+        try {
+            String accessToken     = provider.exchangeCodeForToken(code);
+            OAuthUserInfo userInfo = provider.fetchUserInfo(accessToken);
+
+            if (state != null && state.startsWith("LINK:")) {
+                java.util.UUID userId = java.util.UUID.fromString(state.substring(5));
+                usuarioService.linkProviderToUser(userId, userInfo);
+                response.sendRedirect(frontendUrl + "/profile?linked=" + provider.getProviderName());
+                return;
+            }
+
+            Usuario usuario = usuarioService.findOrCreate(userInfo);
+            String jwt      = jwtService.generateToken(
+                    usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
+            response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
+        } catch (Exception e) {
+            log.error("Error en callback OAuth {}: {}", provider.getProviderName(), e.getMessage());
+            response.sendRedirect(frontendUrl + "/auth/error?reason=" + provider.getProviderName() + "_error");
+        }
+    }
+
+    private void handleOAuthLink(String token, HttpServletResponse response,
+                                 OAuthProvider provider) throws IOException {
         java.util.UUID userId = jwtService.extractUsuarioId(token);
-        String authUrl = googleService.getAuthorizationUrl() + "&state=LINK:" + userId;
-        response.sendRedirect(authUrl);
+        response.sendRedirect(provider.getAuthorizationUrl() + "&state=LINK:" + userId);
     }
 
 

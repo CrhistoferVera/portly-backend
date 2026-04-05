@@ -13,7 +13,10 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-public class GoogleOAuthService {
+public class GoogleOAuthService implements OAuthProvider {
+
+    @Override
+    public String getProviderName() { return "google"; }
 
     private final RestTemplate restTemplate;
 

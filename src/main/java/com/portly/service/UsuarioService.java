@@ -26,74 +26,93 @@ public class UsuarioService {
                 .orElse(null);
 
         Usuario usuario;
-
         if (proveedor != null) {
             usuario = proveedor.getUsuario();
         } else {
-            usuario = usuarioRepository.findByEmail(info.getEmail()).orElse(null);
-
-            if (usuario == null) {
-                usuario = Usuario.builder()
-                        .email(info.getEmail())
-                        .rol("usuario")
-                        .estado("activo")
-                        .correoVerificado(true)
-                        .fechaCreacion(LocalDateTime.now())
-                        .build();
-                usuario = usuarioRepository.save(usuario);
-                log.info("Nuevo usuario creado via OAuth: proveedor={}, email={}", info.getProveedor(), info.getEmail());
-
-                PerfilUsuario perfil = PerfilUsuario.builder()
-                        .usuario(usuario)
-                        .nombre(info.getNombres())
-                        .apellido(info.getApellidos() != null ? info.getApellidos() : "")
-                        .titularProfesional(info.getTitularProfesional())
-                        .enlaceFoto(info.getFotoUrl())
-                        .fechaActualizacion(LocalDateTime.now())
-                        .build();
-                perfilRepository.save(perfil);
-
-                if (info.getUrlPerfil() != null) {
-                    EnlaceProfesional enlace = EnlaceProfesional.builder()
-                            .usuario(usuario)
-                            .plataformaProfesional(info.getProveedor())
-                            .direccionEnlace(info.getUrlPerfil())
-                            .esVisible(true)
-                            .build();
-                    enlaceRepository.save(enlace);
-                }
-            } else {
-                perfilRepository.findByUsuario_IdUsuario(usuario.getIdUsuario())
-                        .ifPresent(perfil -> {
-                            if (perfil.getEnlaceFoto() == null && info.getFotoUrl() != null)
-                                perfil.setEnlaceFoto(info.getFotoUrl());
-                            if (perfil.getTitularProfesional() == null && info.getTitularProfesional() != null)
-                                perfil.setTitularProfesional(info.getTitularProfesional());
-                            perfil.setFechaActualizacion(LocalDateTime.now());
-                            perfilRepository.save(perfil);
-                        });
-            }
-
-            proveedor = ProveedorOauth.builder()
-                    .usuario(usuario)
-                    .nombreProveedor(info.getProveedor())
-                    .idUsuarioProveedor(info.getProveedorUserId())
-                    .nombreUsuarioExterno(info.getUsernameExterno())
-                    .claveAccesoProveedor(info.getAccessToken())
-                    .fechaCreacion(LocalDateTime.now())
-                    .build();
+            usuario  = resolverUsuario(info);
+            proveedor = crearProveedor(usuario, info);
         }
 
+        actualizarProveedor(proveedor, info);
+        usuario.setFechaUltimoAcceso(LocalDateTime.now());
+        log.info("Login OAuth exitoso: proveedor={}, email={}", info.getProveedor(), info.getEmail());
+        return usuarioRepository.save(usuario);
+    }
+
+    // Busca usuario por email o lo crea si no existe
+    private Usuario resolverUsuario(OAuthUserInfo info) {
+        return usuarioRepository.findByEmail(info.getEmail())
+                .map(existente -> { actualizarPerfilDesdeOAuth(existente, info); return existente; })
+                .orElseGet(() -> crearUsuarioDesdeOAuth(info));
+    }
+
+    // Crea un usuario nuevo con su perfil y enlace profesional
+    private Usuario crearUsuarioDesdeOAuth(OAuthUserInfo info) {
+        Usuario usuario = Usuario.builder()
+                .email(info.getEmail())
+                .rol("usuario")
+                .estado("activo")
+                .correoVerificado(true)
+                .fechaCreacion(LocalDateTime.now())
+                .build();
+        usuario = usuarioRepository.save(usuario);
+        log.info("Nuevo usuario creado via OAuth: proveedor={}, email={}", info.getProveedor(), info.getEmail());
+
+        PerfilUsuario perfil = PerfilUsuario.builder()
+                .usuario(usuario)
+                .nombre(info.getNombres())
+                .apellido(info.getApellidos() != null ? info.getApellidos() : "")
+                .titularProfesional(info.getTitularProfesional())
+                .enlaceFoto(info.getFotoUrl())
+                .fechaActualizacion(LocalDateTime.now())
+                .build();
+        perfilRepository.save(perfil);
+
+        if (info.getUrlPerfil() != null) {
+            EnlaceProfesional enlace = EnlaceProfesional.builder()
+                    .usuario(usuario)
+                    .plataformaProfesional(info.getProveedor())
+                    .direccionEnlace(info.getUrlPerfil())
+                    .esVisible(true)
+                    .build();
+            enlaceRepository.save(enlace);
+        }
+        return usuario;
+    }
+
+    // Actualiza foto y titular de un usuario existente solo si no los tenía
+    private void actualizarPerfilDesdeOAuth(Usuario usuario, OAuthUserInfo info) {
+        perfilRepository.findByUsuario_IdUsuario(usuario.getIdUsuario())
+                .ifPresent(perfil -> {
+                    if (perfil.getEnlaceFoto() == null && info.getFotoUrl() != null)
+                        perfil.setEnlaceFoto(info.getFotoUrl());
+                    if (perfil.getTitularProfesional() == null && info.getTitularProfesional() != null)
+                        perfil.setTitularProfesional(info.getTitularProfesional());
+                    perfil.setFechaActualizacion(LocalDateTime.now());
+                    perfilRepository.save(perfil);
+                });
+    }
+
+    // Construye un nuevo registro de proveedor OAuth para el usuario
+    private ProveedorOauth crearProveedor(Usuario usuario, OAuthUserInfo info) {
+        return ProveedorOauth.builder()
+                .usuario(usuario)
+                .nombreProveedor(info.getProveedor())
+                .idUsuarioProveedor(info.getProveedorUserId())
+                .nombreUsuarioExterno(info.getUsernameExterno())
+                .claveAccesoProveedor(info.getAccessToken())
+                .fechaCreacion(LocalDateTime.now())
+                .build();
+    }
+
+    // Sincroniza tokens y metadatos del proveedor y lo persiste
+    private void actualizarProveedor(ProveedorOauth proveedor, OAuthUserInfo info) {
         proveedor.setClaveAccesoProveedor(info.getAccessToken());
         if (info.getUsernameExterno() != null) proveedor.setNombreUsuarioExterno(info.getUsernameExterno());
         if (info.getRefreshToken() != null)    proveedor.setClaveActualizacion(info.getRefreshToken());
         if (info.getMetadatos() != null)       proveedor.setMetadatos(info.getMetadatos());
         proveedor.setFechaUltimaSincronizacion(LocalDateTime.now());
         proveedorRepository.save(proveedor);
-
-        usuario.setFechaUltimoAcceso(LocalDateTime.now());
-        log.info("Login OAuth exitoso: proveedor={}, email={}", info.getProveedor(), info.getEmail());
-        return usuarioRepository.save(usuario);
     }
 
     /**
