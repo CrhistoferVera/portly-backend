@@ -19,6 +19,7 @@ import com.portly.dto.RegisterRequest;
 import com.portly.dto.ForgotPasswordRequest;
 import com.portly.dto.VerifyCodeRequest;
 import com.portly.dto.ResetPasswordRequest;
+import com.portly.dto.ChangePasswordRequest;
 
 import com.portly.service.AuthService;
 import com.portly.service.GitHubOAuthService;
@@ -197,5 +198,17 @@ public class AuthController {
     public ResponseEntity<Map<String, Boolean>> checkAccountStatus(@Valid @RequestBody ForgotPasswordRequest request) {
         boolean isOAuthWithoutPassword = authService.checkOAuthAccountWithoutPassword(request.getEmail());
         return ResponseEntity.ok(Map.of("isOAuthWithoutPassword", isOAuthWithoutPassword));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        try {
+            authService.cambiarPassword(request.getEmail(), request.getContrasenaActual(), request.getNuevaContrasena());
+            return ResponseEntity.ok(Map.of("message", "Actualizacion de contraseña"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Contraseña actual incorrecta"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 }

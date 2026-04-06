@@ -323,4 +323,50 @@ class AuthServiceTest {
             verify(usuarioRepository, never()).save(any());
         }
     }
+
+    // ─── cambiarPassword() ───────────────────────────────────────────────────
+
+    @Nested
+    @DisplayName("cambiarPassword()")
+    class CambiarPassword {
+
+        @Test
+        @DisplayName("Cambia la contraseña exitosamente")
+        void cambioExitoso() {
+            when(usuarioRepository.findByEmail(EMAIL)).thenReturn(Optional.of(usuarioBase()));
+            when(passwordEncoder.matches("PasswordActual123!", "$encoded$")).thenReturn(true);
+            when(passwordEncoder.matches("NuevaPass123!", "$encoded$")).thenReturn(false);
+            when(passwordEncoder.encode("NuevaPass123!")).thenReturn("$nuevaEncoded$");
+
+            authService.cambiarPassword(EMAIL, "PasswordActual123!", "NuevaPass123!");
+
+            verify(usuarioRepository).save(any(Usuario.class));
+        }
+
+        @Test
+        @DisplayName("Lanza IllegalArgumentException si la contraseña actual es incorrecta")
+        void contrasenaActualIncorrecta() {
+            when(usuarioRepository.findByEmail(EMAIL)).thenReturn(Optional.of(usuarioBase()));
+            when(passwordEncoder.matches("PasswordFalsa123!", "$encoded$")).thenReturn(false);
+
+            assertThatThrownBy(() -> authService.cambiarPassword(EMAIL, "PasswordFalsa123!", "NuevaPass123!"))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Contraseña actual incorrecta");
+
+            verify(usuarioRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Lanza SamePasswordException si la nueva contraseña es igual a la actual")
+        void mismaContrasena() {
+            when(usuarioRepository.findByEmail(EMAIL)).thenReturn(Optional.of(usuarioBase()));
+            when(passwordEncoder.matches("PasswordActual123!", "$encoded$")).thenReturn(true);
+            when(passwordEncoder.matches("PasswordActual123!", "$encoded$")).thenReturn(true);
+
+            assertThatThrownBy(() -> authService.cambiarPassword(EMAIL, "PasswordActual123!", "PasswordActual123!"))
+                    .isInstanceOf(SamePasswordException.class);
+
+            verify(usuarioRepository, never()).save(any());
+        }
+    }
 }

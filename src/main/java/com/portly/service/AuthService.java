@@ -139,6 +139,23 @@ public class AuthService {
         log.info("Contraseña restablecida: email={}", email);
     }
 
+    @Transactional
+    public void cambiarPassword(String email, String contrasenaActual, String nuevaContrasena) {
+        Usuario usuario = buscarUsuarioPorEmail(email);
+
+        if (!passwordEncoder.matches(contrasenaActual, usuario.getContrasenaEncriptada())) {
+            throw new IllegalArgumentException("Contraseña actual incorrecta");
+        }
+
+        if (passwordEncoder.matches(nuevaContrasena, usuario.getContrasenaEncriptada())) {
+            throw new SamePasswordException();
+        }
+
+        usuario.setContrasenaEncriptada(passwordEncoder.encode(nuevaContrasena));
+        usuarioRepository.save(usuario);
+        log.info("Contraseña actualizada: email={}", email);
+    }
+
     private Usuario buscarUsuarioPorEmail(String email) {
         return usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new EmailDoesNotExistException(email));
