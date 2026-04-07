@@ -21,6 +21,16 @@ public class ProfileController {
 
     private final ProfileService profileService;
 
+    // POST /api/redes-sociales
+    @PostMapping("/redes-sociales")
+    public ResponseEntity<Void> actualizarRedesSociales(
+            Authentication authentication,
+            @RequestBody RedesSocialesRequest request) {
+        UUID usuarioId = (UUID) authentication.getPrincipal();
+        profileService.actualizarRedesSociales(usuarioId, request);
+        return ResponseEntity.ok().build();
+    }
+
     // GET /api/profile
     // Obtener el perfil completo del usuario autenticado
     @GetMapping("/profile")

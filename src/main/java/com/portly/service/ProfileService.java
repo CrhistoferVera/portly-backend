@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ public class ProfileService {
     private final EnlaceProfesionalRepository enlaceRepository;
     private final ExperienciaLaboralRepository experienciaRepository;
     private final CloudinaryService           cloudinaryService;
+    private final RedesSocialesRepository     redesSocialesRepository;
 
     // GET /api/profile — Obtener perfil completo del usuario autenticado
     @Transactional(readOnly = true)
@@ -80,6 +82,41 @@ public class ProfileService {
         List<ExperienciaLaboral> exps        = experienciaRepository.findByUsuario_IdUsuario(idUsuario);
 
         return buildResponse(usuario, perfil, proveedores, enlaces, exps);
+    }
+
+    // POST /api/redes-sociales — Actualizar redes sociales
+    @Transactional
+    public void actualizarRedesSociales(UUID idUsuario, RedesSocialesRequest request) {
+        PerfilUsuario perfil = perfilRepository.findByUsuario_IdUsuario(idUsuario)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Perfil no encontrado"));
+
+        actualizarOEliminarRedSocial(perfil, "instagram", request.getInstagram());
+        actualizarOEliminarRedSocial(perfil, "facebook", request.getFacebook());
+        actualizarOEliminarRedSocial(perfil, "youtube", request.getYoutube());
+    }
+
+    private void actualizarOEliminarRedSocial(PerfilUsuario perfil, String nombre, String enlace) {
+        Optional<RedesSociales> redSocialOpt = redesSocialesRepository.findByPerfilUsuario_IdPerfilUsuarioAndNombre(perfil.getIdPerfilUsuario(), nombre);
+        
+        if (enlace == null || enlace.trim().isEmpty()) {
+            if (redSocialOpt.isPresent()) {
+                redesSocialesRepository.delete(redSocialOpt.get());
+                log.info("Red social eliminada: perfilId={}, nombre={}", perfil.getIdPerfilUsuario(), nombre);
+            }
+        } else {
+            if (redSocialOpt.isPresent()) {
+                RedesSociales redSocial = redSocialOpt.get();
+                redSocial.setEnlace(enlace);
+                redesSocialesRepository.save(redSocial);
+            } else {
+                RedesSociales redSocial = RedesSociales.builder()
+                        .perfilUsuario(perfil)
+                        .nombre(nombre)
+                        .enlace(enlace)
+                        .build();
+                redesSocialesRepository.save(redSocial);
+            }
+        }
     }
 
     @Transactional
