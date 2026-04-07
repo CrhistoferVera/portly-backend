@@ -31,6 +31,13 @@ public class ProfileController {
         return ResponseEntity.ok().build();
     }
 
+    // POST /api/redes-sociales/user
+    @PostMapping("/redes-sociales/user")
+    public ResponseEntity<RedesSocialesRequest> obtenerRedesSocialesUser(@RequestBody ForgotPasswordRequest request) {
+        RedesSocialesRequest response = profileService.obtenerRedesSocialesPorEmail(request.getEmail());
+        return ResponseEntity.ok(response);
+    }
+
     // GET /api/profile
     // Obtener el perfil completo del usuario autenticado
     @GetMapping("/profile")

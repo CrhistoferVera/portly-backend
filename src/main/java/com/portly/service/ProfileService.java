@@ -119,6 +119,33 @@ public class ProfileService {
         }
     }
 
+    // POST /api/redes-sociales/user — Obtener redes sociales por email
+    @Transactional(readOnly = true)
+    public RedesSocialesRequest obtenerRedesSocialesPorEmail(String email) {
+        List<RedesSociales> redes = redesSocialesRepository.findByPerfilUsuario_Usuario_Email(email);
+        RedesSocialesRequest request = new RedesSocialesRequest();
+        request.setGmail(email);
+        if (redes == null || redes.isEmpty()) {
+            return request;
+        }
+
+        for (RedesSociales red : redes) {
+            String nombre = red.getNombre().toLowerCase();
+            switch (nombre) {
+                case "instagram":
+                    request.setInstagram(red.getEnlace());
+                    break;
+                case "facebook":
+                    request.setFacebook(red.getEnlace());
+                    break;
+                case "youtube":
+                    request.setYoutube(red.getEnlace());
+                    break;
+            }
+        }
+        return request;
+    }
+
     @Transactional
     public UsuarioProfileResponse subirAvatar(UUID idUsuario, MultipartFile file) {
         PerfilUsuario perfil = perfilRepository.findByUsuario_IdUsuario(idUsuario)
