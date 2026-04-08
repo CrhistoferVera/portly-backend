@@ -1,12 +1,9 @@
 package com.portly.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -15,13 +12,14 @@ import java.util.Objects;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
-public class GoogleOAuthService implements OAuthProvider {
+public class GoogleOAuthService extends AbstractOAuthService {
+
+    public GoogleOAuthService(RestTemplate restTemplate) {
+        super(restTemplate);
+    }
 
     @Override
     public String getProviderName() { return "google"; }
-
-    private final RestTemplate restTemplate;
 
     @Value("${google.client-id}")
     private String clientId;
@@ -47,28 +45,10 @@ public class GoogleOAuthService implements OAuthProvider {
     }
 
 
-    @SuppressWarnings("unchecked")
     public String exchangeCodeForToken(String code) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "authorization_code");
-        body.add("code", code);
-        body.add("redirect_uri", redirectUri);
-        body.add("client_id", clientId);
-        body.add("client_secret", clientSecret);
-
-        ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(
-                TOKEN_URL, new HttpEntity<>(body, headers), (Class<Map<String, Object>>) (Class<?>) Map.class);
-
-        Map<String, Object> tokenResponse = response.getBody();
-        if (tokenResponse == null || !tokenResponse.containsKey("access_token")) {
-            log.error("Google no devolvió access_token. Respuesta: {}", tokenResponse);
-            throw new RuntimeException("Google no devolvió access_token");
-        }
+        String accessToken = doExchangeCodeForToken(TOKEN_URL, code, redirectUri, clientId, clientSecret);
         log.info("Token de Google obtenido correctamente");
-        return (String) tokenResponse.get("access_token");
+        return accessToken;
     }
 
 

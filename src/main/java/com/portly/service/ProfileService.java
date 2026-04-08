@@ -40,12 +40,7 @@ public class ProfileService {
 
         PerfilUsuario perfil = perfilRepository.findByUsuario_IdUsuario(idUsuario).orElse(null);
 
-        List<ProveedorOauth>     proveedores = proveedorRepository.findByUsuario_IdUsuario(idUsuario);
-        List<EnlaceProfesional>  enlaces     = enlaceRepository.findByUsuario_IdUsuario(idUsuario)
-                .stream().filter(EnlaceProfesional::getEsVisible).collect(Collectors.toList());
-        List<ExperienciaLaboral> exps        = experienciaRepository.findByUsuario_IdUsuario(idUsuario);
-
-        return buildResponse(usuario, perfil, proveedores, enlaces, exps);
+        return loadAndBuildResponse(idUsuario, usuario, perfil);
     }
 
     // PUT /api/profile — Actualizar datos del perfil del usuario autenticado
@@ -76,12 +71,7 @@ public class ProfileService {
         perfilRepository.save(perfil);
         log.info("Perfil actualizado: idUsuario={}", idUsuario);
 
-        List<ProveedorOauth>     proveedores = proveedorRepository.findByUsuario_IdUsuario(idUsuario);
-        List<EnlaceProfesional>  enlaces     = enlaceRepository.findByUsuario_IdUsuario(idUsuario)
-                .stream().filter(EnlaceProfesional::getEsVisible).collect(Collectors.toList());
-        List<ExperienciaLaboral> exps        = experienciaRepository.findByUsuario_IdUsuario(idUsuario);
-
-        return buildResponse(usuario, perfil, proveedores, enlaces, exps);
+        return loadAndBuildResponse(idUsuario, usuario, perfil);
     }
 
     // POST /api/redes-sociales — Actualizar redes sociales
@@ -162,12 +152,8 @@ public class ProfileService {
 
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
-        List<ProveedorOauth>     proveedores = proveedorRepository.findByUsuario_IdUsuario(idUsuario);
-        List<EnlaceProfesional>  enlaces     = enlaceRepository.findByUsuario_IdUsuario(idUsuario)
-                .stream().filter(EnlaceProfesional::getEsVisible).collect(Collectors.toList());
-        List<ExperienciaLaboral> exps        = experienciaRepository.findByUsuario_IdUsuario(idUsuario);
 
-        return buildResponse(usuario, perfil, proveedores, enlaces, exps);
+        return loadAndBuildResponse(idUsuario, usuario, perfil);
     }
 
     // POST /api/profile/experiencia — Agregar experiencia laboral
@@ -265,6 +251,14 @@ public class ProfileService {
         if (!propietario.equals(solicitante)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para " + accion);
         }
+    }
+
+    private UsuarioProfileResponse loadAndBuildResponse(UUID idUsuario, Usuario usuario, PerfilUsuario perfil) {
+        List<ProveedorOauth>     proveedores = proveedorRepository.findByUsuario_IdUsuario(idUsuario);
+        List<EnlaceProfesional>  enlaces     = enlaceRepository.findByUsuario_IdUsuario(idUsuario)
+                .stream().filter(EnlaceProfesional::getEsVisible).collect(Collectors.toList());
+        List<ExperienciaLaboral> exps        = experienciaRepository.findByUsuario_IdUsuario(idUsuario);
+        return buildResponse(usuario, perfil, proveedores, enlaces, exps);
     }
 
     // Metodos privados de mapeo

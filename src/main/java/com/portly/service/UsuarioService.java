@@ -144,15 +144,8 @@ public class UsuarioService {
         }
 
         // Crear nueva vinculación
-        ProveedorOauth proveedor = ProveedorOauth.builder()
-                .usuario(usuario)
-                .nombreProveedor(info.getProveedor())
-                .idUsuarioProveedor(info.getProveedorUserId())
-                .nombreUsuarioExterno(info.getUsernameExterno())
-                .claveAccesoProveedor(info.getAccessToken())
-                .fechaCreacion(LocalDateTime.now())
-                .fechaUltimaSincronizacion(LocalDateTime.now())
-                .build();
+        ProveedorOauth proveedor = crearProveedor(usuario, info);
+        proveedor.setFechaUltimaSincronizacion(LocalDateTime.now());
         if (info.getMetadatos() != null) proveedor.setMetadatos(info.getMetadatos());
         proveedorRepository.save(proveedor);
         log.info("Proveedor OAuth vinculado: proveedor={}, usuarioId={}", info.getProveedor(), userId);

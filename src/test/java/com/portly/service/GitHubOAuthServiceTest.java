@@ -90,7 +90,7 @@ class GitHubOAuthServiceTest {
 
             assertThatThrownBy(() -> gitHubOAuthService.exchangeCodeForToken("invalid-code"))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("GitHub no devolvió access_token");
+                    .hasMessageContaining("access_token");
         }
     }
 

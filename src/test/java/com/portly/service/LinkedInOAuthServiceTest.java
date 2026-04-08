@@ -91,7 +91,7 @@ class LinkedInOAuthServiceTest {
 
             assertThatThrownBy(() -> linkedInOAuthService.exchangeCodeForToken("code123"))
                     .isInstanceOf(RuntimeException.class)
-                    .hasMessageContaining("LinkedIn no devolvió access_token");
+                    .hasMessageContaining("access_token");
         }
     }
 
