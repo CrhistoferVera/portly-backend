@@ -144,6 +144,23 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>javancss-maven-plugin</artifactId>
+				<version>2.1</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-pmd-plugin</artifactId>
+				<version>3.24.0</version>
+				<configuration>
+					<rulesets>
+						<ruleset>${project.basedir}/pmd-cc.xml</ruleset>
+					</rulesets>
+					<printFailingErrors>false</printFailingErrors>
+					<failOnViolation>false</failOnViolation>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
