@@ -1,6 +1,7 @@
 package com.portly.controller;
 
 import com.portly.dto.*;
+import com.portly.service.AuthService;
 import com.portly.service.ProfileService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,17 @@ import java.util.UUID;
 public class ProfileController {
 
     private final ProfileService profileService;
+    private final AuthService authService;
+
+    // POST /api/complete-profile
+    // Completa profesión y reseña para usuarios registrados via OAuth
+    @PostMapping("/complete-profile")
+    public ResponseEntity<AuthResponse> completeOAuthProfile(
+            Authentication authentication,
+            @Valid @RequestBody CompleteOAuthProfileRequest request) {
+        UUID usuarioId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(authService.completarPerfilOAuth(usuarioId, request.getProfesion(), request.getResena()));
+    }
 
     // POST /api/redes-sociales
     @PostMapping("/redes-sociales")

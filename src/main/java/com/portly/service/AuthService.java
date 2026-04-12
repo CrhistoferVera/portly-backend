@@ -54,6 +54,7 @@ public class AuthService {
                 .rol("usuario")
                 .estado("activo")
                 .correoVerificado(false)
+                .perfilCompleto(true)
                 .fechaCreacion(LocalDateTime.now())
                 .build();
         usuario = usuarioRepository.save(usuario);
@@ -83,8 +84,29 @@ public class AuthService {
     }
 
     public AuthResponse generateTokenResponse(Usuario usuario) {
-        String token = jwtService.generateToken(usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
+        boolean perfilCompleto = usuario.getPerfilCompleto() == null || usuario.getPerfilCompleto();
+        String token = jwtService.generateToken(usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol(), perfilCompleto);
         return new AuthResponse(token, usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
+    }
+
+    @Transactional
+    public AuthResponse completarPerfilOAuth(java.util.UUID idUsuario, String profesion, String resena) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        PerfilUsuario perfil = perfilUsuarioRepository.findByUsuario_IdUsuario(idUsuario)
+                .orElseThrow(() -> new RuntimeException("Perfil no encontrado"));
+
+        perfil.setTitularProfesional(profesion);
+        perfil.setAcercaDeMi(resena);
+        perfil.setFechaActualizacion(LocalDateTime.now());
+        perfilUsuarioRepository.save(perfil);
+
+        usuario.setPerfilCompleto(true);
+        usuarioRepository.save(usuario);
+
+        log.info("Perfil OAuth completado: idUsuario={}", idUsuario);
+        return generateTokenResponse(usuario);
     }
 
     @Transactional

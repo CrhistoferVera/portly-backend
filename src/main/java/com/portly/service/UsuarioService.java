@@ -53,6 +53,7 @@ public class UsuarioService {
                 .rol("usuario")
                 .estado("activo")
                 .correoVerificado(true)
+                .perfilCompleto(false)
                 .fechaCreacion(LocalDateTime.now())
                 .build();
         usuario = usuarioRepository.save(usuario);

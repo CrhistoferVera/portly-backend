@@ -145,7 +145,7 @@ public class AuthController {
                                      HttpServletResponse response, OAuthProvider provider) throws IOException {
         if (error != null) {
             log.warn("OAuth {} rechazado: reason={}", provider.getProviderName(), error);
-            response.sendRedirect(frontendUrl + "/register");
+            response.sendRedirect(frontendUrl + "/login");
             return;
         }
         try {
@@ -160,12 +160,13 @@ public class AuthController {
             }
 
             Usuario usuario = usuarioService.findOrCreate(userInfo);
-            String jwt      = jwtService.generateToken(
-                    usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
+            boolean perfilCompleto = usuario.getPerfilCompleto() == null || usuario.getPerfilCompleto();
+            String jwt = jwtService.generateToken(
+                    usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol(), perfilCompleto);
             response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
         } catch (Exception e) {
             log.error("Error en callback OAuth {}: {}", provider.getProviderName(), e.getMessage());
-            response.sendRedirect(frontendUrl + "/register");
+            response.sendRedirect(frontendUrl + "/login");
         }
     }
 

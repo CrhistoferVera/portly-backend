@@ -27,11 +27,12 @@ public class JwtService {
         this.expirationMs = expirationDays * 24 * 60 * 60 * 1000L;
     }
 
-    public String generateToken(UUID usuarioId, String email, String rol) {
+    public String generateToken(UUID usuarioId, String email, String rol, boolean perfilCompleto) {
         return Jwts.builder()
                 .subject(usuarioId.toString())
                 .claim("email", email)
                 .claim("rol", rol)
+                .claim("perfilCompleto", perfilCompleto)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(key)
