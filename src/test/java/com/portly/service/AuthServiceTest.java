@@ -91,7 +91,7 @@ class AuthServiceTest {
             when(passwordEncoder.encode(PASSWORD)).thenReturn("$encoded$");
             when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuarioBase());
             when(perfilUsuarioRepository.save(any(PerfilUsuario.class))).thenReturn(new PerfilUsuario());
-            when(jwtService.generateToken(ID, EMAIL, "usuario")).thenReturn("jwt-token");
+            when(jwtService.generateToken(any(UUID.class), anyString(), anyString(), anyBoolean())).thenReturn("jwt-token");
 
             AuthResponse response = authService.register(req);
 
@@ -144,7 +144,7 @@ class AuthServiceTest {
         void loginExitoso() {
             when(usuarioRepository.findByEmail(EMAIL)).thenReturn(Optional.of(usuarioBase()));
             when(passwordEncoder.matches(PASSWORD, "$encoded$")).thenReturn(true);
-            when(jwtService.generateToken(ID, EMAIL, "usuario")).thenReturn("jwt-token");
+            when(jwtService.generateToken(any(UUID.class), anyString(), anyString(), anyBoolean())).thenReturn("jwt-token");
 
             AuthResponse response = authService.login(request());
 
