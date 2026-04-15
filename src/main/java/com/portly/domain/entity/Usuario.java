@@ -65,6 +65,10 @@ public class Usuario {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CodigoRecuperacion> codigosRecuperacion;
 
+    @JsonManagedReference("usuario-habilidades")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<HabilidadTecnica> habilidades;
+
     @Builder.Default
     @Column(name = "perfil_completo")
     private Boolean perfilCompleto = true;
