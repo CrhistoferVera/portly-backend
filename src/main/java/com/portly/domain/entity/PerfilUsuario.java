@@ -14,15 +14,19 @@ import java.time.LocalDateTime;
         columnNames = {"id_usuario"}
     )
 )
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"usuario"})
 public class PerfilUsuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_perfil_usuario", nullable = false)
+    @EqualsAndHashCode.Include
     private Integer idPerfilUsuario;
 
     @JsonBackReference("usuario-perfil")
