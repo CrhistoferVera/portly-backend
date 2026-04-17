@@ -17,7 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"perfil", "proveedores", "experiencias", "enlaces", "codigosRecuperacion", "evidencias", "proyectos"})
+@ToString(exclude = {"perfil", "proveedores", "experiencias", "enlaces", "codigosRecuperacion", "evidencias", "proyectos", "habilidades"})
 public class Usuario {
 
     @Id
@@ -76,6 +76,11 @@ public class Usuario {
     @JsonManagedReference("usuario-proyectos")
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Proyecto> proyectos;
+
+    @JsonManagedReference("usuario-habilidades")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<HabilidadTecnica> habilidades;
+
 
     @Builder.Default
     @Column(name = "perfil_completo")

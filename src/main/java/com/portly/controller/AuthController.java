@@ -20,6 +20,8 @@ import com.portly.dto.ForgotPasswordRequest;
 import com.portly.dto.VerifyCodeRequest;
 import com.portly.dto.ResetPasswordRequest;
 import com.portly.dto.ChangePasswordRequest;
+import com.portly.dto.SendRegistrationCodeRequest;
+import com.portly.dto.VerifyRegistrationCodeRequest;
 
 import com.portly.service.AuthService;
 import com.portly.service.GitHubOAuthService;
@@ -52,6 +54,18 @@ public class AuthController {
     private String frontendUrl;
 
     // ─── Registro y loggeo con email y contraseña ─────────────────────────────
+
+    @PostMapping("/register/send-code")
+    public ResponseEntity<?> sendRegistrationCode(@Valid @RequestBody SendRegistrationCodeRequest request) {
+        authService.enviarCodigoRegistro(request.getEmail());
+        return ResponseEntity.ok(Map.of("message", "Código enviado al correo."));
+    }
+
+    @PostMapping("/register/verify-code")
+    public ResponseEntity<?> verifyRegistrationCode(@Valid @RequestBody VerifyRegistrationCodeRequest request) {
+        authService.verificarCodigoRegistro(request.getEmail(), request.getCodigo());
+        return ResponseEntity.ok(Map.of("message", "Código verificado correctamente."));
+    }
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
