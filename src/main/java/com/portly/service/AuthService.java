@@ -10,7 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.portly.domain.entity.PerfilUsuario;
 import com.portly.domain.entity.Usuario;
 import com.portly.domain.entity.CodigoRecuperacion;
+import com.portly.domain.entity.CodigoRegistro;
 import com.portly.domain.repository.CodigoRecuperacionRepository;
+import com.portly.domain.repository.CodigoRegistroRepository;
 import com.portly.domain.repository.PerfilUsuarioRepository;
 import com.portly.domain.repository.UsuarioRepository;
 
@@ -31,12 +33,13 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UsuarioRepository       usuarioRepository;
-    private final PerfilUsuarioRepository perfilUsuarioRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final UsuarioRepository           usuarioRepository;
+    private final PerfilUsuarioRepository     perfilUsuarioRepository;
+    private final PasswordEncoder             passwordEncoder;
+    private final JwtService                  jwtService;
     private final CodigoRecuperacionRepository codigoRecuperacionRepository;
-    private final EmailService emailService;
+    private final CodigoRegistroRepository    codigoRegistroRepository;
+    private final EmailService                emailService;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -176,6 +179,44 @@ public class AuthService {
         usuario.setContrasenaEncriptada(passwordEncoder.encode(nuevaContrasena));
         usuarioRepository.save(usuario);
         log.info("Contraseña actualizada: email={}", email);
+    }
+
+    @Transactional
+    public void enviarCodigoRegistro(String email) {
+        codigoRegistroRepository.deleteByEmail(email);
+
+        if (usuarioRepository.existsByEmail(email)) {
+            emailService.enviarNotificacionEmailRegistrado(email);
+            return;
+        }
+
+        String codigo = generarCodigoSeisDigitos();
+        CodigoRegistro codigoRegistro = CodigoRegistro.builder()
+                .email(email)
+                .codigo(codigo)
+                .fechaExpiracion(LocalDateTime.now().plusMinutes(10))
+                .build();
+        codigoRegistroRepository.save(codigoRegistro);
+        emailService.enviarCodigoRegistro(email, codigo);
+        log.info("Código de registro enviado: email={}", email);
+    }
+
+    public void verificarCodigoRegistro(String email, String codigo) {
+        CodigoRegistro codigoGuardado = codigoRegistroRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("No existe código de registro para: email={}", email);
+                    return new InvalidCodeException();
+                });
+
+        if (!codigoGuardado.getCodigo().equals(codigo)) {
+            log.warn("Código de registro incorrecto: email={}", email);
+            throw new InvalidCodeException();
+        }
+
+        if (codigoGuardado.getFechaExpiracion().isBefore(LocalDateTime.now())) {
+            log.warn("Código de registro expirado: email={}", email);
+            throw new CodeExpiredException();
+        }
     }
 
     private Usuario buscarUsuarioPorEmail(String email) {
