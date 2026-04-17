@@ -11,15 +11,19 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "usuario")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"perfil", "proveedores", "experiencias", "enlaces", "codigosRecuperacion", "evidencias", "proyectos"})
 public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id_usuario", nullable = false, updatable = false)
+    @EqualsAndHashCode.Include
     private UUID idUsuario;
 
     @Column(name = "email", nullable = false, length = 150, unique = true)
@@ -64,6 +68,14 @@ public class Usuario {
     @JsonManagedReference("usuario-codigos-recuperacion")
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CodigoRecuperacion> codigosRecuperacion;
+
+    @JsonManagedReference("usuario-evidencias")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EvidenciaProyecto> evidencias;
+
+    @JsonManagedReference("usuario-proyectos")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Proyecto> proyectos;
 
     @Builder.Default
     @Column(name = "perfil_completo")
