@@ -159,7 +159,11 @@ public class AuthController {
                                      HttpServletResponse response, OAuthProvider provider) throws IOException {
         if (error != null) {
             log.warn("OAuth {} rechazado: reason={}", provider.getProviderName(), error);
-            response.sendRedirect(frontendUrl + "/login");
+            if (state != null && state.startsWith("LINK:")) {
+                response.sendRedirect(frontendUrl + "/profile?error=access_denied");
+            } else {
+                response.sendRedirect(frontendUrl + "/login");
+            }
             return;
         }
         try {
@@ -168,8 +172,13 @@ public class AuthController {
 
             if (state != null && state.startsWith("LINK:")) {
                 java.util.UUID userId = java.util.UUID.fromString(state.substring(5));
-                usuarioService.linkProviderToUser(userId, userInfo);
-                response.sendRedirect(frontendUrl + "/profile?linked=" + provider.getProviderName());
+                try {
+                    usuarioService.linkProviderToUser(userId, userInfo);
+                    response.sendRedirect(frontendUrl + "/profile?linked=" + provider.getProviderName());
+                } catch (RuntimeException re) {
+                    log.warn("Error vinculando cuenta a {}: {}", provider.getProviderName(), re.getMessage());
+                    response.sendRedirect(frontendUrl + "/profile?error=already_linked");
+                }
                 return;
             }
 
