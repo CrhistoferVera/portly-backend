@@ -77,38 +77,10 @@ public class ProfileController {
         return ResponseEntity.ok(Map.of("avatarUrl", response.getEnlaceFoto()));
     }
 
-    // POST /api/profile/experiencia
-    // Agregar una nueva experiencia laboral al perfil del usuario autenticado
-    @PostMapping("/profile/experiencia")
-    public ResponseEntity<UsuarioProfileResponse.ExperienciaDto> agregarExperiencia(
-            Authentication authentication,
-            @Valid @RequestBody ExperienciaRequest request) {
-        UUID usuarioId = (UUID) authentication.getPrincipal();
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(profileService.agregarExperiencia(usuarioId, request));
-    }
-
-    // PUT /api/profile/experiencia/{id}
-    // Editar una experiencia laboral existente (solo si pertenece al usuario autenticado)
-    @PutMapping("/profile/experiencia/{id}")
-    public ResponseEntity<UsuarioProfileResponse.ExperienciaDto> actualizarExperiencia(
-            Authentication authentication,
-            @PathVariable Integer id,
-            @Valid @RequestBody ExperienciaRequest request) {
-        UUID usuarioId = (UUID) authentication.getPrincipal();
-        return ResponseEntity.ok(profileService.actualizarExperiencia(usuarioId, id, request));
-    }
-
-    // DELETE /api/profile/experiencia/{id}
-    // Eliminar una experiencia laboral (solo si pertenece al usuario autenticado)
-    @DeleteMapping("/profile/experiencia/{id}")
-    public ResponseEntity<Void> eliminarExperiencia(
-            Authentication authentication,
-            @PathVariable Integer id) {
-        UUID usuarioId = (UUID) authentication.getPrincipal();
-        profileService.eliminarExperiencia(usuarioId, id);
-        return ResponseEntity.noContent().build();
-    }
+    // ──────────────────────────────────────────────────────────────
+    // Experiencia laboral: movida a ProfileExperienciaController
+    // con soporte para funcionesPrincipales, logros y referenciaProfesional
+    // ──────────────────────────────────────────────────────────────
 
     // POST /api/profile/enlace
     // Agregar un nuevo enlace profesional (LinkedIn, GitHub, portfolio, etc.)
