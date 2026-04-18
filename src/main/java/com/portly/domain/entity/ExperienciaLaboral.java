@@ -1,10 +1,12 @@
 package com.portly.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.portly.util.StringListConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "experiencia_laboral")
@@ -45,4 +47,22 @@ public class ExperienciaLaboral {
 
     @Column(name = "es_empleo_actual", nullable = false)
     private Boolean esEmpleoActual;
+
+    @Convert(converter = StringListConverter.class)
+    @Column(name = "funciones_principales", columnDefinition = "TEXT")
+    private List<String> funcionesPrincipales;
+
+    @Convert(converter = StringListConverter.class)
+    @Column(name = "logros", columnDefinition = "TEXT")
+    private List<String> logros;
+
+    @Column(name = "correo_jefe", length = 255)
+    private String correoJefe;
+
+    @Column(name = "numero_jefe", length = 20)
+    private String numeroJefe;
+
+    @Column(name = "cargo_jefe", length = 50)
+    private String cargoJefe;
 }
+
