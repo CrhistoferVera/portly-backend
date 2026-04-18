@@ -39,7 +39,8 @@ public class GitHubOAuthService extends AbstractOAuthService {
         return AUTH_URL
                 + "?client_id=" + clientId
                 + "&redirect_uri=" + redirectUri
-                + "&scope=read:user%20user:email%20public_repo";
+                + "&scope=read:user%20user:email%20public_repo"
+                + "&prompt=consent";
     }
 
 
