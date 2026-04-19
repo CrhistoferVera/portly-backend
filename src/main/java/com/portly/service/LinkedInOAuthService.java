@@ -41,7 +41,8 @@ public class LinkedInOAuthService extends AbstractOAuthService {
                 + "?response_type=code"
                 + "&client_id=" + clientId
                 + "&redirect_uri=" + redirectUri
-                + "&scope=" + scope.replace(" ", "%20");
+                + "&scope=" + scope.replace(" ", "%20")
+                + "&prompt=consent";
     }
 
 
