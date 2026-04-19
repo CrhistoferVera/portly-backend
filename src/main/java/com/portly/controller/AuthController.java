@@ -162,7 +162,9 @@ public class AuthController {
             if (state != null && state.startsWith("LINK:")) {
                 response.sendRedirect(frontendUrl + "/profile?error=access_denied");
             } else {
-                response.sendRedirect(frontendUrl + "/login");
+                // El proveedor no devolvió el state (comportamiento de GitHub/LinkedIn al cancelar)
+                // Si hay token en sesión el usuario estaba logueado, lo mandamos al perfil
+                response.sendRedirect(frontendUrl + "/profile?error=access_denied");
             }
             return;
         }
