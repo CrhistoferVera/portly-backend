@@ -66,6 +66,36 @@ public class ProfileService {
         if (request.getCiudad() != null) {
             perfil.setCiudad(request.getCiudad());
         }
+        if (request.getMostrarCorreo() != null) {
+            perfil.setMostrarCorreo(request.getMostrarCorreo());
+        }
+        if (request.getMostrarProfesion() != null) {
+            perfil.setMostrarProfesion(request.getMostrarProfesion());
+        }
+        if (request.getMostrarBiografia() != null) {
+            perfil.setMostrarBiografia(request.getMostrarBiografia());
+        }
+        if (request.getMostrarInstagram() != null) {
+            perfil.setMostrarInstagram(request.getMostrarInstagram());
+        }
+        if (request.getMostrarFacebook() != null) {
+            perfil.setMostrarFacebook(request.getMostrarFacebook());
+        }
+        if (request.getMostrarYoutube() != null) {
+            perfil.setMostrarYoutube(request.getMostrarYoutube());
+        }
+        if (request.getMostrarHabilidadesTecnicas() != null) {
+            perfil.setMostrarHabilidadesTecnicas(request.getMostrarHabilidadesTecnicas());
+        }
+        if (request.getMostrarHabilidadesBlandas() != null) {
+            perfil.setMostrarHabilidadesBlandas(request.getMostrarHabilidadesBlandas());
+        }
+        if (request.getMostrarTrayectoria() != null) {
+            perfil.setMostrarTrayectoria(request.getMostrarTrayectoria());
+        }
+        if (request.getMostrarFormacion() != null) {
+            perfil.setMostrarFormacion(request.getMostrarFormacion());
+        }
         perfil.setFechaActualizacion(LocalDateTime.now());
 
         perfilRepository.save(perfil);
@@ -279,6 +309,16 @@ public class ProfileService {
                 .enlaceFoto(fromPerfil(perfil, PerfilUsuario::getEnlaceFoto))
                 .pais(fromPerfil(perfil, PerfilUsuario::getPais))
                 .ciudad(fromPerfil(perfil, PerfilUsuario::getCiudad))
+                .mostrarCorreo(perfil != null && perfil.getMostrarCorreo() != null ? perfil.getMostrarCorreo() : true)
+                .mostrarProfesion(perfil != null && perfil.getMostrarProfesion() != null ? perfil.getMostrarProfesion() : true)
+                .mostrarBiografia(perfil != null && perfil.getMostrarBiografia() != null ? perfil.getMostrarBiografia() : true)
+                .mostrarInstagram(perfil != null && perfil.getMostrarInstagram() != null ? perfil.getMostrarInstagram() : true)
+                .mostrarFacebook(perfil != null && perfil.getMostrarFacebook() != null ? perfil.getMostrarFacebook() : true)
+                .mostrarYoutube(perfil != null && perfil.getMostrarYoutube() != null ? perfil.getMostrarYoutube() : true)
+                .mostrarHabilidadesTecnicas(perfil != null && perfil.getMostrarHabilidadesTecnicas() != null ? perfil.getMostrarHabilidadesTecnicas() : true)
+                .mostrarHabilidadesBlandas(perfil != null && perfil.getMostrarHabilidadesBlandas() != null ? perfil.getMostrarHabilidadesBlandas() : true)
+                .mostrarTrayectoria(perfil != null && perfil.getMostrarTrayectoria() != null ? perfil.getMostrarTrayectoria() : true)
+                .mostrarFormacion(perfil != null && perfil.getMostrarFormacion() != null ? perfil.getMostrarFormacion() : true)
                 .proveedores(proveedores.stream().map(p ->
                         UsuarioProfileResponse.ProveedorDto.builder()
                                 .nombreProveedor(p.getNombreProveedor())

@@ -41,7 +41,8 @@ public class SecurityConfig {
                 
                 // 3. Rutas públicas
                 .requestMatchers("/auth/**").permitAll()
-                
+                .requestMatchers("/api/public/**").permitAll()
+
                 // 4. Todo lo demás requiere autenticación
                 .anyRequest().authenticated()
             )

@@ -30,6 +30,18 @@ public class UsuarioProfileResponse {
     private String pais;
     private String ciudad;
 
+    // visibilidad
+    private Boolean mostrarCorreo;
+    private Boolean mostrarProfesion;
+    private Boolean mostrarBiografia;
+    private Boolean mostrarInstagram;
+    private Boolean mostrarFacebook;
+    private Boolean mostrarYoutube;
+    private Boolean mostrarHabilidadesTecnicas;
+    private Boolean mostrarHabilidadesBlandas;
+    private Boolean mostrarTrayectoria;
+    private Boolean mostrarFormacion;
+
     // proveedores OAuth vinculados (LinkedIn, GitHub, Google)
     private List<ProveedorDto> proveedores;
 

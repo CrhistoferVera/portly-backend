@@ -56,6 +56,46 @@ public class PerfilUsuario {
     @Column(name = "ciudad", length = 100)
     private String ciudad;
 
+    @Builder.Default
+    @Column(name = "mostrar_correo")
+    private Boolean mostrarCorreo = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_profesion")
+    private Boolean mostrarProfesion = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_biografia")
+    private Boolean mostrarBiografia = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_instagram")
+    private Boolean mostrarInstagram = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_facebook")
+    private Boolean mostrarFacebook = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_youtube")
+    private Boolean mostrarYoutube = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_habilidades_tecnicas")
+    private Boolean mostrarHabilidadesTecnicas = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_habilidades_blandas")
+    private Boolean mostrarHabilidadesBlandas = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_trayectoria")
+    private Boolean mostrarTrayectoria = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_formacion")
+    private Boolean mostrarFormacion = true;
+
     @Column(name = "fecha_actualizacion", nullable = false)
     private LocalDateTime fechaActualizacion;
 }
