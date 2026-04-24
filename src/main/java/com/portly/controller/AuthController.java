@@ -66,7 +66,7 @@ public class AuthController {
         authService.verificarCodigoRegistro(request.getEmail(), request.getCodigo());
         return ResponseEntity.ok(Map.of("message", "Código verificado correctamente."));
     }
-
+    //Prueba autodeploy
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         AuthResponse response = authService.register(request);
