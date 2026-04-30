@@ -66,6 +66,12 @@ public class ProfileService {
         if (request.getCiudad() != null) {
             perfil.setCiudad(request.getCiudad());
         }
+        if (request.getCodigoTelefono() != null) {
+            perfil.setCodigoTelefono(request.getCodigoTelefono());
+        }
+        if (request.getTelefono() != null) {
+            perfil.setTelefono(request.getTelefono());
+        }
         if (request.getMostrarCorreo() != null) {
             perfil.setMostrarCorreo(request.getMostrarCorreo());
         }
@@ -113,6 +119,8 @@ public class ProfileService {
         actualizarOEliminarRedSocial(perfil, "instagram", request.getInstagram());
         actualizarOEliminarRedSocial(perfil, "facebook", request.getFacebook());
         actualizarOEliminarRedSocial(perfil, "youtube", request.getYoutube());
+        actualizarOEliminarRedSocial(perfil, "github", request.getGithub());
+        actualizarOEliminarRedSocial(perfil, "linkedin", request.getLinkedin());
     }
 
     private void actualizarOEliminarRedSocial(PerfilUsuario perfil, String nombre, String enlace) {
@@ -161,6 +169,14 @@ public class ProfileService {
                 case "youtube":
                     request.setYoutube(red.getEnlace());
                     break;
+                case "github":
+                    request.setGithub(red.getEnlace());
+                    break;
+                case "linkedin":
+                    request.setLinkedin(red.getEnlace());
+                    break;
+                default:
+                    break;
             }
         }
         return request;
@@ -176,7 +192,8 @@ public class ProfileService {
             perfil.setEnlaceFoto(url);
             perfil.setFechaActualizacion(LocalDateTime.now());
             perfilRepository.save(perfil);
-        } catch (IOException e) {
+        } catch (Exception e) {
+            log.error("Error al subir avatar: {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al subir imagen");
         }
 
@@ -309,6 +326,8 @@ public class ProfileService {
                 .enlaceFoto(fromPerfil(perfil, PerfilUsuario::getEnlaceFoto))
                 .pais(fromPerfil(perfil, PerfilUsuario::getPais))
                 .ciudad(fromPerfil(perfil, PerfilUsuario::getCiudad))
+                .codigoTelefono(fromPerfil(perfil, PerfilUsuario::getCodigoTelefono))
+                .telefono(fromPerfil(perfil, PerfilUsuario::getTelefono))
                 .mostrarCorreo(perfil != null && perfil.getMostrarCorreo() != null ? perfil.getMostrarCorreo() : true)
                 .mostrarProfesion(perfil != null && perfil.getMostrarProfesion() != null ? perfil.getMostrarProfesion() : true)
                 .mostrarBiografia(perfil != null && perfil.getMostrarBiografia() != null ? perfil.getMostrarBiografia() : true)

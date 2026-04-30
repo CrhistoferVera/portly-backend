@@ -29,6 +29,8 @@ public class UsuarioProfileResponse {
     private String enlaceFoto;
     private String pais;
     private String ciudad;
+    private String codigoTelefono;
+    private String telefono;
 
     // visibilidad
     private Boolean mostrarCorreo;

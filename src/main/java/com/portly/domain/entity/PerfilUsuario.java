@@ -56,6 +56,12 @@ public class PerfilUsuario {
     @Column(name = "ciudad", length = 100)
     private String ciudad;
 
+    @Column(name = "codigo_telefono", length = 10)
+    private String codigoTelefono;
+
+    @Column(name = "telefono", length = 20)
+    private String telefono;
+
     @Builder.Default
     @Column(name = "mostrar_correo")
     private Boolean mostrarCorreo = true;

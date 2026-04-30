@@ -8,4 +8,6 @@ public class RedesSocialesRequest {
     private String instagram;
     private String facebook;
     private String youtube;
+    private String github;
+    private String linkedin;
 }

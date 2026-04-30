@@ -19,6 +19,8 @@ public class ActualizarPerfilRequest {
     private String enlaceFoto;
     private String pais;
     private String ciudad;
+    private String codigoTelefono;
+    private String telefono;
 
     private Boolean mostrarCorreo;
     private Boolean mostrarProfesion;
