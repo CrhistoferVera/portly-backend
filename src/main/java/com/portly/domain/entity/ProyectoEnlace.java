@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "proyecto_repositorio")
+@Table(name = "proyecto_enlace")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -13,19 +13,22 @@ import lombok.*;
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"proyecto"})
-public class ProyectoRepositorio {
+public class ProyectoEnlace {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_repositorio", nullable = false)
+    @Column(name = "id_enlace", nullable = false)
     @EqualsAndHashCode.Include
-    private Long idRepositorio;
+    private Long idEnlace;
 
-    @JsonBackReference("proyecto-repositorios")
+    @JsonBackReference("proyecto-enlaces")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_proyecto", nullable = false,
-                foreignKey = @ForeignKey(name = "fk_proyecto_repositorio_proyecto"))
+                foreignKey = @ForeignKey(name = "fk_proyecto_enlace_proyecto"))
     private Proyecto proyecto;
+
+    @Column(name = "titulo", nullable = false, length = 150)
+    private String titulo;
 
     @Column(name = "url", nullable = false, length = 512)
     private String url;

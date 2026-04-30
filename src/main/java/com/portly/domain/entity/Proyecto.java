@@ -17,7 +17,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"usuario", "repositorios", "tecnologias", "evidencias"})
+@ToString(exclude = {"usuario", "enlaces", "tecnologias", "evidencias"})
 public class Proyecto {
 
     @Id
@@ -51,8 +51,7 @@ public class Proyecto {
     @Column(name = "enlace_repositorio", length = 512)
     private String enlaceRepositorio;
 
-    @Column(name = "enlace_proyecto_despleado", length = 512)
-    private String enlaceProyectoDeplegado;
+
 
     /** PUBLICO | PRIVADO */
     @Column(name = "estado_publicacion", length = 20)
@@ -89,10 +88,10 @@ public class Proyecto {
 
     // ─── Relaciones ───────────────────────────────────────────────────────────
 
-    /** URLs adicionales de repositorios (tabla proyecto_repositorio) */
+    /** Enlaces del proyecto (demo, repositorios, etc.) */
     @OneToMany(mappedBy = "proyecto", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<ProyectoRepositorio> repositorios = new ArrayList<>();
+    private List<ProyectoEnlace> enlaces = new ArrayList<>();
 
     /** Tecnologías del proyecto (tabla tecnologia_proyecto → habilidad_catalogo) */
     @ManyToMany(fetch = FetchType.LAZY)

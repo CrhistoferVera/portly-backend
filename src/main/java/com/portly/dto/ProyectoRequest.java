@@ -20,7 +20,7 @@ public class ProyectoRequest {
 
     private String descripcionRepositorio;
 
-    private String enlaceProyectoDeplegado;
+
 
     /** PUBLICO o PRIVADO */
     private String estadoPublicacion;
@@ -43,8 +43,7 @@ public class ProyectoRequest {
     /** IDs de habilidades del catálogo (tecnología_proyecto) */
     private List<Long> idHabilidades = new ArrayList<>();
 
-    /** URLs de repositorios adicionales (proyecto_repositorio) */
-    private List<String> urlsRepositorios = new ArrayList<>();
+
 
     /** IDs de evidencias ya subidas que se vincularán a este proyecto */
     private List<Integer> idEvidencias = new ArrayList<>();

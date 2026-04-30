@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -30,12 +31,12 @@ public class ProyectoPersonalService {
     private final ProyectoRepository proyectoRepository;
     private final UsuarioRepository usuarioRepository;
     private final HabilidadCatalogoRepository habilidadRepository;
-    private final ProyectoRepositorioRepository proyectoRepositorioRepository;
+    private final ProyectoEnlaceRepository proyectoEnlaceRepository;
     private final EvidenciaProyectoRepository evidenciaRepository;
     private final CloudinaryService cloudinaryService;
 
     // ──────────────────────────────────────────────────────────────
-    // POST /api/proyectos
+    // POST /api/proyectos  (multipart – endpoint legacy)
     // ──────────────────────────────────────────────────────────────
     @Transactional
     public ProyectoResponse crearProyecto(UUID idUsuario, ProyectoRequest request, MultipartFile iconoFile) {
@@ -47,7 +48,6 @@ public class ProyectoPersonalService {
                 .titulo(request.getTitulo())
                 .resumen(request.getResumen())
                 .descripcionRepositorio(request.getDescripcionRepositorio())
-                .enlaceProyectoDeplegado(request.getEnlaceProyectoDeplegado())
                 .estadoPublicacion(request.getEstadoPublicacion())
                 .fechaInicio(request.getFechaInicio())
                 .fechaFin(request.getFechaFin())
@@ -58,52 +58,33 @@ public class ProyectoPersonalService {
                 .fechaActualizacion(LocalDateTime.now())
                 .build();
 
-        // 1. Manejar ícono
         if (iconoFile != null && !iconoFile.isEmpty()) {
             try {
-                String iconoUrl = cloudinaryService.uploadImage(iconoFile, "portly/proyectos/iconos");
-                proyecto.setEnlaceIcono(iconoUrl);
+                proyecto.setEnlaceIcono(cloudinaryService.uploadImage(iconoFile, "portly/proyectos/iconos"));
             } catch (IOException e) {
                 log.error("Error subiendo ícono de proyecto: {}", e.getMessage());
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al subir el ícono");
             }
         }
 
-        // 2. Vincular tecnologías
         if (request.getIdHabilidades() != null && !request.getIdHabilidades().isEmpty()) {
-            List<HabilidadCatalogo> techList = habilidadRepository.findAllById(request.getIdHabilidades());
-            proyecto.setTecnologias(techList);
+            proyecto.setTecnologias(habilidadRepository.findAllById(request.getIdHabilidades()));
         }
 
-        // Se guarda el proyecto para obtener el ID
-        Proyecto savedProyecto = proyectoRepository.save(proyecto);
+        Proyecto saved = proyectoRepository.save(proyecto);
 
-        // 3. Crear repositorios adicionales
-        if (request.getUrlsRepositorios() != null && !request.getUrlsRepositorios().isEmpty()) {
-            List<ProyectoRepositorio> reposAdd = request.getUrlsRepositorios().stream().map(url ->
-                ProyectoRepositorio.builder()
-                    .proyecto(savedProyecto)
-                    .url(url)
-                    .build()
-            ).collect(Collectors.toList());
-            proyectoRepositorioRepository.saveAll(reposAdd);
-            savedProyecto.setRepositorios(reposAdd);
-        }
-
-        // 4. Vincular evidencias huérfanas o reasignar
         if (request.getIdEvidencias() != null && !request.getIdEvidencias().isEmpty()) {
             List<EvidenciaProyecto> evidencias = evidenciaRepository.findAllById(request.getIdEvidencias());
             for (EvidenciaProyecto ev : evidencias) {
-                // Solo vincular si pertenece al mismo usuario
                 if (ev.getUsuario().getIdUsuario().equals(idUsuario)) {
-                    ev.setProyecto(savedProyecto);
+                    ev.setProyecto(saved);
                 }
             }
             evidenciaRepository.saveAll(evidencias);
-            savedProyecto.setEvidencias(evidencias);
+            saved.setEvidencias(evidencias);
         }
 
-        return toDto(savedProyecto);
+        return toDto(saved);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -124,75 +105,46 @@ public class ProyectoPersonalService {
     public ProyectoResponse obtenerProyecto(UUID idUsuario, Long idProyecto) {
         Proyecto proyecto = proyectoRepository.findById(idProyecto)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proyecto no encontrado"));
-        
         verificarPropietario(proyecto, idUsuario);
         return toDto(proyecto);
     }
 
     // ──────────────────────────────────────────────────────────────
-    // PUT /api/proyectos/{id}
+    // PUT /api/proyectos/{id}  (multipart – endpoint legacy)
     // ──────────────────────────────────────────────────────────────
     @Transactional
     public ProyectoResponse actualizarProyecto(UUID idUsuario, Long idProyecto, ProyectoRequest request, MultipartFile iconoFile) {
         Proyecto proyecto = proyectoRepository.findById(idProyecto)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proyecto no encontrado"));
-        
         verificarPropietario(proyecto, idUsuario);
 
         proyecto.setTitulo(request.getTitulo());
         proyecto.setResumen(request.getResumen());
         proyecto.setDescripcionRepositorio(request.getDescripcionRepositorio());
-        proyecto.setEnlaceProyectoDeplegado(request.getEnlaceProyectoDeplegado());
         proyecto.setEstadoPublicacion(request.getEstadoPublicacion());
         proyecto.setFechaInicio(request.getFechaInicio());
         proyecto.setFechaFin(request.getFechaFin());
         proyecto.setEsActual(request.getEsActual() != null ? request.getEsActual() : false);
         proyecto.setFechaActualizacion(LocalDateTime.now());
 
-        // 1. Manejar ícono (si viene uno nuevo, reemplaza al anterior)
         if (iconoFile != null && !iconoFile.isEmpty()) {
             try {
-                String iconoUrl = cloudinaryService.uploadImage(iconoFile, "portly/proyectos/iconos");
-                proyecto.setEnlaceIcono(iconoUrl);
+                proyecto.setEnlaceIcono(cloudinaryService.uploadImage(iconoFile, "portly/proyectos/iconos"));
             } catch (IOException e) {
                 log.error("Error subiendo ícono de proyecto: {}", e.getMessage());
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al subir el ícono nuevo");
             }
         }
 
-        // 2. Actualizar tecnologías (reemplazo completo)
         if (request.getIdHabilidades() != null) {
-            List<HabilidadCatalogo> techList = habilidadRepository.findAllById(request.getIdHabilidades());
-            proyecto.setTecnologias(techList);
+            proyecto.setTecnologias(habilidadRepository.findAllById(request.getIdHabilidades()));
         } else {
             proyecto.getTecnologias().clear();
         }
 
-        // 3. Actualizar repositorios adicionales
-        // Primero borramos los anteriores y luego insertamos los nuevos
-        proyectoRepositorioRepository.deleteByProyecto_IdProyecto(idProyecto);
-        proyecto.getRepositorios().clear();
-        
-        if (request.getUrlsRepositorios() != null && !request.getUrlsRepositorios().isEmpty()) {
-            List<ProyectoRepositorio> reposAdd = request.getUrlsRepositorios().stream().map(url ->
-                ProyectoRepositorio.builder()
-                    .proyecto(proyecto)
-                    .url(url)
-                    .build()
-            ).collect(Collectors.toList());
-            proyectoRepositorioRepository.saveAll(reposAdd);
-            proyecto.setRepositorios(reposAdd);
-        }
-
-        // 4. Actualizar evidencias
         if (request.getIdEvidencias() != null) {
-            // Desvincular todas las actuales
-            for (EvidenciaProyecto ev : proyecto.getEvidencias()) {
-                ev.setProyecto(null);
-            }
+            for (EvidenciaProyecto ev : proyecto.getEvidencias()) ev.setProyecto(null);
             proyecto.getEvidencias().clear();
-            
-            // Vincular las nuevas
             if (!request.getIdEvidencias().isEmpty()) {
                 List<EvidenciaProyecto> evidencias = evidenciaRepository.findAllById(request.getIdEvidencias());
                 for (EvidenciaProyecto ev : evidencias) {
@@ -215,19 +167,16 @@ public class ProyectoPersonalService {
     public void eliminarProyecto(UUID idUsuario, Long idProyecto) {
         Proyecto proyecto = proyectoRepository.findById(idProyecto)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proyecto no encontrado"));
-        
         verificarPropietario(proyecto, idUsuario);
 
-        // Desvincular evidencias (no se eliminan, solo se quita la FK al proyecto)
-        for (EvidenciaProyecto ev : proyecto.getEvidencias()) {
-            ev.setProyecto(null);
-        }
+        // Desvincular evidencias
+        for (EvidenciaProyecto ev : proyecto.getEvidencias()) ev.setProyecto(null);
         evidenciaRepository.saveAll(proyecto.getEvidencias());
         proyecto.getEvidencias().clear();
 
-        // Eliminar repositorios vinculados
-        proyectoRepositorioRepository.deleteByProyecto_IdProyecto(idProyecto);
-        proyecto.getRepositorios().clear();
+        // Los enlaces se eliminan en cascada (orphanRemoval = true)
+        proyectoEnlaceRepository.deleteByProyecto_IdProyecto(idProyecto);
+        proyecto.getEnlaces().clear();
 
         proyectoRepository.delete(proyecto);
         log.info("Proyecto eliminado: idProyecto={}, idUsuario={}", idProyecto, idUsuario);
@@ -240,7 +189,7 @@ public class ProyectoPersonalService {
     }
 
     // ──────────────────────────────────────────────────────────────
-    // Métodos adaptadores para el frontend (JSON)
+    // Métodos JSON para el frontend (/api/profile/proyectos)
     // ──────────────────────────────────────────────────────────────
 
     /**
@@ -249,19 +198,32 @@ public class ProyectoPersonalService {
      */
     private List<HabilidadCatalogo> resolverTecnologiasPorNombre(List<String> nombres) {
         if (nombres == null || nombres.isEmpty()) return List.of();
-
         return nombres.stream().map(nombre -> {
             String trimmed = nombre.trim();
             return habilidadRepository.findByNombreIgnoreCase(trimmed)
-                    .orElseGet(() -> {
-                        HabilidadCatalogo nueva = HabilidadCatalogo.builder()
-                                .nombre(trimmed)
-                                .categoria("General")
-                                .activo(true)
-                                .build();
-                        return habilidadRepository.save(nueva);
-                    });
+                    .orElseGet(() -> habilidadRepository.save(
+                            HabilidadCatalogo.builder()
+                                    .nombre(trimmed)
+                                    .categoria("General")
+                                    .activo(true)
+                                    .build()));
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * Construye la lista de ProyectoEnlace a partir del DTO del frontend.
+     */
+    private List<ProyectoEnlace> buildEnlaces(List<FrontProjectRequest.EnlaceDto> dtos, Proyecto proyecto) {
+        if (dtos == null || dtos.isEmpty()) return new ArrayList<>();
+        return dtos.stream()
+                .filter(e -> e.getTitulo() != null && !e.getTitulo().isBlank()
+                        && e.getUrl() != null && !e.getUrl().isBlank())
+                .map(e -> ProyectoEnlace.builder()
+                        .proyecto(proyecto)
+                        .titulo(e.getTitulo().trim())
+                        .url(e.getUrl().trim())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     /**
@@ -277,7 +239,6 @@ public class ProyectoPersonalService {
                 .titulo(req.getNombre())
                 .resumen(req.getDescripcionCorta())
                 .descripcionRepositorio(req.getDescripcionDetallada())
-                .enlaceProyectoDeplegado(req.getUrlDemo())
                 .estadoPublicacion(req.getVisibilidad() != null ? req.getVisibilidad().toUpperCase() : "PUBLICO")
                 .enlaceIcono(req.getIconoUrl())
                 .fechaInicio(req.getFechaInicio() != null ? java.time.LocalDate.parse(req.getFechaInicio()) : null)
@@ -288,39 +249,20 @@ public class ProyectoPersonalService {
                 .fechaActualizacion(LocalDateTime.now())
                 .build();
 
-        // Tecnologías (por nombre)
-        List<HabilidadCatalogo> techs = resolverTecnologiasPorNombre(req.getTecnologias());
-        proyecto.setTecnologias(techs);
+        // Tecnologías
+        proyecto.setTecnologias(resolverTecnologiasPorNombre(req.getTecnologias()));
 
         Proyecto saved = proyectoRepository.save(proyecto);
 
-        // Repositorios
-        if (req.getRepositorios() != null && !req.getRepositorios().isEmpty()) {
-            List<ProyectoRepositorio> repos = req.getRepositorios().stream()
-                    .filter(url -> url != null && !url.isBlank())
-                    .map(url -> ProyectoRepositorio.builder().proyecto(saved).url(url).build())
-                    .collect(Collectors.toList());
-            proyectoRepositorioRepository.saveAll(repos);
-            saved.setRepositorios(repos);
+        // Enlaces
+        List<ProyectoEnlace> enlaces = buildEnlaces(req.getEnlaces(), saved);
+        if (!enlaces.isEmpty()) {
+            proyectoEnlaceRepository.saveAll(enlaces);
+            saved.setEnlaces(enlaces);
         }
 
         // Evidencias
-        if (req.getEvidencias() != null && !req.getEvidencias().isEmpty()) {
-            List<Integer> ids = req.getEvidencias().stream()
-                    .map(FrontProjectRequest.EvidenceDto::getId)
-                    .filter(id -> id != null)
-                    .collect(Collectors.toList());
-            if (!ids.isEmpty()) {
-                List<EvidenciaProyecto> evidencias = evidenciaRepository.findAllById(ids);
-                for (EvidenciaProyecto ev : evidencias) {
-                    if (ev.getUsuario().getIdUsuario().equals(idUsuario)) {
-                        ev.setProyecto(saved);
-                    }
-                }
-                evidenciaRepository.saveAll(evidencias);
-                saved.setEvidencias(evidencias);
-            }
-        }
+        vincularEvidencias(req.getEvidencias(), saved, idUsuario);
 
         return toFrontDto(saved);
     }
@@ -332,13 +274,11 @@ public class ProyectoPersonalService {
     public FrontProjectResponse actualizarProyectoJson(UUID idUsuario, Long idProyecto, FrontProjectRequest req) {
         Proyecto proyecto = proyectoRepository.findById(idProyecto)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proyecto no encontrado"));
-
         verificarPropietario(proyecto, idUsuario);
 
         proyecto.setTitulo(req.getNombre());
         proyecto.setResumen(req.getDescripcionCorta());
         proyecto.setDescripcionRepositorio(req.getDescripcionDetallada());
-        proyecto.setEnlaceProyectoDeplegado(req.getUrlDemo());
         proyecto.setEstadoPublicacion(req.getVisibilidad() != null ? req.getVisibilidad().toUpperCase() : "PUBLICO");
         proyecto.setEnlaceIcono(req.getIconoUrl());
         proyecto.setFechaInicio(req.getFechaInicio() != null ? java.time.LocalDate.parse(req.getFechaInicio()) : null);
@@ -346,44 +286,22 @@ public class ProyectoPersonalService {
         proyecto.setEsActual(req.getEsActual() != null ? req.getEsActual() : false);
         proyecto.setFechaActualizacion(LocalDateTime.now());
 
-        // Tecnologías
-        List<HabilidadCatalogo> techs = resolverTecnologiasPorNombre(req.getTecnologias());
-        proyecto.setTecnologias(techs);
+        // Tecnologías (reemplazo completo)
+        proyecto.setTecnologias(resolverTecnologiasPorNombre(req.getTecnologias()));
 
-        // Repositorios (reemplazo completo)
-        proyectoRepositorioRepository.deleteByProyecto_IdProyecto(idProyecto);
-        proyecto.getRepositorios().clear();
-
-        if (req.getRepositorios() != null && !req.getRepositorios().isEmpty()) {
-            List<ProyectoRepositorio> repos = req.getRepositorios().stream()
-                    .filter(url -> url != null && !url.isBlank())
-                    .map(url -> ProyectoRepositorio.builder().proyecto(proyecto).url(url).build())
-                    .collect(Collectors.toList());
-            proyectoRepositorioRepository.saveAll(repos);
-            proyecto.getRepositorios().addAll(repos);
+        // Enlaces (reemplazo completo)
+        proyectoEnlaceRepository.deleteByProyecto_IdProyecto(idProyecto);
+        proyecto.getEnlaces().clear();
+        List<ProyectoEnlace> nuevosEnlaces = buildEnlaces(req.getEnlaces(), proyecto);
+        if (!nuevosEnlaces.isEmpty()) {
+            proyectoEnlaceRepository.saveAll(nuevosEnlaces);
+            proyecto.getEnlaces().addAll(nuevosEnlaces);
         }
 
         // Evidencias (reemplazo completo)
-        for (EvidenciaProyecto ev : proyecto.getEvidencias()) {
-            ev.setProyecto(null);
-        }
+        for (EvidenciaProyecto ev : proyecto.getEvidencias()) ev.setProyecto(null);
         proyecto.getEvidencias().clear();
-
-        if (req.getEvidencias() != null && !req.getEvidencias().isEmpty()) {
-            List<Integer> ids = req.getEvidencias().stream()
-                    .map(FrontProjectRequest.EvidenceDto::getId)
-                    .filter(id -> id != null)
-                    .collect(Collectors.toList());
-            if (!ids.isEmpty()) {
-                List<EvidenciaProyecto> evidencias = evidenciaRepository.findAllById(ids);
-                for (EvidenciaProyecto ev : evidencias) {
-                    if (ev.getUsuario().getIdUsuario().equals(idUsuario)) {
-                        ev.setProyecto(proyecto);
-                        proyecto.getEvidencias().add(ev);
-                    }
-                }
-            }
-        }
+        vincularEvidencias(req.getEvidencias(), proyecto, idUsuario);
 
         proyectoRepository.save(proyecto);
         return toFrontDto(proyecto);
@@ -400,10 +318,38 @@ public class ProyectoPersonalService {
                 .collect(Collectors.toList());
     }
 
+    // ──────────────────────────────────────────────────────────────
+    // Helpers privados
+    // ──────────────────────────────────────────────────────────────
+
+    private void vincularEvidencias(List<FrontProjectRequest.EvidenceDto> dtos, Proyecto proyecto, UUID idUsuario) {
+        if (dtos == null || dtos.isEmpty()) return;
+        List<Integer> ids = dtos.stream()
+                .map(FrontProjectRequest.EvidenceDto::getId)
+                .filter(id -> id != null)
+                .collect(Collectors.toList());
+        if (ids.isEmpty()) return;
+        List<EvidenciaProyecto> evidencias = evidenciaRepository.findAllById(ids);
+        for (EvidenciaProyecto ev : evidencias) {
+            if (ev.getUsuario().getIdUsuario().equals(idUsuario)) {
+                ev.setProyecto(proyecto);
+                proyecto.getEvidencias().add(ev);
+            }
+        }
+        evidenciaRepository.saveAll(evidencias);
+    }
+
     /**
      * Convierte entidad Proyecto al DTO del frontend.
      */
     private FrontProjectResponse toFrontDto(Proyecto p) {
+        List<FrontProjectResponse.EnlaceDto> enlaces = p.getEnlaces().stream()
+                .map(e -> FrontProjectResponse.EnlaceDto.builder()
+                        .titulo(e.getTitulo())
+                        .url(e.getUrl())
+                        .build())
+                .collect(Collectors.toList());
+
         return FrontProjectResponse.builder()
                 .id(p.getIdProyecto())
                 .nombre(p.getTitulo())
@@ -416,10 +362,7 @@ public class ProyectoPersonalService {
                         .map(HabilidadCatalogo::getNombre)
                         .collect(Collectors.toList()))
                 .visibilidad(p.getEstadoPublicacion() != null ? p.getEstadoPublicacion().toLowerCase() : "publico")
-                .urlDemo(p.getEnlaceProyectoDeplegado())
-                .repositorios(p.getRepositorios().stream()
-                        .map(ProyectoRepositorio::getUrl)
-                        .collect(Collectors.toList()))
+                .enlaces(enlaces)
                 .iconoUrl(p.getEnlaceIcono())
                 .evidencias(p.getEvidencias().stream()
                         .map(e -> FrontEvidenceResponse.builder()
@@ -440,7 +383,6 @@ public class ProyectoPersonalService {
                 .resumen(p.getResumen())
                 .descripcionRepositorio(p.getDescripcionRepositorio())
                 .enlaceIcono(p.getEnlaceIcono())
-                .enlaceProyectoDeplegado(p.getEnlaceProyectoDeplegado())
                 .estadoPublicacion(p.getEstadoPublicacion())
                 .fechaInicio(p.getFechaInicio())
                 .fechaFin(p.getFechaFin())
@@ -450,9 +392,6 @@ public class ProyectoPersonalService {
                 .fechaSincronizacion(p.getFechaSincronizacion())
                 .fechaCreacion(p.getFechaCreacion())
                 .fechaActualizacion(p.getFechaActualizacion())
-                .urlsRepositorios(p.getRepositorios().stream()
-                        .map(ProyectoRepositorio::getUrl)
-                        .collect(Collectors.toList()))
                 .tecnologias(p.getTecnologias().stream()
                         .map(t -> ProyectoResponse.HabilidadDto.builder()
                                 .idHabilidad(t.getIdHabilidad())
@@ -475,4 +414,3 @@ public class ProyectoPersonalService {
                 .build();
     }
 }
-

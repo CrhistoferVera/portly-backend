@@ -30,11 +30,16 @@ public class FrontProjectResponse {
 
     private String visibilidad;
 
-    private String urlDemo;
-
-    private List<String> repositorios;
+    private List<EnlaceDto> enlaces;
 
     private String iconoUrl;
 
     private List<FrontEvidenceResponse> evidencias;
+
+    @Data
+    @Builder
+    public static class EnlaceDto {
+        private String titulo;
+        private String url;
+    }
 }

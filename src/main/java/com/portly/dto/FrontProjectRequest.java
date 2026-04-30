@@ -32,10 +32,8 @@ public class FrontProjectRequest {
     /** "publico" o "privado" */
     private String visibilidad;
 
-    private String urlDemo;
-
-    /** URLs de repositorios */
-    private List<String> repositorios = new ArrayList<>();
+    /** Enlaces del proyecto */
+    private List<EnlaceDto> enlaces = new ArrayList<>();
 
     private String iconoUrl;
 
@@ -49,5 +47,11 @@ public class FrontProjectRequest {
         private String url;
         private String tipo;
         private Long pesoBytes;
+    }
+
+    @Data
+    public static class EnlaceDto {
+        private String titulo;
+        private String url;
     }
 }

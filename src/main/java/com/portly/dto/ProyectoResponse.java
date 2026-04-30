@@ -16,7 +16,7 @@ public class ProyectoResponse {
     private String resumen;
     private String descripcionRepositorio;
     private String enlaceIcono;
-    private String enlaceProyectoDeplegado;
+
     private String estadoPublicacion;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
@@ -27,8 +27,7 @@ public class ProyectoResponse {
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
 
-    /** URLs de repositorios del proyecto */
-    private List<String> urlsRepositorios;
+
 
     /** Tecnologías del catálogo */
     private List<HabilidadDto> tecnologias;
