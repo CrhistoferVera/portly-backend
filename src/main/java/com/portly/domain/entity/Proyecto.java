@@ -107,4 +107,9 @@ public class Proyecto {
     @OneToMany(mappedBy = "proyecto", fetch = FetchType.LAZY)
     @Builder.Default
     private List<EvidenciaProyecto> evidencias = new ArrayList<>();
+
+    /** Documentos nativos vinculados a este proyecto */
+    @OneToMany(mappedBy = "proyecto", fetch = FetchType.LAZY)
+    @Builder.Default
+    private List<DocumentoProyecto> documentos = new ArrayList<>();
 }

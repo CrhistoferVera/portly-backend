@@ -3,7 +3,9 @@ package com.portly.controller;
 import com.portly.dto.EvidenciaProyectoResponse;
 import com.portly.dto.FrontProjectRequest;
 import com.portly.dto.FrontProjectResponse;
+import com.portly.dto.DocumentoProyectoResponse;
 import com.portly.service.CloudinaryService;
+import com.portly.service.DocumentoProyectoService;
 import com.portly.service.EvidenciaProyectoService;
 import com.portly.service.ProyectoPersonalService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class ProfileProyectoController {
 
     private final ProyectoPersonalService proyectoService;
     private final EvidenciaProyectoService evidenciaService;
+    private final DocumentoProyectoService documentoService;
     private final CloudinaryService cloudinaryService;
 
     // ── Proyectos CRUD ──────────────────────────────────────────────
@@ -97,5 +100,25 @@ public class ProfileProyectoController {
             @RequestParam("file") MultipartFile file) throws IOException {
         String url = cloudinaryService.uploadImage(file, "portly/proyectos/iconos");
         return ResponseEntity.ok(Map.of("url", url));
+    }
+
+    // ── Documentos (subida de PDF, DOC, DOCX) ───────────────────────
+
+    @PostMapping(value = "/documentos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<DocumentoProyectoResponse> subirDocumento(
+            Authentication auth,
+            @RequestParam("file") MultipartFile file) {
+        UUID idUsuario = (UUID) auth.getPrincipal();
+        DocumentoProyectoResponse response = documentoService.subirDocumento(idUsuario, file);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @DeleteMapping("/documentos/{id}")
+    public ResponseEntity<Void> eliminarDocumento(
+            Authentication auth,
+            @PathVariable Integer id) {
+        UUID idUsuario = (UUID) auth.getPrincipal();
+        documentoService.eliminarDocumento(idUsuario, id);
+        return ResponseEntity.noContent().build();
     }
 }

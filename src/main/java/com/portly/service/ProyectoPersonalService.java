@@ -4,6 +4,7 @@ import com.portly.domain.entity.*;
 import com.portly.domain.repository.*;
 import com.portly.dto.EvidenciaProyectoResponse;
 import com.portly.dto.FrontEvidenceResponse;
+import com.portly.dto.FrontDocumentResponse;
 import com.portly.dto.FrontProjectRequest;
 import com.portly.dto.FrontProjectResponse;
 import com.portly.dto.ProyectoRequest;
@@ -33,6 +34,7 @@ public class ProyectoPersonalService {
     private final HabilidadCatalogoRepository habilidadRepository;
     private final ProyectoEnlaceRepository proyectoEnlaceRepository;
     private final EvidenciaProyectoRepository evidenciaRepository;
+    private final DocumentoProyectoRepository documentoRepository;
     private final CloudinaryService cloudinaryService;
 
     // ──────────────────────────────────────────────────────────────
@@ -174,6 +176,11 @@ public class ProyectoPersonalService {
         evidenciaRepository.saveAll(proyecto.getEvidencias());
         proyecto.getEvidencias().clear();
 
+        // Desvincular documentos
+        for (DocumentoProyecto doc : proyecto.getDocumentos()) doc.setProyecto(null);
+        documentoRepository.saveAll(proyecto.getDocumentos());
+        proyecto.getDocumentos().clear();
+
         // Los enlaces se eliminan en cascada (orphanRemoval = true)
         proyectoEnlaceRepository.deleteByProyecto_IdProyecto(idProyecto);
         proyecto.getEnlaces().clear();
@@ -241,8 +248,8 @@ public class ProyectoPersonalService {
                 .descripcionRepositorio(req.getDescripcionDetallada())
                 .estadoPublicacion(req.getVisibilidad() != null ? req.getVisibilidad().toUpperCase() : "PUBLICO")
                 .enlaceIcono(req.getIconoUrl())
-                .fechaInicio(req.getFechaInicio() != null ? java.time.LocalDate.parse(req.getFechaInicio()) : null)
-                .fechaFin(req.getFechaFin() != null ? java.time.LocalDate.parse(req.getFechaFin()) : null)
+                .fechaInicio(req.getFechaInicio() != null && !req.getFechaInicio().isBlank() ? java.time.LocalDate.parse(req.getFechaInicio()) : null)
+                .fechaFin(req.getFechaFin() != null && !req.getFechaFin().isBlank() ? java.time.LocalDate.parse(req.getFechaFin()) : null)
                 .esActual(req.getEsActual() != null ? req.getEsActual() : false)
                 .importadoDesdeGithub(false)
                 .fechaCreacion(LocalDateTime.now())
@@ -264,6 +271,9 @@ public class ProyectoPersonalService {
         // Evidencias
         vincularEvidencias(req.getEvidencias(), saved, idUsuario);
 
+        // Documentos
+        vincularDocumentos(req.getDocumentos(), saved, idUsuario);
+
         return toFrontDto(saved);
     }
 
@@ -281,8 +291,8 @@ public class ProyectoPersonalService {
         proyecto.setDescripcionRepositorio(req.getDescripcionDetallada());
         proyecto.setEstadoPublicacion(req.getVisibilidad() != null ? req.getVisibilidad().toUpperCase() : "PUBLICO");
         proyecto.setEnlaceIcono(req.getIconoUrl());
-        proyecto.setFechaInicio(req.getFechaInicio() != null ? java.time.LocalDate.parse(req.getFechaInicio()) : null);
-        proyecto.setFechaFin(req.getFechaFin() != null ? java.time.LocalDate.parse(req.getFechaFin()) : null);
+        proyecto.setFechaInicio(req.getFechaInicio() != null && !req.getFechaInicio().isBlank() ? java.time.LocalDate.parse(req.getFechaInicio()) : null);
+        proyecto.setFechaFin(req.getFechaFin() != null && !req.getFechaFin().isBlank() ? java.time.LocalDate.parse(req.getFechaFin()) : null);
         proyecto.setEsActual(req.getEsActual() != null ? req.getEsActual() : false);
         proyecto.setFechaActualizacion(LocalDateTime.now());
 
@@ -302,6 +312,11 @@ public class ProyectoPersonalService {
         for (EvidenciaProyecto ev : proyecto.getEvidencias()) ev.setProyecto(null);
         proyecto.getEvidencias().clear();
         vincularEvidencias(req.getEvidencias(), proyecto, idUsuario);
+
+        // Documentos (reemplazo completo)
+        for (DocumentoProyecto doc : proyecto.getDocumentos()) doc.setProyecto(null);
+        proyecto.getDocumentos().clear();
+        vincularDocumentos(req.getDocumentos(), proyecto, idUsuario);
 
         proyectoRepository.save(proyecto);
         return toFrontDto(proyecto);
@@ -339,6 +354,23 @@ public class ProyectoPersonalService {
         evidenciaRepository.saveAll(evidencias);
     }
 
+    private void vincularDocumentos(List<FrontProjectRequest.DocumentDto> dtos, Proyecto proyecto, UUID idUsuario) {
+        if (dtos == null || dtos.isEmpty()) return;
+        List<Integer> ids = dtos.stream()
+                .map(FrontProjectRequest.DocumentDto::getId)
+                .filter(id -> id != null)
+                .collect(Collectors.toList());
+        if (ids.isEmpty()) return;
+        List<DocumentoProyecto> documentos = documentoRepository.findAllById(ids);
+        for (DocumentoProyecto doc : documentos) {
+            if (doc.getUsuario().getIdUsuario().equals(idUsuario)) {
+                doc.setProyecto(proyecto);
+                proyecto.getDocumentos().add(doc);
+            }
+        }
+        documentoRepository.saveAll(documentos);
+    }
+
     /**
      * Convierte entidad Proyecto al DTO del frontend.
      */
@@ -371,6 +403,15 @@ public class ProyectoPersonalService {
                                 .url(e.getEnlaceEvidencia())
                                 .tipo(e.getFormato())
                                 .pesoBytes(e.getTamanoBytes())
+                                .build())
+                        .collect(Collectors.toList()))
+                .documentos(p.getDocumentos().stream()
+                        .map(d -> FrontDocumentResponse.builder()
+                                .id(d.getIdDocumentoProyecto())
+                                .nombre(d.getNombreOriginal())
+                                .urlDescarga("/api/public/documentos/" + d.getIdDocumentoProyecto() + "/descargar")
+                                .tipo(d.getFormato())
+                                .pesoBytes(d.getTamanoBytes())
                                 .build())
                         .collect(Collectors.toList()))
                 .build();

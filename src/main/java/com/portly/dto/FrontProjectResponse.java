@@ -36,6 +36,8 @@ public class FrontProjectResponse {
 
     private List<FrontEvidenceResponse> evidencias;
 
+    private List<FrontDocumentResponse> documentos;
+
     @Data
     @Builder
     public static class EnlaceDto {

@@ -40,6 +40,9 @@ public class FrontProjectRequest {
     /** Evidencias ya subidas (con id) */
     private List<EvidenceDto> evidencias = new ArrayList<>();
 
+    /** Documentos ya subidos (con id) */
+    private List<DocumentDto> documentos = new ArrayList<>();
+
     @Data
     public static class EvidenceDto {
         private Integer id;
@@ -53,5 +56,14 @@ public class FrontProjectRequest {
     public static class EnlaceDto {
         private String titulo;
         private String url;
+    }
+
+    @Data
+    public static class DocumentDto {
+        private Integer id;
+        private String nombre;
+        private String urlDescarga;
+        private String tipo;
+        private Long pesoBytes;
     }
 }

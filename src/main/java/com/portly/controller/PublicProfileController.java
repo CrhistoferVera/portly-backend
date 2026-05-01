@@ -3,7 +3,11 @@ package com.portly.controller;
 import com.portly.domain.entity.*;
 import com.portly.domain.repository.*;
 import com.portly.dto.PublicProfesionalResponse;
+import com.portly.service.DocumentoProyectoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +26,7 @@ public class PublicProfileController {
     private final HabilidadBlandaRepository    habilidadBlandaRepository;
     private final ExperienciaLaboralRepository experienciaRepository;
     private final FormacionAcademicaRepository formacionRepository;
+    private final DocumentoProyectoService     documentoService;
 
     @GetMapping("/profesionales")
     public ResponseEntity<List<PublicProfesionalResponse>> listarProfesionales() {
@@ -132,5 +137,25 @@ public class PublicProfileController {
 
     private boolean bool(Boolean value) {
         return value == null || value;
+    }
+
+    @GetMapping("/documentos/{id}/descargar")
+    public ResponseEntity<Resource> descargarDocumentoPublico(@PathVariable Integer id) {
+        Resource resource = documentoService.cargarDocumentoComoRecurso(id);
+        DocumentoProyecto documento = documentoService.obtenerDocumentoEntity(id);
+
+        String contentType = "application/octet-stream";
+        if (documento.getFormato().equalsIgnoreCase("pdf")) {
+            contentType = "application/pdf";
+        } else if (documento.getFormato().equalsIgnoreCase("doc")) {
+            contentType = "application/msword";
+        } else if (documento.getFormato().equalsIgnoreCase("docx")) {
+            contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + documento.getNombreOriginal() + "\"")
+                .body(resource);
     }
 }
