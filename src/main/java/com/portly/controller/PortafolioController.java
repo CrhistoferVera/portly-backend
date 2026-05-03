@@ -55,6 +55,14 @@ public class PortafolioController {
         return ResponseEntity.ok(portafolioService.updateVisibilidad(usuarioId, id, request));
     }
 
+    @PutMapping("/{id}/publicar")
+    public ResponseEntity<PortafolioResponse> publicar(
+            Authentication authentication,
+            @PathVariable UUID id) {
+        UUID usuarioId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(portafolioService.publicar(usuarioId, id));
+    }
+
     @GetMapping("/{id}/publica")
     public ResponseEntity<PortafolioPublicoResponse> getPublico(
             Authentication authentication,

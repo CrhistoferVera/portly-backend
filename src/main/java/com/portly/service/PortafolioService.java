@@ -124,6 +124,25 @@ public class PortafolioService {
         return toResponse(portafolio);
     }
 
+    /** Cambia la visibilidad del portafolio a PUBLICO. */
+    @Transactional
+    public PortafolioResponse publicar(UUID idUsuario, UUID idPortafolio) {
+        Portafolio portafolio = portafolioRepository.findById(idPortafolio)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Portafolio no encontrado"));
+
+        if (!portafolio.getUsuario().getIdUsuario().equals(idUsuario)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "No tienes permiso para publicar este portafolio");
+        }
+
+        portafolio.setVisibilidad("PUBLICO");
+        portafolioRepository.save(portafolio);
+        log.info("Portafolio publicado: idPortafolio={}, idUsuario={}", idPortafolio, idUsuario);
+
+        return toResponse(portafolio);
+    }
+
     /** Obtiene el portafolio público con toda su data, aplicando filtros de visibilidad. */
     @Transactional(readOnly = true)
     public PortafolioPublicoResponse getPublico(String identifier, org.springframework.security.core.Authentication authentication) {
