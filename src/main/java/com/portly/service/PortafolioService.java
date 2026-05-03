@@ -158,6 +158,10 @@ public class PortafolioService {
         boolean showEmail      = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarCorreo());
         boolean showProfession = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarProfesion());
         boolean showBio        = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarBiografia());
+        boolean showPhone      = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarTelefono());
+        boolean showCountry    = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarPais());
+        boolean showLinkedin   = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarLinkedin());
+        boolean showGithub     = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarGithub());
         boolean showInstagram  = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarInstagram());
         boolean showFacebook   = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarFacebook());
         boolean showYoutube    = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarYoutube());
@@ -203,13 +207,13 @@ public class PortafolioService {
                         .descripcion(showBio && perfil != null ? perfil.getAcercaDeMi() : null)
                         .avatarUrl(perfil != null ? perfil.getEnlaceFoto() : "")
                         .email(showEmail ? u.getEmail() : null)
-                        .telefono(telefono)
-                        .pais(perfil != null ? perfil.getPais() : null)
+                        .telefono(showPhone ? telefono : null)
+                        .pais(showCountry && perfil != null ? perfil.getPais() : null)
                         .instagram(showInstagram ? redes.get("instagram") : null)
                         .facebook(showFacebook ? redes.get("facebook") : null)
                         .youtube(showYoutube ? redes.get("youtube") : null)
-                        .linkedin(redes.get("linkedin"))
-                        .github(redes.get("github"))
+                        .linkedin(showLinkedin ? redes.get("linkedin") : null)
+                        .github(showGithub ? redes.get("github") : null)
                         .build())
                 .skills(showTechSkills
                         ? u.getHabilidades().stream()

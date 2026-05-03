@@ -87,6 +87,22 @@ public class PerfilUsuario {
     private Boolean mostrarYoutube = true;
 
     @Builder.Default
+    @Column(name = "mostrar_telefono")
+    private Boolean mostrarTelefono = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_pais")
+    private Boolean mostrarPais = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_linkedin")
+    private Boolean mostrarLinkedin = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_github")
+    private Boolean mostrarGithub = true;
+
+    @Builder.Default
     @Column(name = "mostrar_habilidades_tecnicas")
     private Boolean mostrarHabilidadesTecnicas = true;
 

@@ -36,6 +36,10 @@ public class UsuarioProfileResponse {
     private Boolean mostrarCorreo;
     private Boolean mostrarProfesion;
     private Boolean mostrarBiografia;
+    private Boolean mostrarTelefono;
+    private Boolean mostrarPais;
+    private Boolean mostrarLinkedin;
+    private Boolean mostrarGithub;
     private Boolean mostrarInstagram;
     private Boolean mostrarFacebook;
     private Boolean mostrarYoutube;

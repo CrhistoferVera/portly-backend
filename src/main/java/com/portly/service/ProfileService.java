@@ -81,6 +81,18 @@ public class ProfileService {
         if (request.getMostrarBiografia() != null) {
             perfil.setMostrarBiografia(request.getMostrarBiografia());
         }
+        if (request.getMostrarTelefono() != null) {
+            perfil.setMostrarTelefono(request.getMostrarTelefono());
+        }
+        if (request.getMostrarPais() != null) {
+            perfil.setMostrarPais(request.getMostrarPais());
+        }
+        if (request.getMostrarLinkedin() != null) {
+            perfil.setMostrarLinkedin(request.getMostrarLinkedin());
+        }
+        if (request.getMostrarGithub() != null) {
+            perfil.setMostrarGithub(request.getMostrarGithub());
+        }
         if (request.getMostrarInstagram() != null) {
             perfil.setMostrarInstagram(request.getMostrarInstagram());
         }
@@ -331,6 +343,10 @@ public class ProfileService {
                 .mostrarCorreo(perfil != null && perfil.getMostrarCorreo() != null ? perfil.getMostrarCorreo() : true)
                 .mostrarProfesion(perfil != null && perfil.getMostrarProfesion() != null ? perfil.getMostrarProfesion() : true)
                 .mostrarBiografia(perfil != null && perfil.getMostrarBiografia() != null ? perfil.getMostrarBiografia() : true)
+                .mostrarTelefono(perfil != null && perfil.getMostrarTelefono() != null ? perfil.getMostrarTelefono() : true)
+                .mostrarPais(perfil != null && perfil.getMostrarPais() != null ? perfil.getMostrarPais() : true)
+                .mostrarLinkedin(perfil != null && perfil.getMostrarLinkedin() != null ? perfil.getMostrarLinkedin() : true)
+                .mostrarGithub(perfil != null && perfil.getMostrarGithub() != null ? perfil.getMostrarGithub() : true)
                 .mostrarInstagram(perfil != null && perfil.getMostrarInstagram() != null ? perfil.getMostrarInstagram() : true)
                 .mostrarFacebook(perfil != null && perfil.getMostrarFacebook() != null ? perfil.getMostrarFacebook() : true)
                 .mostrarYoutube(perfil != null && perfil.getMostrarYoutube() != null ? perfil.getMostrarYoutube() : true)
