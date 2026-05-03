@@ -29,6 +29,13 @@ public class PortafolioPublicoResponse {
         private String descripcion;
         private String avatarUrl;
         private String email;
+        private String telefono;
+        private String pais;
+        private String instagram;
+        private String facebook;
+        private String youtube;
+        private String linkedin;
+        private String github;
     }
     
     @Getter @Builder public static class SkillPublica {
@@ -46,10 +53,16 @@ public class PortafolioPublicoResponse {
         private Long id;
         private String nombreEmpresa;
         private String cargo;
+        private String modalidadTrabajo;
         private String fechaInicio;
         private String fechaFin;
         private boolean actualmenteTrabajando;
         private String descripcion;
+        private java.util.List<String> funcionesPrincipales;
+        private java.util.List<String> logros;
+        private String correoJefe;
+        private String numeroJefe;
+        private String cargoJefe;
     }
 
     @Getter @Builder public static class ProyectoPublico {
@@ -70,5 +83,6 @@ public class PortafolioPublicoResponse {
         private String fechaFinalizacion;
         private boolean actualmenteEstudiando;
         private String nivel;
+        private String descripcion;
     }
 }

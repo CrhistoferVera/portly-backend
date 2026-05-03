@@ -54,4 +54,7 @@ public class Portafolio {
 
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
+
+    @Column(name = "configuracion_visibilidad", columnDefinition = "TEXT")
+    private String configuracionVisibilidad;
 }

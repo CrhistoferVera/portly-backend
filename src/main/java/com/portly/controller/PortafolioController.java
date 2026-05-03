@@ -3,6 +3,7 @@ package com.portly.controller;
 import com.portly.dto.PortafolioRequest;
 import com.portly.dto.PortafolioResponse;
 import com.portly.dto.PortafolioPublicoResponse;
+import com.portly.dto.VisibilidadItemsRequest;
 import com.portly.service.PortafolioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +22,12 @@ public class PortafolioController {
 
     private final PortafolioService portafolioService;
 
-    // GET /api/portafolios — obtener todos los portafolios del usuario autenticado
     @GetMapping
     public ResponseEntity<List<PortafolioResponse>> getAll(Authentication authentication) {
         UUID usuarioId = (UUID) authentication.getPrincipal();
         return ResponseEntity.ok(portafolioService.getAll(usuarioId));
     }
 
-    // POST /api/portafolios — crear un nuevo portafolio
     @PostMapping
     public ResponseEntity<PortafolioResponse> create(
             Authentication authentication,
@@ -38,7 +37,6 @@ public class PortafolioController {
                 .body(portafolioService.create(usuarioId, request));
     }
 
-    // DELETE /api/portafolios/{id} — eliminar un portafolio
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             Authentication authentication,
@@ -48,7 +46,15 @@ public class PortafolioController {
         return ResponseEntity.noContent().build();
     }
 
-    // GET /api/portafolios/{id}/publica — endpoint público
+    @PutMapping("/{id}/visibilidad")
+    public ResponseEntity<PortafolioResponse> updateVisibilidad(
+            Authentication authentication,
+            @PathVariable UUID id,
+            @RequestBody VisibilidadItemsRequest request) {
+        UUID usuarioId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(portafolioService.updateVisibilidad(usuarioId, id, request));
+    }
+
     @GetMapping("/{id}/publica")
     public ResponseEntity<PortafolioPublicoResponse> getPublico(
             Authentication authentication,

@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface RedesSocialesRepository extends JpaRepository<RedesSociales, Integer> {
     Optional<RedesSociales> findByPerfilUsuario_IdPerfilUsuarioAndNombre(Integer idPerfilUsuario, String nombre);
     List<RedesSociales> findByPerfilUsuario_Usuario_Email(String email);
+    List<RedesSociales> findAllByPerfilUsuario_IdPerfilUsuario(Integer idPerfilUsuario);
 }
