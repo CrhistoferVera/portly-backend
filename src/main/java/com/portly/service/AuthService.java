@@ -130,7 +130,7 @@ public class AuthService {
         log.info("Código de recuperación enviado: email={}", email);
     }
 
-    public void verificarCodigo(String email, String codigo) {
+    public AuthResponse verificarCodigo(String email, String codigo) {
         Usuario usuario = buscarUsuarioPorEmail(email);
 
         CodigoRecuperacion codigoGuardado = codigoRecuperacionRepository.findByCodigoAndUsuario_IdUsuario(codigo, usuario.getIdUsuario())
@@ -143,6 +143,10 @@ public class AuthService {
             log.warn("Código de recuperación expirado: email={}", email);
             throw new CodeExpiredException();
         }
+
+        codigoRecuperacionRepository.deleteByUsuario_IdUsuario(usuario.getIdUsuario());
+
+        return generateTokenResponse(usuario);
     }
 
     public boolean checkOAuthAccountWithoutPassword(String email) {
