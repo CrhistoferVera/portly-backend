@@ -155,7 +155,7 @@ public class PublicProfileController {
 
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + documento.getNombreOriginal() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + documento.getNombreOriginal() + "\"")
                 .body(resource);
     }
 }

@@ -13,6 +13,10 @@ import java.util.Map;
 @Service
 public class CloudinaryService {
 
+    private static final String PARAM_FOLDER        = "folder";
+    private static final String PARAM_RESOURCE_TYPE = "resource_type";
+    private static final String PARAM_SECURE_URL    = "secure_url";
+
     private final Cloudinary cloudinary;
 
     public CloudinaryService(
@@ -35,12 +39,12 @@ public class CloudinaryService {
         Map<?, ?> result = cloudinary.uploader().upload(
                 file.getBytes(),
                 ObjectUtils.asMap(
-                        "folder", folder,
-                        "resource_type", "image",
+                        PARAM_FOLDER, folder,
+                        PARAM_RESOURCE_TYPE, "image",
                         "overwrite", true
                 )
         );
-        return (String) result.get("secure_url");
+        return (String) result.get(PARAM_SECURE_URL);
     }
 
     /**
@@ -52,15 +56,15 @@ public class CloudinaryService {
         Map<?, ?> result = cloudinary.uploader().upload(
                 file.getBytes(),
                 ObjectUtils.asMap(
-                        "folder", folder,
-                        "resource_type", "image",
+                        PARAM_FOLDER, folder,
+                        PARAM_RESOURCE_TYPE, "image",
                         "use_filename", true,
                         "unique_filename", true
                 )
         );
 
         String publicId  = (String) result.get("public_id");
-        String secureUrl = (String) result.get("secure_url");
+        String secureUrl = (String) result.get(PARAM_SECURE_URL);
         Number bytes     = (Number) result.get("bytes");
         String format    = (String) result.get("format");
 
@@ -82,6 +86,22 @@ public class CloudinaryService {
      */
     public void deleteImage(String publicId) throws IOException {
         cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+    }
+
+    /**
+     * Sube un archivo raw (PDF, DOC, DOCX) y devuelve la URL segura.
+     */
+    public String uploadRawFile(MultipartFile file, String folder) throws IOException {
+        Map<?, ?> result = cloudinary.uploader().upload(
+                file.getBytes(),
+                ObjectUtils.asMap(
+                        PARAM_FOLDER, folder,
+                        PARAM_RESOURCE_TYPE, "raw",
+                        "use_filename", true,
+                        "unique_filename", true
+                )
+        );
+        return (String) result.get(PARAM_SECURE_URL);
     }
 }
 
