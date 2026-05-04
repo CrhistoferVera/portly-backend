@@ -130,6 +130,7 @@ public class AuthService {
         log.info("Código de recuperación enviado: email={}", email);
     }
 
+    @Transactional
     public AuthResponse verificarCodigo(String email, String codigo) {
         Usuario usuario = buscarUsuarioPorEmail(email);
 
