@@ -7,7 +7,6 @@ import com.portly.domain.repository.UsuarioRepository;
 import com.portly.dto.DocumentoProyectoResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
@@ -25,7 +24,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,12 +32,11 @@ public class DocumentoProyectoService {
 
     private static final long MAX_SIZE_BYTES = 10L * 1024 * 1024; // 10MB
     private static final Set<String> FORMATOS_PERMITIDOS = Set.of("pdf", "doc", "docx");
+    private static final String DOCUMENTO_NO_ENCONTRADO = "Documento no encontrado";
 
     private final DocumentoProyectoRepository documentoRepository;
     private final UsuarioRepository usuarioRepository;
-
-    @Value("${portly.storage.documents.path}")
-    private String storagePath;
+    private final CloudinaryService cloudinaryService;
 
     @Transactional
     public DocumentoProyectoResponse subirDocumento(UUID idUsuario, MultipartFile file) {
@@ -59,31 +56,21 @@ public class DocumentoProyectoService {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
-        // Asegurar que el directorio existe (ruta absoluta para evitar problemas con transferTo)
-        Path directory = Paths.get(storagePath).toAbsolutePath().normalize();
+        String cloudinaryUrl;
         try {
-            if (!Files.exists(directory)) {
-                Files.createDirectories(directory);
+            cloudinaryUrl = cloudinaryService.uploadRawFile(file, "portly/documentos");
+            if (cloudinaryUrl == null) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al guardar el archivo");
             }
         } catch (IOException e) {
-            log.error("No se pudo crear el directorio de almacenamiento", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor al crear directorio");
-        }
-
-        String uniqueFilename = UUID.randomUUID().toString() + "_" + file.getOriginalFilename().replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
-        Path filePath = directory.resolve(uniqueFilename);
-
-        try {
-            file.transferTo(filePath.toFile());
-        } catch (IOException e) {
-            log.error("Error al guardar archivo en disco: {}", e.getMessage(), e);
+            log.error("Error al subir documento a Cloudinary: {}", e.getMessage(), e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al guardar el archivo");
         }
 
         DocumentoProyecto documento = DocumentoProyecto.builder()
                 .usuario(usuario)
                 .nombreOriginal(file.getOriginalFilename() != null ? file.getOriginalFilename() : "documento")
-                .rutaLocal(filePath.toString())
+                .rutaLocal(cloudinaryUrl)
                 .formato(extension)
                 .tamanoBytes(file.getSize())
                 .fechaSubida(LocalDateTime.now())
@@ -103,24 +90,25 @@ public class DocumentoProyectoService {
         return documentoRepository.findByUsuario_IdUsuarioOrderByFechaSubidaDesc(idUsuario)
                 .stream()
                 .map(this::toDto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional
     public void eliminarDocumento(UUID idUsuario, Integer idDocumento) {
         DocumentoProyecto documento = documentoRepository.findById(idDocumento)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DOCUMENTO_NO_ENCONTRADO));
 
         if (!documento.getUsuario().getIdUsuario().equals(idUsuario)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para eliminar este documento");
         }
 
-        try {
-            Path filePath = Paths.get(documento.getRutaLocal());
-            Files.deleteIfExists(filePath);
-        } catch (IOException e) {
-            log.error("Error al eliminar el archivo físico: {}", e.getMessage());
-            // Se continua para borrar de DB aunque el archivo fisico no exista
+        String ruta = documento.getRutaLocal();
+        if (ruta != null && !ruta.startsWith("http")) {
+            try {
+                Files.deleteIfExists(Paths.get(ruta));
+            } catch (IOException e) {
+                log.error("Error al eliminar el archivo físico: {}", e.getMessage());
+            }
         }
 
         documentoRepository.delete(documento);
@@ -129,13 +117,18 @@ public class DocumentoProyectoService {
 
     public Resource cargarDocumentoComoRecurso(Integer idDocumento) {
         DocumentoProyecto documento = documentoRepository.findById(idDocumento)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DOCUMENTO_NO_ENCONTRADO));
 
         try {
-            Path filePath = Paths.get(documento.getRutaLocal());
-            Resource resource = new UrlResource(filePath.toUri());
+            Resource resource;
+            String ruta = documento.getRutaLocal();
+            if (ruta != null && ruta.startsWith("http")) {
+                resource = new UrlResource(ruta);
+            } else {
+                resource = new UrlResource(Paths.get(ruta).toUri());
+            }
 
-            if (resource.exists() || resource.isReadable()) {
+            if (resource.exists() && resource.isReadable()) {
                 return resource;
             } else {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se pudo leer el archivo");
@@ -144,17 +137,20 @@ public class DocumentoProyectoService {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error en la ruta del archivo", e);
         }
     }
-    
+
     public DocumentoProyecto obtenerDocumentoEntity(Integer idDocumento) {
         return documentoRepository.findById(idDocumento)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Documento no encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, DOCUMENTO_NO_ENCONTRADO));
     }
 
     private DocumentoProyectoResponse toDto(DocumentoProyecto d) {
+        String urlDescarga = d.getRutaLocal() != null && d.getRutaLocal().startsWith("http")
+                ? d.getRutaLocal()
+                : "/api/public/documentos/" + d.getIdDocumentoProyecto() + "/descargar";
         return DocumentoProyectoResponse.builder()
                 .idDocumentoProyecto(d.getIdDocumentoProyecto())
                 .nombreOriginal(d.getNombreOriginal())
-                .urlDescarga("/api/public/documentos/" + d.getIdDocumentoProyecto() + "/descargar")
+                .urlDescarga(urlDescarga)
                 .formato(d.getFormato())
                 .tamanoBytes(d.getTamanoBytes())
                 .fechaSubida(d.getFechaSubida())

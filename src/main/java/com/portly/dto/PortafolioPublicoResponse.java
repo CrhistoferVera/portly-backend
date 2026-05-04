@@ -73,6 +73,22 @@ public class PortafolioPublicoResponse {
         private List<String> tecnologias;
         private String urlDemo;
         private String iconoUrl;
+        private List<String> evidencias;
+        private List<EnlacePublico> enlaces;
+        private List<DocumentoPublico> documentos;
+    }
+
+    @Getter @Builder public static class EnlacePublico {
+        private String titulo;
+        private String url;
+    }
+
+    @Getter @Builder public static class DocumentoPublico {
+        private Integer id;
+        private String nombre;
+        private String urlDescarga;
+        private String formato;
+        private Long pesoBytes;
     }
 
     @Getter @Builder public static class FormacionPublica {
