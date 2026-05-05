@@ -14,5 +14,7 @@ public interface PortafolioRepository extends JpaRepository<Portafolio, UUID> {
 
     boolean existsByUrlPublica(String urlPublica);
 
+    boolean existsByUsuario_IdUsuarioAndNombreIgnoreCase(UUID idUsuario, String nombre);
+
     java.util.Optional<Portafolio> findByUrlPublicaEndingWith(String suffix);
 }

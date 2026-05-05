@@ -209,9 +209,9 @@ public class AuthController {
     }
 
     @PostMapping("/verify-code")
-    public ResponseEntity<?> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
-        authService.verificarCodigo(request.getEmail(), request.getCodigo());
-        return ResponseEntity.ok(Map.of("message", "Código verificado correctamente."));
+    public ResponseEntity<AuthResponse> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
+        AuthResponse response = authService.verificarCodigo(request.getEmail(), request.getCodigo());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/reset-password")
