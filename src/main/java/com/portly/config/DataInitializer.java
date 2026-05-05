@@ -4,6 +4,7 @@ import com.portly.domain.entity.Plantilla;
 import com.portly.domain.entity.TemplateSchema;
 import com.portly.domain.entity.TemplateSection;
 import com.portly.domain.repository.PlantillaRepository;
+import com.portly.domain.repository.PortafolioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -11,7 +12,6 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 import java.util.function.UnaryOperator;
 
 @Slf4j
@@ -30,6 +30,7 @@ public class DataInitializer implements ApplicationRunner {
     private static final String TAG_BRUTALISTA = "Brutalista";
 
     private final PlantillaRepository plantillaRepository;
+    private final PortafolioRepository portafolioRepository;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -37,107 +38,21 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void sembrarPlantillas() {
+        eliminarPlantillasObsoletas();
 
-        // ── Plantilla 1: Brutalist Architect ──────────────────────────────────
-        String idBrutalist = "template-brutalist-architect";
-        TemplateSchema schemaBrutalist = TemplateSchema.builder()
-                .colorScheme("brutalist-dark")
-                .fontFamily("Space Mono")
-                .sections(List.of(
-                        TemplateSection.builder().type(S_HERO)      .title("Presentación")          .visible(true).order(0).build(),
-                        TemplateSection.builder().type(S_SKILLS)    .title("Stack Tecnológico")      .visible(true).order(1).build(),
-                        TemplateSection.builder().type(S_SOFTSKILLS).title("Capacidades")            .visible(true).order(2).build(),
-                        TemplateSection.builder().type(S_EXPERIENCE).title("Trayectoria")            .visible(true).order(3).build(),
-                        TemplateSection.builder().type(S_EDUCATION) .title("Formación Académica")    .visible(true).order(4).build(),
-                        TemplateSection.builder().type(S_PROJECTS)  .title("Trabajos Seleccionados") .visible(true).order(5).build(),
-                        TemplateSection.builder().type(S_ABOUT)     .title("Filosofía")              .visible(true).order(6).build(),
-                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")               .visible(true).order(7).build()
-                ))
-                .build();
-
-        upsertPlantilla(idBrutalist, p -> {
-            if (p == null) {
-                return Plantilla.builder()
-                        .idPlantilla(idBrutalist)
-                        .nombre("Brutalist Architect")
-                        .descripcion(
-                                "Diseño brutalista de alto impacto con tipografía monoespaciada, bloques de color " +
-                                "negro, blanco y amarillo intenso. Ideal para desarrolladores senior y arquitectos " +
-                                "de software que quieren transmitir autoridad técnica y un estilo visual sin concesiones."
-                        )
-                        .etiquetas(List.of(TAG_BRUTALISTA, "Tech", "Desarrollador", "Dark", "Impactante"))
-                        .imagenVistaPrevia("")
-                        .urlVistaPrevia("")
-                        .cantidadSecciones(8)
-                        .impacto("3.4k")
-                        .tiempoConfiguracion("3 min")
-                        .esquemaConfiguracion(schemaBrutalist)
-                        .build();
-            }
-            p.setEsquemaConfiguracion(schemaBrutalist);
-            p.setCantidadSecciones(8);
-            return p;
-        });
-
-        // ── Plantilla 2: The Architect v2 (Brutalist Light) ──────────────────
-        String idArchitectV2 = "template-architect-v2";
-        TemplateSchema schemaV2 = TemplateSchema.builder()
-                .colorScheme(Map.of(
-                        "background", "#FFFFFF",
-                        "primary", "#FFCC00",
-                        "secondary", "#FF3333",
-                        "text", "#000000"
-                ))
-                .fontFamily("Space Mono")
-                .sections(List.of(
-                        TemplateSection.builder().type(S_HERO)      .title("Presentación")          .visible(true).order(0).build(),
-                        TemplateSection.builder().type(S_SKILLS)    .title("Stack Tecnológico")      .visible(true).order(1).build(),
-                        TemplateSection.builder().type(S_SOFTSKILLS).title("Capacidades")            .visible(true).order(2).build(),
-                        TemplateSection.builder().type(S_EXPERIENCE).title("Trayectoria")            .visible(true).order(3).build(),
-                        TemplateSection.builder().type(S_EDUCATION) .title("Formación Académica")    .visible(true).order(4).build(),
-                        TemplateSection.builder().type(S_PROJECTS)  .title("Trabajos Seleccionados") .visible(true).order(5).build(),
-                        TemplateSection.builder().type(S_ABOUT)     .title("Filosofía")              .visible(true).order(6).build(),
-                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")               .visible(true).order(7).build()
-                ))
-                .build();
-
-        upsertPlantilla(idArchitectV2, p -> {
-            if (p == null) {
-                return Plantilla.builder()
-                        .idPlantilla(idArchitectV2)
-                        .nombre("The Architect v2")
-                        .descripcion(
-                                "Evolución del diseño brutalista con fondo claro (blanco), texto en negro y " +
-                                "bloques de impacto en rojo y amarillo. Estructura que prioriza la legibilidad " +
-                                "manteniendo un estilo vanguardista y técnico."
-                        )
-                        .etiquetas(List.of(TAG_BRUTALISTA, "Light", "Tech", "Minimalista", "Alto Contraste"))
-                        .imagenVistaPrevia("")
-                        .urlVistaPrevia("")
-                        .cantidadSecciones(8)
-                        .impacto("4.8k")
-                        .tiempoConfiguracion("3 min")
-                        .esquemaConfiguracion(schemaV2)
-                        .build();
-            }
-            p.setEsquemaConfiguracion(schemaV2);
-            p.setCantidadSecciones(8);
-            return p;
-        });
-
-        // ── Plantilla 3: Brutalist Space ─────────────────────────────────────
+        // ── Plantilla 1: Brutalist Space ──────────────────────────────────────
         String idTercera = "template-tercera-brutalist";
         TemplateSchema schemaTercera = TemplateSchema.builder()
                 .colorScheme("brutalist")
                 .fontFamily("Space Grotesk")
                 .sections(List.of(
-                        TemplateSection.builder().type(S_HERO)      .title("Work")             .visible(true).order(0).build(),
-                        TemplateSection.builder().type(S_SKILLS)    .title("Capabilities")     .visible(true).order(1).build(),
-                        TemplateSection.builder().type(S_SOFTSKILLS).title("Soft Skills")      .visible(true).order(2).build(),
-                        TemplateSection.builder().type(S_EXPERIENCE).title("Experience")       .visible(true).order(3).build(),
-                        TemplateSection.builder().type(S_EDUCATION) .title("Education")        .visible(true).order(4).build(),
-                        TemplateSection.builder().type(S_PROJECTS)  .title("Selected Works")   .visible(true).order(5).build(),
-                        TemplateSection.builder().type(S_CONTACT)   .title("Contact")          .visible(true).order(6).build()
+                        TemplateSection.builder().type(S_HERO)      .title("Presentación")       .visible(true).order(0).build(),
+                        TemplateSection.builder().type(S_SKILLS)    .title("Capacidades")        .visible(true).order(1).build(),
+                        TemplateSection.builder().type(S_SOFTSKILLS).title("Habilidades")        .visible(true).order(2).build(),
+                        TemplateSection.builder().type(S_EXPERIENCE).title("Experiencia")        .visible(true).order(3).build(),
+                        TemplateSection.builder().type(S_EDUCATION) .title("Formación")          .visible(true).order(4).build(),
+                        TemplateSection.builder().type(S_PROJECTS)  .title("Proyectos")          .visible(true).order(5).build(),
+                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")           .visible(true).order(6).build()
                 ))
                 .build();
 
@@ -163,6 +78,77 @@ public class DataInitializer implements ApplicationRunner {
             p.setCantidadSecciones(7);
             return p;
         });
+
+        // ── Plantilla 4: Azure Professional ──────────────────────────────────
+        String idCorporate = "template-corporate-blue";
+        TemplateSchema schemaCorporate = TemplateSchema.builder()
+                .colorScheme("corporate")
+                .fontFamily("Plus Jakarta Sans")
+                .sections(List.of(
+                        TemplateSection.builder().type(S_HERO)      .title("Presentación")         .visible(true).order(0).build(),
+                        TemplateSection.builder().type(S_SKILLS)    .title("Habilidades técnicas")  .visible(true).order(1).build(),
+                        TemplateSection.builder().type(S_SOFTSKILLS).title("Habilidades blandas")   .visible(true).order(2).build(),
+                        TemplateSection.builder().type(S_EXPERIENCE).title("Experiencia")           .visible(true).order(3).build(),
+                        TemplateSection.builder().type(S_EDUCATION) .title("Formación académica")   .visible(true).order(4).build(),
+                        TemplateSection.builder().type(S_PROJECTS)  .title("Proyectos")             .visible(true).order(5).build(),
+                        TemplateSection.builder().type(S_ABOUT)     .title("Sobre mí")              .visible(true).order(6).build(),
+                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")              .visible(true).order(7).build()
+                ))
+                .build();
+
+        upsertPlantilla(idCorporate, p -> {
+            if (p == null) {
+                return Plantilla.builder()
+                        .idPlantilla(idCorporate)
+                        .nombre("Azure Professional")
+                        .descripcion(
+                                "Plantilla profesional en tonos blancos y azules. Diseño limpio y corporativo " +
+                                "con tipografía Plus Jakarta Sans, ideal para perfiles de negocios, consultores " +
+                                "y profesionales que buscan transmitir confianza y modernidad."
+                        )
+                        .etiquetas(List.of("Profesional", "Corporativo", "Azul", "Limpio", "Moderno"))
+                        .imagenVistaPrevia("")
+                        .urlVistaPrevia("")
+                        .cantidadSecciones(8)
+                        .impacto("1.2k")
+                        .tiempoConfiguracion("3 min")
+                        .esquemaConfiguracion(schemaCorporate)
+                        .build();
+            }
+            p.setEsquemaConfiguracion(schemaCorporate);
+            p.setCantidadSecciones(8);
+            return p;
+        });
+    }
+
+    private void eliminarPlantillasObsoletas() {
+        Plantilla fallback = plantillaRepository.findById("template-tercera-brutalist").orElse(null);
+
+        // Eliminar por ID conocido
+        List<String> obsoletosById = List.of("template-brutalist-architect", "template-architect-v2");
+        for (String id : obsoletosById) {
+            eliminarPlantilla(id, fallback);
+        }
+
+        // Eliminar por nombre (plantillas sin ID conocido en el código)
+        List<String> obsoletasPorNombre = List.of("Corporate Teal");
+        for (String nombre : obsoletasPorNombre) {
+            plantillaRepository.findByNombre(nombre).ifPresent(p -> eliminarPlantilla(p.getIdPlantilla(), fallback));
+        }
+    }
+
+    private void eliminarPlantilla(String id, Plantilla fallback) {
+        if (!plantillaRepository.existsById(id)) return;
+        if (fallback != null) {
+            var afectados = portafolioRepository.findByPlantilla_IdPlantilla(id);
+            afectados.forEach(p -> p.setPlantilla(fallback));
+            portafolioRepository.saveAll(afectados);
+            if (!afectados.isEmpty()) {
+                log.info("Reasignados {} portafolios de '{}' a '{}'.", afectados.size(), id, fallback.getIdPlantilla());
+            }
+        }
+        plantillaRepository.deleteById(id);
+        log.info("Eliminada plantilla obsoleta '{}'.", id);
     }
 
     private void upsertPlantilla(String id, UnaryOperator<Plantilla> mapper) {
