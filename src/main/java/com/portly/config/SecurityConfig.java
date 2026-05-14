@@ -43,7 +43,8 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/portafolios/*/publica").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/portafolios/search").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/portafolios/search/**").permitAll()
+                .requestMatchers("/api/portafolios/search").permitAll()
 
                 // 4. Todo lo demás requiere autenticación
                 .anyRequest().authenticated()
@@ -57,12 +58,13 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Aquí pones la URL de tu frontend en React (Suele ser 5173 en Vite o 3000 en Create React App)
-        configuration.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "http://localhost:3000",
+        // URLs permitidas para el frontend (usando patrones para mayor flexibilidad)
+        configuration.setAllowedOriginPatterns(List.of(
+            "http://localhost:*",
+            "https://localhost:*",
+            "https://portly-front.vercel.app",
             "https://portly-frontend-three.vercel.app",
-            "https://portly-front.vercel.app"
+            "https://*.easypanel.host"
         ));
         
         // Métodos HTTP permitidos
