@@ -13,6 +13,8 @@ public interface PortafolioRepository extends JpaRepository<Portafolio, UUID> {
 
     List<Portafolio> findByUsuario_IdUsuarioOrderByFechaCreacionDesc(UUID idUsuario);
 
+    List<Portafolio> findByPlantilla_IdPlantilla(String idPlantilla);
+
     boolean existsByUrlPublica(String urlPublica);
 
     boolean existsByUsuario_IdUsuarioAndNombreIgnoreCase(UUID idUsuario, String nombre);
