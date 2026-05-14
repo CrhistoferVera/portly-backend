@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/portafolios/*/publica").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/portafolios/search").permitAll()
 
                 // 4. Todo lo demás requiere autenticación
                 .anyRequest().authenticated()

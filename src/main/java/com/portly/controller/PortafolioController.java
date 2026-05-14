@@ -4,6 +4,7 @@ import com.portly.dto.PortafolioRequest;
 import com.portly.dto.PortafolioResponse;
 import com.portly.dto.PortafolioPublicoResponse;
 import com.portly.dto.VisibilidadItemsRequest;
+import com.portly.dto.ExploreSearchResult;
 import com.portly.service.PortafolioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -68,5 +69,14 @@ public class PortafolioController {
             Authentication authentication,
             @PathVariable("id") String id) {
         return ResponseEntity.ok(portafolioService.getPublico(id, authentication));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ExploreSearchResult> search(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false, defaultValue = "recientes") String sort,
+            @RequestParam(required = false, defaultValue = "1") int page,
+            @RequestParam(required = false, defaultValue = "12") int limit) {
+        return ResponseEntity.ok(portafolioService.searchPortafolios(q, sort, page, limit));
     }
 }
