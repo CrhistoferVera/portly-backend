@@ -31,7 +31,7 @@ public class FormacionAcademica {
     @Column(name = "carrera", nullable = false, length = 120)
     private String carrera;
 
-    @Column(name = "fecha_inicio", nullable = false)
+    @Column(name = "fecha_inicio")
     private LocalDate fechaInicio;
 
     @Column(name = "fecha_finalizacion")
