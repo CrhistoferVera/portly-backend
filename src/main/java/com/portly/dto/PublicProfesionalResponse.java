@@ -1,10 +1,10 @@
 package com.portly.dto;
 
-import lombok.Builder;
-import lombok.Data;
-
 import java.util.List;
 import java.util.UUID;
+
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder
@@ -55,8 +55,7 @@ public class PublicProfesionalResponse {
         private String  institucion;
         private String  carrera;
         private String  nivel;
-        private String  fechaInicio;
-        private String  fechaFinalizacion;
+        private String  fechaEgreso;
         private Boolean actualmenteEstudiando;
     }
 }
