@@ -31,22 +31,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Enciende el CORS en Spring Security (Jala el @Bean de abajo automáticamente)
             .cors(Customizer.withDefaults()) 
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // 2. Permitir explícitamente las peticiones OPTIONS (el "preflight" del navegador)
+                // 1. Permitir explícitamente las peticiones OPTIONS (el "preflight" del navegador)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 
-                // 3. Rutas públicas
-                .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/api/public/**").permitAll()
+                // 2. Rutas públicas (MOVEMOS SEARCH AL PRINCIPIO PARA EVITAR INTERFERENCIAS)
+                .requestMatchers("/api/portafolios/search", "/api/portafolios/search/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/portafolios/*/publica").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/portafolios/search/**").permitAll()
-                .requestMatchers("/api/portafolios/search").permitAll()
+                .requestMatchers("/api/public/**").permitAll()
+                .requestMatchers("/auth/**").permitAll()
 
-                // 4. Todo lo demás requiere autenticación
+                // 3. Todo lo demás requiere autenticación
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -64,6 +62,7 @@ public class SecurityConfig {
             "https://localhost:*",
             "https://portly-front.vercel.app",
             "https://portly-frontend-three.vercel.app",
+            "https://*.vercel.app",
             "https://*.easypanel.host"
         ));
         
