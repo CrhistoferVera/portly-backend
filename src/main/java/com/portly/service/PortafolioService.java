@@ -14,6 +14,13 @@ import com.portly.dto.PortafolioRequest;
 import com.portly.dto.PortafolioResponse;
 import com.portly.dto.PortafolioPublicoResponse;
 import com.portly.dto.VisibilidadItemsRequest;
+import com.portly.dto.ExplorePortfolio;
+import com.portly.dto.ExplorePortfolioPropietario;
+import com.portly.dto.ExploreSearchResult;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -141,6 +148,52 @@ public class PortafolioService {
         log.info("Portafolio publicado: idPortafolio={}, idUsuario={}", idPortafolio, idUsuario);
 
         return toResponse(portafolio);
+    }
+
+    /** Obtiene el portafolio público con toda su data, aplicando filtros de visibilidad. */
+    @Transactional(readOnly = true)
+    public ExploreSearchResult searchPortafolios(String q, String sort, int page, int limit) {
+        // Page is 1-indexed from frontend, so subtract 1 for Spring Data JPA
+        int pageNumber = page > 0 ? page - 1 : 0;
+        
+        Sort.Direction direction = Sort.Direction.DESC;
+        String sortBy = "fechaCreacion";
+        
+        if ("nombre".equalsIgnoreCase(sort)) {
+            direction = Sort.Direction.ASC;
+            sortBy = "nombre";
+        }
+        
+        Pageable pageable = PageRequest.of(pageNumber, limit, Sort.by(direction, sortBy));
+        
+        Page<Portafolio> portafoliosPage = portafolioRepository.searchPublicPortafolios(q, pageable);
+        
+        List<ExplorePortfolio> portfolios = portafoliosPage.getContent().stream().map(p -> {
+            PerfilUsuario perfil = p.getUsuario() != null ? p.getUsuario().getPerfil() : null;
+            
+            ExplorePortfolioPropietario propietario = ExplorePortfolioPropietario.builder()
+                .nombre(perfil != null ? perfil.getNombre() : "")
+                .apellido(perfil != null ? perfil.getApellido() : "")
+                .profesion(perfil != null && Boolean.TRUE.equals(perfil.getMostrarProfesion()) ? perfil.getTitularProfesional() : null)
+                .avatarUrl(perfil != null ? perfil.getEnlaceFoto() : null)
+                .build();
+                
+            return ExplorePortfolio.builder()
+                .id(p.getIdPortafolio().toString())
+                .nombre(p.getNombre())
+                .templateNombre(p.getPlantilla() != null ? p.getPlantilla().getNombre() : null)
+                .previewImageUrl(p.getImagenVistaPrevia())
+                .createdAt(p.getFechaCreacion())
+                .propietario(propietario)
+                .build();
+        }).collect(Collectors.toList());
+        
+        return ExploreSearchResult.builder()
+            .portfolios(portfolios)
+            .total(portafoliosPage.getTotalElements())
+            .page(pageNumber + 1)
+            .totalPages(portafoliosPage.getTotalPages())
+            .build();
     }
 
     /** Obtiene el portafolio público con toda su data, aplicando filtros de visibilidad. */
