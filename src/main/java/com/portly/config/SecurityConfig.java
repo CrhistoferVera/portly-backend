@@ -69,8 +69,14 @@ public class SecurityConfig {
         // Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         
-        // Cabeceras permitidas (Authorization es crucial para que pase el JWT)
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "*"));
+        // Cabeceras permitidas (específicas para evitar bloqueos en producción)
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization", 
+            "Content-Type", 
+            "Origin", 
+            "Accept", 
+            "X-Requested-With"
+        ));
         
         // Permitir envío de credenciales (cookies, auth headers)
         configuration.setAllowCredentials(true);
