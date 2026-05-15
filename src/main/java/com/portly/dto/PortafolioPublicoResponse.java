@@ -1,10 +1,11 @@
 package com.portly.dto;
 
+import java.util.List;
+
 import com.portly.domain.entity.TemplateSchema;
+
 import lombok.Builder;
 import lombok.Getter;
-
-import java.util.List;
 
 @Getter
 @Builder
@@ -95,8 +96,7 @@ public class PortafolioPublicoResponse {
         private Long idFormacionAcademica;
         private String institucion;
         private String carrera;
-        private String fechaInicio;
-        private String fechaFinalizacion;
+        private String fechaEgreso;
         private boolean actualmenteEstudiando;
         private String nivel;
         private String descripcion;

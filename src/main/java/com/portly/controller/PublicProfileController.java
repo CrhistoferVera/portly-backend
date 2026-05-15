@@ -110,8 +110,7 @@ public class PublicProfileController {
                             .institucion(f.getInstitucion())
                             .carrera(f.getCarrera())
                             .nivel(f.getNivel())
-                            .fechaInicio(f.getFechaInicio() != null ? f.getFechaInicio().toString() : null)
-                            .fechaFinalizacion(f.getFechaFinalizacion() != null ? f.getFechaFinalizacion().toString() : null)
+                            .fechaEgreso(f.getFechaEgreso() != null ? f.getFechaEgreso().toString() : null)
                             .actualmenteEstudiando(f.getActualmenteEstudiando())
                             .build())
                     .collect(Collectors.toList());

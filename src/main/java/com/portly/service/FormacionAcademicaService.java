@@ -1,21 +1,23 @@
 package com.portly.service;
 
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.portly.domain.entity.FormacionAcademica;
 import com.portly.domain.entity.Usuario;
 import com.portly.domain.repository.FormacionAcademicaRepository;
 import com.portly.domain.repository.UsuarioRepository;
 import com.portly.dto.FormacionAcademicaRequest;
 import com.portly.dto.FormacionAcademicaResponse;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -44,8 +46,7 @@ public class FormacionAcademicaService {
                 .usuario(usuario)
                 .institucion(request.getInstitucion())
                 .carrera(request.getCarrera())
-                .fechaInicio(request.getFechaInicio())
-                .fechaFinalizacion(request.getFechaFinalizacion())
+                .fechaEgreso(request.getFechaEgreso())
                 .actualmenteEstudiando(request.getActualmenteEstudiando())
                 .descripcion(request.getDescripcion())
                 .nivel(request.getNivel())
@@ -64,13 +65,9 @@ public class FormacionAcademicaService {
 
         verificarPropietario(formacion.getUsuario().getIdUsuario(), idUsuario);
 
-        formacion.setInstitucion(request.getInstitucion());
-        formacion.setCarrera(request.getCarrera());
-        formacion.setFechaInicio(request.getFechaInicio());
-        formacion.setFechaFinalizacion(request.getFechaFinalizacion());
+        formacion.setFechaEgreso(request.getFechaEgreso());
         formacion.setActualmenteEstudiando(request.getActualmenteEstudiando());
         formacion.setDescripcion(request.getDescripcion());
-        formacion.setNivel(request.getNivel());
 
         formacionRepository.save(formacion);
         log.info("Formación académica actualizada: idFormacion={}, idUsuario={}", idFormacion, idUsuario);
@@ -102,8 +99,7 @@ public class FormacionAcademicaService {
                 .idFormacionAcademica(f.getIdFormacionAcademica())
                 .institucion(f.getInstitucion())
                 .carrera(f.getCarrera())
-                .fechaInicio(f.getFechaInicio())
-                .fechaFinalizacion(f.getFechaFinalizacion())
+                .fechaEgreso(f.getFechaEgreso())
                 .actualmenteEstudiando(f.getActualmenteEstudiando())
                 .descripcion(f.getDescripcion())
                 .nivel(f.getNivel())
