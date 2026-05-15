@@ -1,5 +1,6 @@
 package com.portly.config;
 
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,6 +42,7 @@ public class SecurityConfig {
                 // 2. Rutas públicas (MOVEMOS SEARCH AL PRINCIPIO PARA EVITAR INTERFERENCIAS)
                 .requestMatchers("/api/portafolios/search", "/api/portafolios/search/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/portafolios/*/publica").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/analytics/track/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/auth/**").permitAll()
 
@@ -82,7 +84,7 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
