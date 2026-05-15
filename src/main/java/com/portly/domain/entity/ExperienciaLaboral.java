@@ -36,7 +36,7 @@ public class ExperienciaLaboral {
     @Column(name = "modalidad_trabajo", length = 20)
     private String modalidadTrabajo;
 
-    @Column(name = "fecha_inicio", nullable = false)
+    @Column(name = "fecha_inicio")
     private LocalDate fechaInicio;
 
     @Column(name = "fecha_fin")

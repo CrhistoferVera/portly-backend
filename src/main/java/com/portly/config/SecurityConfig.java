@@ -31,21 +31,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Enciende el CORS en Spring Security (Jala el @Bean de abajo automáticamente)
             .cors(Customizer.withDefaults()) 
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // 2. Permitir explícitamente las peticiones OPTIONS (el "preflight" del navegador)
+                // 1. Permitir explícitamente las peticiones OPTIONS (el "preflight" del navegador)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 
-                // 3. Rutas públicas
-                .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/api/public/**").permitAll()
+                // 2. Rutas públicas (MOVEMOS SEARCH AL PRINCIPIO PARA EVITAR INTERFERENCIAS)
+                .requestMatchers("/api/portafolios/search", "/api/portafolios/search/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/portafolios/*/publica").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/portafolios/search").permitAll()
+                .requestMatchers("/api/public/**").permitAll()
+                .requestMatchers("/auth/**").permitAll()
 
-                // 4. Todo lo demás requiere autenticación
+                // 3. Todo lo demás requiere autenticación
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -57,26 +56,33 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Aquí pones la URL de tu frontend en React (Suele ser 5173 en Vite o 3000 en Create React App)
-        configuration.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "http://localhost:3000",
+        // URLs permitidas para el frontend (usando patrones para mayor flexibilidad)
+        configuration.setAllowedOriginPatterns(List.of(
+            "http://localhost:*",
+            "https://localhost:*",
+            "https://portly-front.vercel.app",
             "https://portly-frontend-three.vercel.app",
-            "https://portly-front.vercel.app"
+            "https://*.vercel.app",
+            "https://*.easypanel.host"
         ));
         
         // Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         
-        // Cabeceras permitidas (Authorization es crucial para que pase el JWT)
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "*"));
+        // Cabeceras permitidas (específicas para evitar bloqueos en producción)
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Authorization", 
+            "Content-Type", 
+            "Origin", 
+            "Accept", 
+            "X-Requested-With"
+        ));
         
         // Permitir envío de credenciales (cookies, auth headers)
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Aplicar esta configuración de CORS a TODAS las rutas de tu API
-        source.registerCorsConfiguration("/**", configuration); 
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }
