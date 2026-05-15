@@ -31,8 +31,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // 1. Enciende el CORS en Spring Security (Jala el @Bean de abajo automáticamente)
-            .cors(Customizer.withDefaults()) 
+            .cors(Customizer.withDefaults())
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
@@ -54,28 +53,14 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        
-        // Aquí pones la URL de tu frontend en React (Suele ser 5173 en Vite o 3000 en Create React App)
-        configuration.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "http://localhost:3000",
-            "https://portly-frontend-three.vercel.app",
-            "https://portly-front.vercel.app"
-        ));
-        
-        // Métodos HTTP permitidos
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        
-        // Cabeceras permitidas (Authorization es crucial para que pase el JWT)
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "*"));
-        
-        // Permitir envío de credenciales (cookies, auth headers)
-        configuration.setAllowCredentials(true);
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Aplicar esta configuración de CORS a TODAS las rutas de tu API
-        source.registerCorsConfiguration("/**", configuration); 
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }
