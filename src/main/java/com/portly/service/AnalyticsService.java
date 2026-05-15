@@ -106,12 +106,22 @@ public class AnalyticsService {
 
         // KPIs
         long totalVistas = visitaRepo.countByIdPortafolioAndFechaVisitaBetween(portfolioId, desde, hasta);
-        long clicsProyectos = clickProyectoRepo.countByIdPortafolioAndFechaClickBetween(portfolioId, desde, hasta);
         long visitantesUnicos = visitaRepo.countDistinctVisitorsByPortafolioAndFecha(portfolioId, desde, hasta);
         long duracionTotal = visitaRepo.sumDuracionByPortafolioAndFecha(portfolioId, desde, hasta);
 
         // Datos del gráfico
         List<PortfolioAnalyticsResponse.ChartPoint> chartData = buildChartData(portfolioId, desde, hasta, period);
+
+        // Rankings
+        List<PortfolioAnalyticsResponse.RankingItem> proyectos = clickProyectoRepo
+                .countByProyecto(portfolioId, desde, hasta)
+                .stream()
+                .map(row -> PortfolioAnalyticsResponse.RankingItem.builder()
+                        .id(row[0] != null ? row[0].toString() : "")
+                        .nombre(row[1] != null ? row[1].toString() : "")
+                        .clicks(((Number) row[2]).longValue())
+                        .build())
+                .collect(Collectors.toList());
 
         // Rankings de secciones
         List<PortfolioAnalyticsResponse.RankingItem> experiencias = clickSeccionRepo
@@ -136,10 +146,10 @@ public class AnalyticsService {
 
         return PortfolioAnalyticsResponse.builder()
                 .totalVistas(totalVistas)
-                .clicsEnProyectos(clicsProyectos)
                 .visitantesUnicos(visitantesUnicos)
                 .duracionTotalSegundos(duracionTotal)
                 .chartData(chartData)
+                .proyectosRanking(proyectos)
                 .experienciasRanking(experiencias)
                 .redesSocialesRanking(redes)
                 .build();

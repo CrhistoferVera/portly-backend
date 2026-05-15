@@ -18,12 +18,14 @@ import java.util.List;
 public class PortfolioAnalyticsResponse {
 
     private long totalVistas;
-    private long clicsEnProyectos;
     private long visitantesUnicos;
     private long duracionTotalSegundos;
 
     /** Datos del gráfico de línea (etiqueta + valor) */
     private List<ChartPoint> chartData;
+
+    /** Ranking de proyectos por clics */
+    private List<RankingItem> proyectosRanking;
 
     /** Ranking de experiencias por clics */
     private List<RankingItem> experienciasRanking;
