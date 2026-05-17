@@ -165,7 +165,6 @@ public class AuthService {
         }
         usuario.setContrasenaEncriptada(passwordEncoder.encode(nuevaPassword));
         usuarioRepository.save(usuario);
-        codigoRecuperacionRepository.deleteByUsuario_IdUsuario(usuario.getIdUsuario());
         log.info("Contraseña restablecida: email={}", email);
     }
 
