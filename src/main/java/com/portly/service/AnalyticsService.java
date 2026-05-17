@@ -215,7 +215,10 @@ public class AnalyticsService {
 
     private LocalDateTime calcularDesde(String period, LocalDateTime hasta, LocalDateTime fechaCreacion) {
         return switch (period != null ? period.toLowerCase() : "all") {
-            case "24h" -> hasta.minusHours(24);
+            case "24h" -> {
+                LocalDateTime start24 = hasta.minusHours(24);
+                yield (fechaCreacion != null && fechaCreacion.isAfter(start24)) ? fechaCreacion : start24;
+            }
             case "7d" -> hasta.minusDays(7);
             case "30d" -> hasta.minusDays(30);
             default -> fechaCreacion != null ? fechaCreacion : LocalDateTime.of(2020, 1, 1, 0, 0); // "all" — desde la creación
@@ -229,8 +232,12 @@ public class AnalyticsService {
             // Agrupar por hora del día
             List<Object[]> raw = visitaRepo.countByHour(portfolioId, desde, hasta);
             List<PortfolioAnalyticsResponse.ChartPoint> points = new ArrayList<>();
-            for (int h = 0; h < 24; h++) {
-                final int hour = h;
+            
+            LocalDateTime current = desde.truncatedTo(java.time.temporal.ChronoUnit.HOURS);
+            LocalDateTime end = hasta.truncatedTo(java.time.temporal.ChronoUnit.HOURS);
+            
+            while (!current.isAfter(end)) {
+                final int hour = current.getHour();
                 long count = raw.stream()
                         .filter(r -> ((Number) r[0]).intValue() == hour)
                         .findFirst()
@@ -240,6 +247,7 @@ public class AnalyticsService {
                         .label(String.format("%02d:00", hour))
                         .value(count)
                         .build());
+                current = current.plusHours(1);
             }
             return points;
         } else {
