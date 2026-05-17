@@ -102,7 +102,7 @@ public class AnalyticsService {
 
         // Calcular rango de fechas según el periodo
         LocalDateTime hasta = LocalDateTime.now();
-        LocalDateTime desde = calcularDesde(period, hasta);
+        LocalDateTime desde = calcularDesde(period, hasta, portafolio.getFechaCreacion());
 
         // KPIs
         long totalVistas = visitaRepo.countByIdPortafolioAndFechaVisitaBetween(portfolioId, desde, hasta);
@@ -159,9 +159,15 @@ public class AnalyticsService {
     @Transactional(readOnly = true)
     public com.portly.dto.GlobalAnalyticsResponse getGlobalAnalytics(UUID userId, String period) {
         LocalDateTime hasta = LocalDateTime.now();
-        LocalDateTime desde = calcularDesde(period, hasta);
 
         List<com.portly.domain.entity.Portafolio> portafolios = portafolioRepo.findByUsuario_IdUsuarioOrderByFechaCreacionDesc(userId);
+
+        LocalDateTime fechaCreacionMasAntigua = portafolios.stream()
+                .map(com.portly.domain.entity.Portafolio::getFechaCreacion)
+                .min(LocalDateTime::compareTo)
+                .orElse(LocalDateTime.now().minusDays(30)); // fallback si no hay portafolios
+
+        LocalDateTime desde = calcularDesde(period, hasta, fechaCreacionMasAntigua);
 
         long totalVistas = 0;
         long visitantesUnicos = 0;
@@ -207,12 +213,12 @@ public class AnalyticsService {
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    private LocalDateTime calcularDesde(String period, LocalDateTime hasta) {
+    private LocalDateTime calcularDesde(String period, LocalDateTime hasta, LocalDateTime fechaCreacion) {
         return switch (period != null ? period.toLowerCase() : "all") {
             case "24h" -> hasta.minusHours(24);
             case "7d" -> hasta.minusDays(7);
             case "30d" -> hasta.minusDays(30);
-            default -> LocalDateTime.of(2020, 1, 1, 0, 0); // "all" — desde el inicio
+            default -> fechaCreacion != null ? fechaCreacion : LocalDateTime.of(2020, 1, 1, 0, 0); // "all" — desde la creación
         };
     }
 
