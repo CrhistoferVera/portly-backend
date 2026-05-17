@@ -155,6 +155,56 @@ public class AnalyticsService {
                 .build();
     }
 
+    /** Obtiene las analíticas globales (todos los portafolios del usuario). */
+    @Transactional(readOnly = true)
+    public com.portly.dto.GlobalAnalyticsResponse getGlobalAnalytics(UUID userId, String period) {
+        LocalDateTime hasta = LocalDateTime.now();
+        LocalDateTime desde = calcularDesde(period, hasta);
+
+        List<com.portly.domain.entity.Portafolio> portafolios = portafolioRepo.findByUsuario_IdUsuarioOrderByFechaCreacionDesc(userId);
+
+        long totalVistas = 0;
+        long visitantesUnicos = 0;
+        long duracionTotal = 0;
+        long clicsTotales = 0;
+
+        List<com.portly.dto.GlobalAnalyticsResponse.PortfolioChartSeries> seriesList = new ArrayList<>();
+
+        String[] colores = {"#7c6bec", "#06b6d4", "#10b981", "#f59e0b", "#ef4444"};
+        int colorIdx = 0;
+
+        for (com.portly.domain.entity.Portafolio p : portafolios) {
+            UUID pId = p.getIdPortafolio();
+            totalVistas += visitaRepo.countByIdPortafolioAndFechaVisitaBetween(pId, desde, hasta);
+            visitantesUnicos += visitaRepo.countDistinctVisitorsByPortafolioAndFecha(pId, desde, hasta);
+            duracionTotal += visitaRepo.sumDuracionByPortafolioAndFecha(pId, desde, hasta);
+            
+            // contar clics en proyectos de este portafolio
+            clicsTotales += clickProyectoRepo.countByProyecto(pId, desde, hasta).stream()
+                    .mapToLong(row -> ((Number) row[2]).longValue()).sum();
+
+            List<PortfolioAnalyticsResponse.ChartPoint> chartData = buildChartData(pId, desde, hasta, period);
+            
+            String color = colores[colorIdx % colores.length];
+            colorIdx++;
+
+            seriesList.add(com.portly.dto.GlobalAnalyticsResponse.PortfolioChartSeries.builder()
+                    .portfolioId(pId.toString())
+                    .portfolioName(p.getNombre() != null && !p.getNombre().isEmpty() ? p.getNombre() : "Portafolio Sin Nombre")
+                    .color(color)
+                    .data(chartData)
+                    .build());
+        }
+
+        return com.portly.dto.GlobalAnalyticsResponse.builder()
+                .totalVistas(totalVistas)
+                .totalClicsProyectos(clicsTotales)
+                .visitantesUnicos(visitantesUnicos)
+                .duracionTotalSegundos(duracionTotal)
+                .chartSeries(seriesList)
+                .build();
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private LocalDateTime calcularDesde(String period, LocalDateTime hasta) {

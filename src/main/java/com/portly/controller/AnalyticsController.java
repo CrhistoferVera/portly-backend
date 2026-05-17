@@ -1,5 +1,6 @@
 package com.portly.controller;
 
+import com.portly.dto.GlobalAnalyticsResponse;
 import com.portly.dto.PortfolioAnalyticsResponse;
 import com.portly.dto.TrackEventRequest;
 import com.portly.service.AnalyticsService;
@@ -54,5 +55,13 @@ public class AnalyticsController {
             @RequestParam(required = false, defaultValue = "all") String period) {
         UUID userId = (UUID) authentication.getPrincipal();
         return ResponseEntity.ok(analyticsService.getPortfolioAnalytics(userId, id, period));
+    }
+
+    @GetMapping("/global")
+    public ResponseEntity<GlobalAnalyticsResponse> getGlobalAnalytics(
+            Authentication authentication,
+            @RequestParam(required = false, defaultValue = "all") String period) {
+        UUID userId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(analyticsService.getGlobalAnalytics(userId, period));
     }
 }
