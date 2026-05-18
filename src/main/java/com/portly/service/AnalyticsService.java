@@ -110,7 +110,7 @@ public class AnalyticsService {
         long duracionTotal = visitaRepo.sumDuracionByPortafolioAndFecha(portfolioId, desde, hasta);
 
         // Datos del gráfico
-        List<PortfolioAnalyticsResponse.ChartPoint> chartData = buildChartData(portfolioId, desde, hasta, period);
+        List<PortfolioAnalyticsResponse.ChartPoint> chartData = buildChartData(portfolioId, desde, hasta, period, portafolio.getFechaCreacion());
 
         // Rankings
         List<PortfolioAnalyticsResponse.RankingItem> proyectos = clickProyectoRepo
@@ -189,7 +189,7 @@ public class AnalyticsService {
             clicsTotales += clickProyectoRepo.countByProyecto(pId, desde, hasta).stream()
                     .mapToLong(row -> ((Number) row[2]).longValue()).sum();
 
-            List<PortfolioAnalyticsResponse.ChartPoint> chartData = buildChartData(pId, desde, hasta, period);
+            List<PortfolioAnalyticsResponse.ChartPoint> chartData = buildChartData(pId, desde, hasta, period, p.getFechaCreacion());
             
             String color = colores[colorIdx % colores.length];
             colorIdx++;
@@ -215,10 +215,7 @@ public class AnalyticsService {
 
     private LocalDateTime calcularDesde(String period, LocalDateTime hasta, LocalDateTime fechaCreacion) {
         return switch (period != null ? period.toLowerCase() : "all") {
-            case "24h" -> {
-                LocalDateTime start24 = hasta.minusHours(24);
-                yield (fechaCreacion != null && fechaCreacion.isAfter(start24)) ? fechaCreacion : start24;
-            }
+            case "24h" -> hasta.minusHours(24);
             case "7d" -> hasta.minusDays(7);
             case "30d" -> hasta.minusDays(30);
             default -> {
@@ -231,7 +228,7 @@ public class AnalyticsService {
     }
 
     private List<PortfolioAnalyticsResponse.ChartPoint> buildChartData(
-            UUID portfolioId, LocalDateTime desde, LocalDateTime hasta, String period) {
+            UUID portfolioId, LocalDateTime desde, LocalDateTime hasta, String period, LocalDateTime fechaCreacion) {
 
         if ("24h".equalsIgnoreCase(period)) {
             // Agrupar por hora del día
@@ -242,15 +239,20 @@ public class AnalyticsService {
             LocalDateTime end = hasta.truncatedTo(java.time.temporal.ChronoUnit.HOURS);
             
             while (!current.isAfter(end)) {
+                final int day = current.getDayOfMonth();
                 final int hour = current.getHour();
-                long count = raw.stream()
-                        .filter(r -> ((Number) r[0]).intValue() == hour)
-                        .findFirst()
-                        .map(r -> ((Number) r[1]).longValue())
-                        .orElse(0L);
+                Long value = null;
+                if (fechaCreacion == null || !current.isBefore(fechaCreacion.truncatedTo(java.time.temporal.ChronoUnit.HOURS))) {
+                    value = raw.stream()
+                            .filter(r -> ((Number) r[0]).intValue() == day && ((Number) r[1]).intValue() == hour)
+                            .findFirst()
+                            .map(r -> ((Number) r[2]).longValue())
+                            .orElse(0L);
+                }
+                
                 points.add(PortfolioAnalyticsResponse.ChartPoint.builder()
                         .label(String.format("%02d:00", hour))
-                        .value(count)
+                        .value(value)
                         .build());
                 current = current.plusHours(1);
             }
