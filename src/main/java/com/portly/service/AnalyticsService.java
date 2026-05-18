@@ -221,7 +221,12 @@ public class AnalyticsService {
             }
             case "7d" -> hasta.minusDays(7);
             case "30d" -> hasta.minusDays(30);
-            default -> fechaCreacion != null ? fechaCreacion : LocalDateTime.of(2020, 1, 1, 0, 0); // "all" — desde la creación
+            default -> {
+                // "all" — desde la creación pero máximo 90 días para no sobrecargar el gráfico
+                LocalDateTime minDate = hasta.minusDays(90);
+                LocalDateTime desde = fechaCreacion != null ? fechaCreacion : LocalDateTime.of(2020, 1, 1, 0, 0);
+                yield desde.isBefore(minDate) ? minDate : desde;
+            }
         };
     }
 
