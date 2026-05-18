@@ -40,6 +40,12 @@ public class AnalyticsService {
     @Transactional
     public Long trackVisit(TrackEventRequest request) {
         UUID portfolioId = UUID.fromString(request.getPortfolioId());
+        
+        com.portly.domain.entity.Portafolio p = portafolioRepo.findById(portfolioId).orElse(null);
+        if (p == null || !"PUBLICO".equalsIgnoreCase(p.getVisibilidad())) {
+            return -1L;
+        }
+
         VisitaPortafolio visita = VisitaPortafolio.builder()
                 .idPortafolio(portfolioId)
                 .visitorId(request.getVisitorId())
@@ -66,6 +72,12 @@ public class AnalyticsService {
     @Transactional
     public void trackProjectClick(TrackEventRequest request) {
         UUID portfolioId = UUID.fromString(request.getPortfolioId());
+
+        com.portly.domain.entity.Portafolio p = portafolioRepo.findById(portfolioId).orElse(null);
+        if (p == null || !"PUBLICO".equalsIgnoreCase(p.getVisibilidad())) {
+            return;
+        }
+
         ClickProyectoPortafolio click = ClickProyectoPortafolio.builder()
                 .idPortafolio(portfolioId)
                 .idProyecto(request.getProjectId())
@@ -78,6 +90,12 @@ public class AnalyticsService {
     @Transactional
     public void trackSectionClick(TrackEventRequest request) {
         UUID portfolioId = UUID.fromString(request.getPortfolioId());
+
+        com.portly.domain.entity.Portafolio p = portafolioRepo.findById(portfolioId).orElse(null);
+        if (p == null || !"PUBLICO".equalsIgnoreCase(p.getVisibilidad())) {
+            return;
+        }
+
         ClickSeccionPortafolio click = ClickSeccionPortafolio.builder()
                 .idPortafolio(portfolioId)
                 .tipoSeccion(request.getSectionType())
@@ -160,7 +178,11 @@ public class AnalyticsService {
     public com.portly.dto.GlobalAnalyticsResponse getGlobalAnalytics(UUID userId, String period) {
         LocalDateTime hasta = LocalDateTime.now();
 
-        List<com.portly.domain.entity.Portafolio> portafolios = portafolioRepo.findByUsuario_IdUsuarioOrderByFechaCreacionDesc(userId);
+        // Solo considerar portafolios públicos para las analíticas globales
+        List<com.portly.domain.entity.Portafolio> portafolios = portafolioRepo.findByUsuario_IdUsuarioOrderByFechaCreacionDesc(userId)
+                .stream()
+                .filter(p -> "PUBLICO".equalsIgnoreCase(p.getVisibilidad()))
+                .collect(Collectors.toList());
 
         LocalDateTime fechaCreacionMasAntigua = portafolios.stream()
                 .map(com.portly.domain.entity.Portafolio::getFechaCreacion)
