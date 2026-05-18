@@ -266,22 +266,29 @@ public class AnalyticsService {
 
             LocalDate start = desde.toLocalDate();
             LocalDate end = hasta.toLocalDate();
+            LocalDate fechaCreacionLocalDate = (fechaCreacion != null) ? fechaCreacion.toLocalDate() : null;
+
             for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
                 final LocalDate day = d;
-                long count = raw.stream()
-                        .filter(r -> {
-                            Object dateObj = r[0];
-                            if (dateObj instanceof java.sql.Date) {
-                                return ((java.sql.Date) dateObj).toLocalDate().equals(day);
-                            }
-                            if (dateObj instanceof LocalDate) {
-                                return dateObj.equals(day);
-                            }
-                            return false;
-                        })
-                        .findFirst()
-                        .map(r -> ((Number) r[1]).longValue())
-                        .orElse(0L);
+                Long count = null;
+                
+                if (fechaCreacionLocalDate == null || !day.isBefore(fechaCreacionLocalDate)) {
+                    count = raw.stream()
+                            .filter(r -> {
+                                Object dateObj = r[0];
+                                if (dateObj instanceof java.sql.Date) {
+                                    return ((java.sql.Date) dateObj).toLocalDate().equals(day);
+                                }
+                                if (dateObj instanceof LocalDate) {
+                                    return dateObj.equals(day);
+                                }
+                                return false;
+                            })
+                            .findFirst()
+                            .map(r -> ((Number) r[1]).longValue())
+                            .orElse(0L);
+                }
+                
                 points.add(PortfolioAnalyticsResponse.ChartPoint.builder()
                         .label(day.format(fmt))
                         .value(count)
