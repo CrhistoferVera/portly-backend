@@ -150,6 +150,25 @@ public class PortafolioService {
         return toResponse(portafolio);
     }
 
+    /** Cambia la visibilidad del portafolio a PRIVADO. */
+    @Transactional
+    public PortafolioResponse privatizar(UUID idUsuario, UUID idPortafolio) {
+        Portafolio portafolio = portafolioRepository.findById(idPortafolio)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Portafolio no encontrado"));
+
+        if (!portafolio.getUsuario().getIdUsuario().equals(idUsuario)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "No tienes permiso para privatizar este portafolio");
+        }
+
+        portafolio.setVisibilidad("PRIVADO");
+        portafolioRepository.save(portafolio);
+        log.info("Portafolio privatizado: idPortafolio={}, idUsuario={}", idPortafolio, idUsuario);
+
+        return toResponse(portafolio);
+    }
+
     /** Obtiene el portafolio público con toda su data, aplicando filtros de visibilidad. */
     @Transactional(readOnly = true)
     public ExploreSearchResult searchPortafolios(String q, String sort, int page, int limit) {

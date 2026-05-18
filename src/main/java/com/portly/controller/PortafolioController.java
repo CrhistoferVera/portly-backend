@@ -64,6 +64,14 @@ public class PortafolioController {
         return ResponseEntity.ok(portafolioService.publicar(usuarioId, id));
     }
 
+    @PutMapping("/{id}/privatizar")
+    public ResponseEntity<PortafolioResponse> privatizar(
+            Authentication authentication,
+            @PathVariable UUID id) {
+        UUID usuarioId = (UUID) authentication.getPrincipal();
+        return ResponseEntity.ok(portafolioService.privatizar(usuarioId, id));
+    }
+
     @GetMapping("/{id}/publica")
     public ResponseEntity<PortafolioPublicoResponse> getPublico(
             Authentication authentication,
