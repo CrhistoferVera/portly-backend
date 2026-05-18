@@ -40,6 +40,12 @@ public class AnalyticsService {
     @Transactional
     public Long trackVisit(TrackEventRequest request) {
         UUID portfolioId = UUID.fromString(request.getPortfolioId());
+        
+        com.portly.domain.entity.Portafolio p = portafolioRepo.findById(portfolioId).orElse(null);
+        if (p == null || !"PUBLICO".equalsIgnoreCase(p.getVisibilidad())) {
+            return -1L;
+        }
+
         VisitaPortafolio visita = VisitaPortafolio.builder()
                 .idPortafolio(portfolioId)
                 .visitorId(request.getVisitorId())
@@ -66,6 +72,12 @@ public class AnalyticsService {
     @Transactional
     public void trackProjectClick(TrackEventRequest request) {
         UUID portfolioId = UUID.fromString(request.getPortfolioId());
+
+        com.portly.domain.entity.Portafolio p = portafolioRepo.findById(portfolioId).orElse(null);
+        if (p == null || !"PUBLICO".equalsIgnoreCase(p.getVisibilidad())) {
+            return;
+        }
+
         ClickProyectoPortafolio click = ClickProyectoPortafolio.builder()
                 .idPortafolio(portfolioId)
                 .idProyecto(request.getProjectId())
@@ -78,6 +90,12 @@ public class AnalyticsService {
     @Transactional
     public void trackSectionClick(TrackEventRequest request) {
         UUID portfolioId = UUID.fromString(request.getPortfolioId());
+
+        com.portly.domain.entity.Portafolio p = portafolioRepo.findById(portfolioId).orElse(null);
+        if (p == null || !"PUBLICO".equalsIgnoreCase(p.getVisibilidad())) {
+            return;
+        }
+
         ClickSeccionPortafolio click = ClickSeccionPortafolio.builder()
                 .idPortafolio(portfolioId)
                 .tipoSeccion(request.getSectionType())
