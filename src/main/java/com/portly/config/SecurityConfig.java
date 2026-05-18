@@ -42,7 +42,7 @@ public class SecurityConfig {
                 // 2. Rutas públicas (MOVEMOS SEARCH AL PRINCIPIO PARA EVITAR INTERFERENCIAS)
                 .requestMatchers("/api/portafolios/search", "/api/portafolios/search/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/portafolios/*/publica").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/analytics/track/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/metrics/ev/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/auth/**").permitAll()
 

@@ -13,8 +13,6 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/analytics")
-
 @RequiredArgsConstructor
 public class AnalyticsController {
 
@@ -22,25 +20,25 @@ public class AnalyticsController {
 
     // ─── Tracking endpoints (públicos) ──────────────────────────────────────
 
-    @PostMapping("/track/visit")
+    @PostMapping("/api/metrics/ev/visit")
     public ResponseEntity<Map<String, Long>> trackVisit(@RequestBody TrackEventRequest request) {
         Long visitId = analyticsService.trackVisit(request);
         return ResponseEntity.ok(Map.of("visitId", visitId));
     }
 
-    @PostMapping("/track/visit-duration")
+    @PostMapping("/api/metrics/ev/visit-duration")
     public ResponseEntity<Void> trackVisitDuration(@RequestBody TrackEventRequest request) {
         analyticsService.updateVisitDuration(request);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/track/project-click")
+    @PostMapping("/api/metrics/ev/project-click")
     public ResponseEntity<Void> trackProjectClick(@RequestBody TrackEventRequest request) {
         analyticsService.trackProjectClick(request);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/track/section-click")
+    @PostMapping("/api/metrics/ev/section-click")
     public ResponseEntity<Void> trackSectionClick(@RequestBody TrackEventRequest request) {
         analyticsService.trackSectionClick(request);
         return ResponseEntity.ok().build();
@@ -48,7 +46,7 @@ public class AnalyticsController {
 
     // ─── Consulta de analíticas (autenticado) ───────────────────────────────
 
-    @GetMapping("/portfolio/{id}")
+    @GetMapping("/api/analytics/portfolio/{id}")
     public ResponseEntity<PortfolioAnalyticsResponse> getPortfolioAnalytics(
             Authentication authentication,
             @PathVariable UUID id,
@@ -57,7 +55,7 @@ public class AnalyticsController {
         return ResponseEntity.ok(analyticsService.getPortfolioAnalytics(userId, id, period));
     }
 
-    @GetMapping("/global")
+    @GetMapping("/api/analytics/global")
     public ResponseEntity<GlobalAnalyticsResponse> getGlobalAnalytics(
             Authentication authentication,
             @RequestParam(required = false, defaultValue = "all") String period) {
