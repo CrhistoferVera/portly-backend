@@ -8,5 +8,5 @@ import java.util.UUID;
 
 public interface ExperienciaLaboralRepository extends JpaRepository<ExperienciaLaboral, Integer> {
 
-    List<ExperienciaLaboral> findByUsuario_UsuarioId(UUID usuarioId);
+    List<ExperienciaLaboral> findByUsuario_IdUsuario(UUID idUsuario);
 }

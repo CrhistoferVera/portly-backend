@@ -11,23 +11,27 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "usuario")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"perfil", "proveedores", "experiencias", "enlaces", "codigosRecuperacion", "evidencias", "proyectos", "habilidades", "misPortafolios", "habilidadesBlandas", "formaciones", "actualizaciones"})
 public class Usuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "usuario_id", nullable = false, updatable = false)
-    private UUID usuarioId;
+    @Column(name = "id_usuario", nullable = false, updatable = false)
+    @EqualsAndHashCode.Include
+    private UUID idUsuario;
 
     @Column(name = "email", nullable = false, length = 150, unique = true)
     private String email;
 
     @JsonIgnore
-    @Column(name = "password_hash", length = 255)
-    private String passwordHash;
+    @Column(name = "contrasena_encriptada", length = 255)
+    private String contrasenaEncriptada;
 
     @Column(name = "rol", nullable = false, length = 20)
     private String rol;
@@ -35,14 +39,14 @@ public class Usuario {
     @Column(name = "estado", nullable = false, length = 20)
     private String estado;
 
-    @Column(name = "email_verificado", nullable = false)
-    private Boolean emailVerificado;
+    @Column(name = "correo_verificado", nullable = false)
+    private Boolean correoVerificado;
 
-    @Column(name = "fecha_registro", nullable = false)
-    private LocalDateTime fechaRegistro;
+    @Column(name = "fecha_creacion", nullable = false)
+    private LocalDateTime fechaCreacion;
 
-    @Column(name = "ultimo_acceso")
-    private LocalDateTime ultimoAcceso;
+    @Column(name = "fecha_ultimo_acceso")
+    private LocalDateTime fechaUltimoAcceso;
 
 
     @JsonManagedReference("usuario-proveedores")
@@ -60,4 +64,41 @@ public class Usuario {
     @JsonManagedReference("usuario-enlaces")
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EnlaceProfesional> enlaces;
+
+    @JsonManagedReference("usuario-codigos-recuperacion")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CodigoRecuperacion> codigosRecuperacion;
+
+    @JsonManagedReference("usuario-evidencias")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EvidenciaProyecto> evidencias;
+
+    @JsonManagedReference("usuario-proyectos")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Proyecto> proyectos;
+
+    @JsonManagedReference("usuario-habilidades")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<HabilidadTecnica> habilidades;
+
+    @JsonManagedReference("usuario-portafolios")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Portafolio> misPortafolios;
+
+    @JsonManagedReference("usuario-habilidades-blandas")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<HabilidadBlanda> habilidadesBlandas;
+
+    @JsonManagedReference("usuario-formaciones")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FormacionAcademica> formaciones;
+
+    @JsonManagedReference("usuario-actualizaciones")
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ActualizacionAcademica> actualizaciones;
+
+
+    @Builder.Default
+    @Column(name = "perfil_completo")
+    private Boolean perfilCompleto = true;
 }

@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "enlace_profesional")
+@Table(name = "enlace_perfil")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,21 +14,21 @@ public class EnlaceProfesional {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_enlace", nullable = false)
-    private Integer idEnlace;
+    @Column(name = "id_enlace_profesional", nullable = false)
+    private Integer idEnlaceProfesional;
 
     @JsonBackReference("usuario-enlaces")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false,
-                foreignKey = @ForeignKey(name = "fk_enlace_usuario"))
+    @JoinColumn(name = "id_usuario", nullable = false,
+                foreignKey = @ForeignKey(name = "fk_enlace_perfil_usuario"))
     private Usuario usuario;
 
-    @Column(name = "plataforma", nullable = false, length = 50)
-    private String plataforma;
+    @Column(name = "plataforma_profesional", nullable = false, length = 50)
+    private String plataformaProfesional;
 
-    @Column(name = "url_perfil", nullable = false, length = 255)
-    private String urlPerfil;
+    @Column(name = "direccion_enlace", nullable = false, length = 255)
+    private String direccionEnlace;
 
-    @Column(name = "visible", nullable = false)
-    private Boolean visible;
+    @Column(name = "es_visible", nullable = false)
+    private Boolean esVisible;
 }

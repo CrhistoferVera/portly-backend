@@ -11,40 +11,44 @@ import java.time.LocalDateTime;
     name = "perfil_usuario",
     uniqueConstraints = @UniqueConstraint(
         name = "perfil_usuario_usuario_unique",
-        columnNames = {"usuario_id"}
+        columnNames = {"id_usuario"}
     )
 )
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"usuario"})
 public class PerfilUsuario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_perfil", nullable = false)
-    private Integer idPerfil;
+    @Column(name = "id_perfil_usuario", nullable = false)
+    @EqualsAndHashCode.Include
+    private Integer idPerfilUsuario;
 
     @JsonBackReference("usuario-perfil")
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id", nullable = false, unique = true,
+    @JoinColumn(name = "id_usuario", nullable = false, unique = true,
                 foreignKey = @ForeignKey(name = "fk_perfil_usuario_usuario"))
     private Usuario usuario;
 
-    @Column(name = "nombres", nullable = false, length = 100)
-    private String nombres;
+    @Column(name = "nombre", nullable = false, length = 100)
+    private String nombre;
 
-    @Column(name = "apellidos", nullable = false, length = 100)
-    private String apellidos;
+    @Column(name = "apellido", nullable = false, length = 100)
+    private String apellido;
 
     @Column(name = "titular_profesional", length = 150)
     private String titularProfesional;
 
-    @Column(name = "sobre_mi", columnDefinition = "TEXT")
-    private String sobreMi;
+    @Column(name = "acerca_de_mi", columnDefinition = "TEXT")
+    private String acercaDeMi;
 
-    @Column(name = "foto_url", length = 255)
-    private String fotoUrl;
+    @Column(name = "enlace_foto", length = 255)
+    private String enlaceFoto;
 
     @Column(name = "pais", length = 100)
     private String pais;
@@ -52,9 +56,68 @@ public class PerfilUsuario {
     @Column(name = "ciudad", length = 100)
     private String ciudad;
 
-    @Column(name = "cv_automatico", nullable = false)
-    private Boolean cvAutomatico;
+    @Column(name = "codigo_telefono", length = 10)
+    private String codigoTelefono;
 
-    @Column(name = "actualizado_en", nullable = false)
-    private LocalDateTime actualizadoEn;
+    @Column(name = "telefono", length = 20)
+    private String telefono;
+
+    @Builder.Default
+    @Column(name = "mostrar_correo")
+    private Boolean mostrarCorreo = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_profesion")
+    private Boolean mostrarProfesion = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_biografia")
+    private Boolean mostrarBiografia = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_instagram")
+    private Boolean mostrarInstagram = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_facebook")
+    private Boolean mostrarFacebook = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_youtube")
+    private Boolean mostrarYoutube = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_telefono")
+    private Boolean mostrarTelefono = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_pais")
+    private Boolean mostrarPais = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_linkedin")
+    private Boolean mostrarLinkedin = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_github")
+    private Boolean mostrarGithub = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_habilidades_tecnicas")
+    private Boolean mostrarHabilidadesTecnicas = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_habilidades_blandas")
+    private Boolean mostrarHabilidadesBlandas = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_trayectoria")
+    private Boolean mostrarTrayectoria = true;
+
+    @Builder.Default
+    @Column(name = "mostrar_formacion")
+    private Boolean mostrarFormacion = true;
+
+    @Column(name = "fecha_actualizacion", nullable = false)
+    private LocalDateTime fechaActualizacion;
 }

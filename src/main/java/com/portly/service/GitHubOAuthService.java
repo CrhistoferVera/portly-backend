@@ -1,22 +1,25 @@
 package com.portly.service;
 
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
-@RequiredArgsConstructor
-public class GitHubOAuthService {
+public class GitHubOAuthService extends AbstractOAuthService {
 
-    private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
+    public GitHubOAuthService(RestTemplate restTemplate) {
+        super(restTemplate);
+    }
+
+    @Override
+    public String getProviderName() { return "github"; }
 
     @Value("${github.client-id}")
     private String clientId;
@@ -36,31 +39,15 @@ public class GitHubOAuthService {
         return AUTH_URL
                 + "?client_id=" + clientId
                 + "&redirect_uri=" + redirectUri
-                + "&scope=read:user%20user:email%20public_repo";
+                + "&scope=read:user%20user:email%20public_repo"
+                + "&prompt=consent";
     }
 
 
-    @SuppressWarnings("unchecked")
     public String exchangeCodeForToken(String code) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        Map<String, String> body = Map.of(
-                "client_id", clientId,
-                "client_secret", clientSecret,
-                "code", code,
-                "redirect_uri", redirectUri
-        );
-
-        ResponseEntity<Map<String, Object>> response = restTemplate.postForEntity(
-                TOKEN_URL, new HttpEntity<>(body, headers), (Class<Map<String, Object>>) (Class<?>) Map.class);
-
-        Map<String, Object> tokenResponse = response.getBody();
-        if (tokenResponse == null || !tokenResponse.containsKey("access_token")) {
-            throw new RuntimeException("GitHub no devolvió access_token: " + tokenResponse);
-        }
-        return (String) tokenResponse.get("access_token");
+        String accessToken = doExchangeCodeForToken(TOKEN_URL, code, redirectUri, clientId, clientSecret);
+        log.info("Token de GitHub obtenido correctamente");
+        return accessToken;
     }
 
 
@@ -126,7 +113,8 @@ public class GitHubOAuthService {
                     .map(e -> (String) e.get("email"))
                     .findFirst()
                     .orElse(null);
-        } catch (Exception e) {
+        } catch (RestClientException | NullPointerException ex) {
+            log.warn("No se pudo obtener el email primario de GitHub: {}", ex.getMessage());
             return null;
         }
     }
@@ -142,7 +130,7 @@ public class GitHubOAuthService {
             List<Map<String, Object>> repos = resp.getBody();
             if (repos == null || repos.isEmpty()) return null;
 
-                    List<Map<String, Object>> topRepos = repos.stream()
+            List<Map<String, Object>> topRepos = repos.stream()
                     .sorted((a, b) -> {
                         int starsA = ((Number) a.getOrDefault("stargazers_count", 0)).intValue();
                         int starsB = ((Number) b.getOrDefault("stargazers_count", 0)).intValue();
@@ -152,17 +140,37 @@ public class GitHubOAuthService {
                     .map(r -> {
                         Map<String, Object> repo = new java.util.HashMap<>();
                         repo.put("name",        r.getOrDefault("name", ""));
-                        repo.put("description", r.get("description")); // puede ser null
+                        repo.put("description", r.get("description"));
                         repo.put("url",         r.getOrDefault("html_url", ""));
                         repo.put("stars",       r.getOrDefault("stargazers_count", 0));
-                        repo.put("language",    r.get("language")); // puede ser null
+                        repo.put("language",    r.get("language"));
                         return repo;
                     })
                     .collect(Collectors.toList());
 
-            return objectMapper.writeValueAsString(topRepos);
-        } catch (Exception e) {
+            // Serializar manualmente a JSON sin depender de ObjectMapper como bean
+            StringBuilder sb = new StringBuilder("[");
+            for (int i = 0; i < topRepos.size(); i++) {
+                Map<String, Object> r = topRepos.get(i);
+                sb.append("{");
+                sb.append("\"name\":").append(jsonStr(r.get("name"))).append(",");
+                sb.append("\"description\":").append(jsonStr(r.get("description"))).append(",");
+                sb.append("\"url\":").append(jsonStr(r.get("url"))).append(",");
+                sb.append("\"stars\":").append(r.get("stars")).append(",");
+                sb.append("\"language\":").append(jsonStr(r.get("language")));
+                sb.append("}");
+                if (i < topRepos.size() - 1) sb.append(",");
+            }
+            sb.append("]");
+            return sb.toString();
+        } catch (RestClientException | NullPointerException ex) {
+            log.warn("No se pudo obtener los repositorios de GitHub: {}", ex.getMessage());
             return null;
         }
+    }
+
+    private String jsonStr(Object value) {
+        if (value == null) return "null";
+        return "\"" + value.toString().replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
     }
 }

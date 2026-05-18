@@ -1,0 +1,17 @@
+name: CD — Deploy to EasyPanel
+
+on:
+  workflow_run:
+    workflows: ["CI — Build & Test"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy to EasyPanel
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Trigger EasyPanel Deploy
+        run: curl -X POST ${{ secrets.EASYPANEL_DEPLOY_WEBHOOK }}

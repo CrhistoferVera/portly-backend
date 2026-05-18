@@ -8,5 +8,5 @@ import java.util.UUID;
 
 public interface EnlaceProfesionalRepository extends JpaRepository<EnlaceProfesional, Integer> {
 
-    List<EnlaceProfesional> findByUsuario_UsuarioId(UUID usuarioId);
+    List<EnlaceProfesional> findByUsuario_IdUsuario(UUID idUsuario);
 }
