@@ -250,8 +250,9 @@ public class AnalyticsService {
                             .orElse(0L);
                 }
                 
+                java.time.format.DateTimeFormatter isoFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
                 points.add(PortfolioAnalyticsResponse.ChartPoint.builder()
-                        .label(current.toString() + "Z")
+                        .label(current.format(isoFmt))
                         .value(value)
                         .build());
                 current = current.plusHours(1);
