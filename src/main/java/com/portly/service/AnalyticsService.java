@@ -160,7 +160,11 @@ public class AnalyticsService {
     public com.portly.dto.GlobalAnalyticsResponse getGlobalAnalytics(UUID userId, String period) {
         LocalDateTime hasta = LocalDateTime.now();
 
-        List<com.portly.domain.entity.Portafolio> portafolios = portafolioRepo.findByUsuario_IdUsuarioOrderByFechaCreacionDesc(userId);
+        // Solo considerar portafolios públicos para las analíticas globales
+        List<com.portly.domain.entity.Portafolio> portafolios = portafolioRepo.findByUsuario_IdUsuarioOrderByFechaCreacionDesc(userId)
+                .stream()
+                .filter(p -> "PUBLICO".equalsIgnoreCase(p.getVisibilidad()))
+                .collect(Collectors.toList());
 
         LocalDateTime fechaCreacionMasAntigua = portafolios.stream()
                 .map(com.portly.domain.entity.Portafolio::getFechaCreacion)
