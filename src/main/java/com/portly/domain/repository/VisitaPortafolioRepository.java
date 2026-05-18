@@ -30,11 +30,11 @@ public interface VisitaPortafolioRepository extends JpaRepository<VisitaPortafol
             @Param("desde") LocalDateTime desde,
             @Param("hasta") LocalDateTime hasta);
 
-    /** Visitas agrupadas por hora para el gráfico */
-    @Query("SELECT EXTRACT(HOUR FROM v.fechaVisita) AS hora, COUNT(v) AS total " +
+    /** Visitas agrupadas por día y hora para el gráfico de 24h */
+    @Query("SELECT EXTRACT(DAY FROM v.fechaVisita) AS dia, EXTRACT(HOUR FROM v.fechaVisita) AS hora, COUNT(v) AS total " +
            "FROM VisitaPortafolio v " +
            "WHERE v.idPortafolio = :id AND v.fechaVisita BETWEEN :desde AND :hasta " +
-           "GROUP BY EXTRACT(HOUR FROM v.fechaVisita) ORDER BY hora")
+           "GROUP BY EXTRACT(DAY FROM v.fechaVisita), EXTRACT(HOUR FROM v.fechaVisita) ORDER BY dia, hora")
     List<Object[]> countByHour(
             @Param("id") UUID idPortafolio,
             @Param("desde") LocalDateTime desde,
