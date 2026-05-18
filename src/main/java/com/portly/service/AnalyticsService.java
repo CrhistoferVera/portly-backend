@@ -160,7 +160,11 @@ public class AnalyticsService {
     public com.portly.dto.GlobalAnalyticsResponse getGlobalAnalytics(UUID userId, String period) {
         LocalDateTime hasta = LocalDateTime.now();
 
-        List<com.portly.domain.entity.Portafolio> portafolios = portafolioRepo.findByUsuario_IdUsuarioOrderByFechaCreacionDesc(userId);
+        // Solo considerar portafolios públicos para las analíticas globales
+        List<com.portly.domain.entity.Portafolio> portafolios = portafolioRepo.findByUsuario_IdUsuarioOrderByFechaCreacionDesc(userId)
+                .stream()
+                .filter(p -> "PUBLICO".equalsIgnoreCase(p.getVisibilidad()))
+                .collect(Collectors.toList());
 
         LocalDateTime fechaCreacionMasAntigua = portafolios.stream()
                 .map(com.portly.domain.entity.Portafolio::getFechaCreacion)
@@ -250,8 +254,9 @@ public class AnalyticsService {
                             .orElse(0L);
                 }
                 
+                java.time.format.DateTimeFormatter isoFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
                 points.add(PortfolioAnalyticsResponse.ChartPoint.builder()
-                        .label(String.format("%02d:00", hour))
+                        .label(current.format(isoFmt))
                         .value(value)
                         .build());
                 current = current.plusHours(1);
@@ -265,22 +270,29 @@ public class AnalyticsService {
 
             LocalDate start = desde.toLocalDate();
             LocalDate end = hasta.toLocalDate();
+            LocalDate fechaCreacionLocalDate = (fechaCreacion != null) ? fechaCreacion.toLocalDate() : null;
+
             for (LocalDate d = start; !d.isAfter(end); d = d.plusDays(1)) {
                 final LocalDate day = d;
-                long count = raw.stream()
-                        .filter(r -> {
-                            Object dateObj = r[0];
-                            if (dateObj instanceof java.sql.Date) {
-                                return ((java.sql.Date) dateObj).toLocalDate().equals(day);
-                            }
-                            if (dateObj instanceof LocalDate) {
-                                return dateObj.equals(day);
-                            }
-                            return false;
-                        })
-                        .findFirst()
-                        .map(r -> ((Number) r[1]).longValue())
-                        .orElse(0L);
+                Long count = null;
+                
+                if (fechaCreacionLocalDate == null || !day.isBefore(fechaCreacionLocalDate)) {
+                    count = raw.stream()
+                            .filter(r -> {
+                                Object dateObj = r[0];
+                                if (dateObj instanceof java.sql.Date) {
+                                    return ((java.sql.Date) dateObj).toLocalDate().equals(day);
+                                }
+                                if (dateObj instanceof LocalDate) {
+                                    return dateObj.equals(day);
+                                }
+                                return false;
+                            })
+                            .findFirst()
+                            .map(r -> ((Number) r[1]).longValue())
+                            .orElse(0L);
+                }
+                
                 points.add(PortfolioAnalyticsResponse.ChartPoint.builder()
                         .label(day.format(fmt))
                         .value(count)
