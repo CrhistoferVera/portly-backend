@@ -39,7 +39,7 @@ public class PortfolioAnalyticsResponse {
     @AllArgsConstructor
     public static class ChartPoint {
         private String label;
-        private long value;
+        private Long value;
     }
 
     @Data
