@@ -251,7 +251,7 @@ public class AnalyticsService {
                 }
                 
                 points.add(PortfolioAnalyticsResponse.ChartPoint.builder()
-                        .label(String.format("%02d:00", hour))
+                        .label(current.toString() + "Z")
                         .value(value)
                         .build());
                 current = current.plusHours(1);
