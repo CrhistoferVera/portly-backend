@@ -235,16 +235,20 @@ public class AnalyticsService {
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
+    private LocalDateTime truncateToHour(LocalDateTime dt) {
+        if (dt == null) return null;
+        return dt.withMinute(0).withSecond(0).withNano(0);
+    }
+
     private LocalDateTime calcularDesde(String period, LocalDateTime hasta, LocalDateTime fechaCreacion) {
         return switch (period != null ? period.toLowerCase() : "all") {
             case "24h" -> hasta.minusHours(24);
             case "7d" -> hasta.minusDays(7);
             case "30d" -> hasta.minusDays(30);
             default -> {
-                // "all" — desde la creación pero máximo 90 días para no sobrecargar el gráfico
-                LocalDateTime minDate = hasta.minusDays(90);
+                // "all" — desde la creación
                 LocalDateTime desde = fechaCreacion != null ? fechaCreacion : LocalDateTime.of(2020, 1, 1, 0, 0);
-                yield desde.isBefore(minDate) ? minDate : desde;
+                yield desde;
             }
         };
     }
@@ -253,26 +257,29 @@ public class AnalyticsService {
             UUID portfolioId, LocalDateTime desde, LocalDateTime hasta, String period, LocalDateTime fechaCreacion) {
 
         if ("24h".equalsIgnoreCase(period)) {
-            // Agrupar por hora del día
+            // Agrupar por horas para reducir el ruido en el gráfico (típico en portfolios de tráfico bajo/medio)
             List<Object[]> raw = visitaRepo.countByHour(portfolioId, desde, hasta);
             List<PortfolioAnalyticsResponse.ChartPoint> points = new ArrayList<>();
             
-            LocalDateTime current = desde.truncatedTo(java.time.temporal.ChronoUnit.HOURS);
-            LocalDateTime end = hasta.truncatedTo(java.time.temporal.ChronoUnit.HOURS);
+            LocalDateTime current = truncateToHour(desde);
+            LocalDateTime end = truncateToHour(hasta);
+            LocalDateTime creacionTrunc = truncateToHour(fechaCreacion);
             
             while (!current.isAfter(end)) {
                 final int day = current.getDayOfMonth();
                 final int hour = current.getHour();
                 Long value = null;
-                if (fechaCreacion == null || !current.isBefore(fechaCreacion.truncatedTo(java.time.temporal.ChronoUnit.HOURS))) {
+
+                if (creacionTrunc == null || !current.isBefore(creacionTrunc)) {
                     value = raw.stream()
-                            .filter(r -> ((Number) r[0]).intValue() == day && ((Number) r[1]).intValue() == hour)
+                            .filter(r -> ((Number) r[0]).intValue() == day && 
+                                         ((Number) r[1]).intValue() == hour)
                             .findFirst()
                             .map(r -> ((Number) r[2]).longValue())
                             .orElse(0L);
                 }
                 
-                java.time.format.DateTimeFormatter isoFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                java.time.format.DateTimeFormatter isoFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
                 points.add(PortfolioAnalyticsResponse.ChartPoint.builder()
                         .label(current.format(isoFmt))
                         .value(value)
@@ -283,7 +290,7 @@ public class AnalyticsService {
         } else {
             // Agrupar por día
             List<Object[]> raw = visitaRepo.countByDay(portfolioId, desde, hasta);
-            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
+            java.time.format.DateTimeFormatter isoFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
             List<PortfolioAnalyticsResponse.ChartPoint> points = new ArrayList<>();
 
             LocalDate start = desde.toLocalDate();
@@ -312,7 +319,7 @@ public class AnalyticsService {
                 }
                 
                 points.add(PortfolioAnalyticsResponse.ChartPoint.builder()
-                        .label(day.format(fmt))
+                        .label(day.atStartOfDay().format(isoFmt))
                         .value(count)
                         .build());
             }
