@@ -171,7 +171,9 @@ public class PortafolioService {
 
     /** Obtiene el portafolio público con toda su data, aplicando filtros de visibilidad. */
     @Transactional(readOnly = true)
-    public ExploreSearchResult searchPortafolios(String q, String sort, int page, int limit) {
+    public ExploreSearchResult searchPortafolios(String q, String sort, int page, int limit,
+                                                 String nacionalidad, String gradoAcademico,
+                                                 String habilidadesTecnicas, String habilidadesBlandas) {
         // Page is 1-indexed from frontend, so subtract 1 for Spring Data JPA
         int pageNumber = page > 0 ? page - 1 : 0;
         
@@ -185,7 +187,8 @@ public class PortafolioService {
         
         Pageable pageable = PageRequest.of(pageNumber, limit, Sort.by(direction, sortBy));
         
-        Page<Portafolio> portafoliosPage = portafolioRepository.searchPublicPortafolios(q, pageable);
+        Page<Portafolio> portafoliosPage = portafolioRepository.searchPublicPortafolios(
+                q, nacionalidad, gradoAcademico, habilidadesTecnicas, habilidadesBlandas, pageable);
         
         List<ExplorePortfolio> portfolios = portafoliosPage.getContent().stream().map(p -> {
             PerfilUsuario perfil = p.getUsuario() != null ? p.getUsuario().getPerfil() : null;

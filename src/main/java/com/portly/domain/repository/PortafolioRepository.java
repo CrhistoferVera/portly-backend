@@ -27,6 +27,16 @@ public interface PortafolioRepository extends JpaRepository<Portafolio, UUID> {
            "OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(pf.nombre) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(pf.apellido) LIKE LOWER(CONCAT('%', :q, '%')) " +
-           "OR LOWER(pf.titularProfesional) LIKE LOWER(CONCAT('%', :q, '%')))")
-    Page<Portafolio> searchPublicPortafolios(@Param("q") String q, Pageable pageable);
+           "OR LOWER(pf.titularProfesional) LIKE LOWER(CONCAT('%', :q, '%'))) " +
+           "AND (:nacionalidad IS NULL OR :nacionalidad = '' OR pf.pais = :nacionalidad) " +
+           "AND (:gradoAcademico IS NULL OR :gradoAcademico = '' OR EXISTS (SELECT 1 FROM u.formaciones f WHERE f.nivel = :gradoAcademico)) " +
+           "AND (:habilidadesTecnicas IS NULL OR :habilidadesTecnicas = '' OR EXISTS (SELECT 1 FROM u.habilidades h WHERE h.nombre = :habilidadesTecnicas)) " +
+           "AND (:habilidadesBlandas IS NULL OR :habilidadesBlandas = '' OR EXISTS (SELECT 1 FROM u.habilidadesBlandas hb WHERE hb.nombreHabilidad = :habilidadesBlandas))")
+    Page<Portafolio> searchPublicPortafolios(
+            @Param("q") String q, 
+            @Param("nacionalidad") String nacionalidad,
+            @Param("gradoAcademico") String gradoAcademico,
+            @Param("habilidadesTecnicas") String habilidadesTecnicas,
+            @Param("habilidadesBlandas") String habilidadesBlandas,
+            Pageable pageable);
 }
