@@ -279,7 +279,7 @@ public class AnalyticsService {
                             .orElse(0L);
                 }
                 
-                java.time.format.DateTimeFormatter isoFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+                java.time.format.DateTimeFormatter isoFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
                 points.add(PortfolioAnalyticsResponse.ChartPoint.builder()
                         .label(current.format(isoFmt))
                         .value(value)
@@ -290,7 +290,7 @@ public class AnalyticsService {
         } else {
             // Agrupar por día
             List<Object[]> raw = visitaRepo.countByDay(portfolioId, desde, hasta);
-            java.time.format.DateTimeFormatter isoFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+            java.time.format.DateTimeFormatter isoFmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
             List<PortfolioAnalyticsResponse.ChartPoint> points = new ArrayList<>();
 
             LocalDate start = desde.toLocalDate();
