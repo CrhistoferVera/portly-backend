@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AnalyticsService {
+
+    private static final ZoneId ZONE = ZoneId.of("America/La_Paz");
 
     private final VisitaPortafolioRepository visitaRepo;
     private final ClickProyectoPortafolioRepository clickProyectoRepo;
@@ -49,7 +52,7 @@ public class AnalyticsService {
         VisitaPortafolio visita = VisitaPortafolio.builder()
                 .idPortafolio(portfolioId)
                 .visitorId(request.getVisitorId())
-                .fechaVisita(LocalDateTime.now())
+                .fechaVisita(LocalDateTime.now(ZONE))
                 .duracionSegundos(0)
                 .build();
         visitaRepo.save(visita);
@@ -81,7 +84,7 @@ public class AnalyticsService {
         ClickProyectoPortafolio click = ClickProyectoPortafolio.builder()
                 .idPortafolio(portfolioId)
                 .idProyecto(request.getProjectId())
-                .fechaClick(LocalDateTime.now())
+                .fechaClick(LocalDateTime.now(ZONE))
                 .build();
         clickProyectoRepo.save(click);
     }
@@ -119,7 +122,7 @@ public class AnalyticsService {
         }
 
         // Calcular rango de fechas según el periodo
-        LocalDateTime hasta = LocalDateTime.now();
+        LocalDateTime hasta = LocalDateTime.now(ZONE);
         LocalDateTime desde = calcularDesde(period, hasta, portafolio.getFechaCreacion());
 
         // KPIs
@@ -176,7 +179,7 @@ public class AnalyticsService {
     /** Obtiene las analíticas globales (todos los portafolios del usuario). */
     @Transactional(readOnly = true)
     public com.portly.dto.GlobalAnalyticsResponse getGlobalAnalytics(UUID userId, String period) {
-        LocalDateTime hasta = LocalDateTime.now();
+        LocalDateTime hasta = LocalDateTime.now(ZONE);
 
         // Solo considerar portafolios públicos para las analíticas globales
         List<com.portly.domain.entity.Portafolio> portafolios = portafolioRepo.findByUsuario_IdUsuarioOrderByFechaCreacionDesc(userId)
