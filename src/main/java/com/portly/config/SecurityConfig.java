@@ -46,6 +46,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/auth/**").permitAll()
 
+                // Rutas de administración
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
                 // 3. Todo lo demás requiere autenticación
                 .anyRequest().authenticated()
             )
