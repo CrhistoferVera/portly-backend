@@ -1,11 +1,13 @@
 package com.portly.domain.repository;
 
 import com.portly.domain.entity.Portafolio;
+import com.portly.dto.DashboardStatsResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,10 +35,17 @@ public interface PortafolioRepository extends JpaRepository<Portafolio, UUID> {
            "AND (:habilidadesTecnicas IS NULL OR :habilidadesTecnicas = '' OR EXISTS (SELECT 1 FROM u.habilidades h WHERE h.nombre = :habilidadesTecnicas)) " +
            "AND (:habilidadesBlandas IS NULL OR :habilidadesBlandas = '' OR EXISTS (SELECT 1 FROM u.habilidadesBlandas hb WHERE hb.nombreHabilidad = :habilidadesBlandas))")
     Page<Portafolio> searchPublicPortafolios(
-            @Param("q") String q, 
+            @Param("q") String q,
             @Param("nacionalidad") String nacionalidad,
             @Param("gradoAcademico") String gradoAcademico,
             @Param("habilidadesTecnicas") String habilidadesTecnicas,
             @Param("habilidadesBlandas") String habilidadesBlandas,
             Pageable pageable);
+
+    @Query("SELECT COUNT(p) FROM Portafolio p WHERE p.visibilidad = 'PUBLICO' AND p.fechaCreacion >= :desde")
+    long countPublicosDesde(@Param("desde") LocalDateTime desde);
+
+    @Query("SELECT new com.portly.dto.DashboardStatsResponse$PlantillaStats(p.plantilla.nombre, COUNT(p)) " +
+           "FROM Portafolio p GROUP BY p.plantilla.nombre ORDER BY COUNT(p) DESC")
+    List<DashboardStatsResponse.PlantillaStats> findTopPlantillas(Pageable pageable);
 }
