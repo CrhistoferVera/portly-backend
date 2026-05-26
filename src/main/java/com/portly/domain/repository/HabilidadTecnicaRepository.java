@@ -14,4 +14,10 @@ public interface HabilidadTecnicaRepository extends JpaRepository<HabilidadTecni
 
     boolean existsByUsuario_IdUsuarioAndNombreIgnoreCaseAndIdHabilidadNot(
             UUID idUsuario, String nombre, Integer idHabilidad);
+
+    @org.springframework.data.jpa.repository.Query("SELECT new com.portly.dto.SkillReportDto(ht.nombre, 'Técnicas', COUNT(ht)) " +
+            "FROM HabilidadTecnica ht " +
+            "WHERE ht.fechaCreacion BETWEEN :desde AND :hasta " +
+            "GROUP BY ht.nombre")
+    List<com.portly.dto.SkillReportDto> getSkillReport(java.time.LocalDateTime desde, java.time.LocalDateTime hasta);
 }

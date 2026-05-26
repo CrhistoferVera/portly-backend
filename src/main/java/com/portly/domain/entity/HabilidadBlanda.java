@@ -25,4 +25,14 @@ public class HabilidadBlanda {
 
     @Column(name = "nombre_habilidad", nullable = false, length = 100)
     private String nombreHabilidad;
+
+    @Column(name = "fecha_creacion", nullable = true, updatable = false)
+    private java.time.LocalDateTime fechaCreacion;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.fechaCreacion == null) {
+            this.fechaCreacion = java.time.LocalDateTime.now();
+        }
+    }
 }

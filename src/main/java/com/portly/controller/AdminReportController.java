@@ -38,4 +38,25 @@ public class AdminReportController {
                 .headers(headers)
                 .body(pdfBytes);
     }
+
+    @GetMapping("/skills")
+    public ResponseEntity<byte[]> generateSkillReport(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(defaultValue = "Todas") String skillType) {
+
+        byte[] pdfBytes = adminReportService.generateSkillReportPdf(desde, hasta, skillType);
+
+        if (pdfBytes.length == 0) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "reporte_habilidades.pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
+    }
 }
