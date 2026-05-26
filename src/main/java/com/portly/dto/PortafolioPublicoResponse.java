@@ -15,6 +15,7 @@ public class PortafolioPublicoResponse {
     private String visibilidad;
     private String templateNombre;
     private TemplateSchema templateSchema;
+    private boolean hasPendingReport;
     
     private UsuarioPublico usuario;
     private List<SkillPublica> skills;

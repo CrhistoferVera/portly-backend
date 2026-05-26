@@ -25,6 +25,7 @@ public interface PortafolioRepository extends JpaRepository<Portafolio, UUID> {
 
     @Query("SELECT p FROM Portafolio p JOIN p.usuario u LEFT JOIN u.perfil pf " +
            "WHERE p.visibilidad = 'PUBLICO' " +
+           "AND u.estado != 'suspendido' " +
            "AND (:q IS NULL OR :q = '' " +
            "OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(pf.nombre) LIKE LOWER(CONCAT('%', :q, '%')) " +

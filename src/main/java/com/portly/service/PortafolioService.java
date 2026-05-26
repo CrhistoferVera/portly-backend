@@ -10,6 +10,9 @@ import com.portly.domain.repository.PlantillaRepository;
 import com.portly.domain.repository.PortafolioRepository;
 import com.portly.domain.repository.RedesSocialesRepository;
 import com.portly.domain.repository.UsuarioRepository;
+import com.portly.domain.repository.DenunciaAgrupadaRepository;
+import com.portly.domain.repository.DenunciaIndividualRepository;
+import com.portly.domain.entity.DenunciaAgrupada;
 import com.portly.dto.PortafolioRequest;
 import com.portly.dto.PortafolioResponse;
 import com.portly.dto.PortafolioPublicoResponse;
@@ -45,6 +48,8 @@ public class PortafolioService {
     private final PlantillaRepository plantillaRepository;
     private final UsuarioRepository usuarioRepository;
     private final RedesSocialesRepository redesSocialesRepository;
+    private final DenunciaAgrupadaRepository denunciaAgrupadaRepository;
+    private final DenunciaIndividualRepository denunciaIndividualRepository;
     private final ObjectMapper objectMapper;
 
     @Value("${app.frontend-url}")
@@ -288,12 +293,23 @@ public class PortafolioService {
                     : perfil.getTelefono();
         }
 
+        // Check if the current user has a pending report
+        boolean hasPendingReport = false;
+        if (authentication != null && authentication.getPrincipal() instanceof UUID) {
+            String reporterId = authentication.getPrincipal().toString();
+            hasPendingReport = denunciaAgrupadaRepository
+                    .findByPortafolio_IdPortafolioAndStatus(portafolio.getIdPortafolio(), "pendiente")
+                    .map(agrupada -> denunciaIndividualRepository.existsByDenunciaAgrupada_IdAndCreadoPor(agrupada.getId(), reporterId))
+                    .orElse(false);
+        }
+
         return PortafolioPublicoResponse.builder()
                 .id(portafolio.getIdPortafolio().toString())
                 .nombre(portafolio.getNombre())
                 .visibilidad(portafolio.getVisibilidad())
                 .templateNombre(portafolio.getPlantilla().getNombre())
                 .templateSchema(portafolio.getPlantilla().getEsquemaConfiguracion())
+                .hasPendingReport(hasPendingReport)
                 .usuario(PortafolioPublicoResponse.UsuarioPublico.builder()
                         .nombre(perfil != null ? perfil.getNombre() : "")
                         .apellido(perfil != null ? perfil.getApellido() : "")

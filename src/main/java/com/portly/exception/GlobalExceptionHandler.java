@@ -50,6 +50,16 @@ public class GlobalExceptionHandler {
         return warnResponse(HttpStatus.BAD_REQUEST, "Argumento ilegal: {}", ex);
     }
 
+    @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleEntityNotFound(jakarta.persistence.EntityNotFoundException ex) {
+        return warnResponse(HttpStatus.NOT_FOUND, "Entidad no encontrada: {}", ex);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalState(IllegalStateException ex) {
+        return warnResponse(HttpStatus.CONFLICT, "Conflicto de estado: {}", ex);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntime(RuntimeException ex) {
         log.error("Error de runtime no controlado: {}", ex.getMessage());
