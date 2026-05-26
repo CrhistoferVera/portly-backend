@@ -26,6 +26,8 @@ import java.util.List;
 public class AdminReportService {
 
     private final UsuarioRepository usuarioRepository;
+    private final com.portly.domain.repository.HabilidadBlandaRepository habilidadBlandaRepository;
+    private final com.portly.domain.repository.HabilidadTecnicaRepository habilidadTecnicaRepository;
 
     public byte[] generateUserReportPdf(LocalDate desde, LocalDate hasta, String estado) {
         LocalDateTime fechaDesde = desde.atStartOfDay();
@@ -88,6 +90,70 @@ public class AdminReportService {
             return baos.toByteArray();
         } catch (Exception e) {
             log.error("Error al generar PDF de reporte de usuarios", e);
+            throw new RuntimeException("Error al generar el reporte PDF");
+        }
+    }
+
+    public byte[] generateSkillReportPdf(LocalDate desde, LocalDate hasta, String skillType) {
+        LocalDateTime fechaDesde = desde.atStartOfDay();
+        LocalDateTime fechaHasta = hasta.atTime(23, 59, 59);
+
+        java.util.List<com.portly.dto.SkillReportDto> skills = new java.util.ArrayList<>();
+
+        if ("Todas".equalsIgnoreCase(skillType) || "Blandas".equalsIgnoreCase(skillType)) {
+            skills.addAll(habilidadBlandaRepository.getSkillReport(fechaDesde, fechaHasta));
+        }
+        
+        if ("Todas".equalsIgnoreCase(skillType) || "Técnicas".equalsIgnoreCase(skillType)) {
+            skills.addAll(habilidadTecnicaRepository.getSkillReport(fechaDesde, fechaHasta));
+        }
+
+        if (skills.isEmpty()) {
+            return new byte[0];
+        }
+
+        skills.sort((a, b) -> b.getCantidadUsuarios().compareTo(a.getCantidadUsuarios()));
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            Paragraph titulo = new Paragraph("Reporte de Habilidades Registradas")
+                    .setTextAlignment(TextAlignment.CENTER)
+                    .setBold()
+                    .setFontSize(18);
+            document.add(titulo);
+
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            document.add(new Paragraph("Fecha de generación: " + LocalDateTime.now().format(dtf)));
+            document.add(new Paragraph(String.format("Filtros - Rango: %s a %s | Tipo: %s",
+                    desde.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    hasta.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    skillType != null ? skillType : "Todas")));
+            
+            document.add(new Paragraph("\n"));
+
+            float[] columnWidths = {4, 2, 2};
+            Table table = new Table(UnitValue.createPercentArray(columnWidths));
+            table.setWidth(UnitValue.createPercentValue(100));
+
+            table.addHeaderCell(new Cell().add(new Paragraph("Nombre de Habilidad").setBold()));
+            table.addHeaderCell(new Cell().add(new Paragraph("Tipo").setBold()));
+            table.addHeaderCell(new Cell().add(new Paragraph("Cantidad de Usuarios").setBold()));
+
+            for (com.portly.dto.SkillReportDto s : skills) {
+                table.addCell(new Cell().add(new Paragraph(s.getNombreHabilidad())));
+                table.addCell(new Cell().add(new Paragraph(s.getTipo())));
+                table.addCell(new Cell().add(new Paragraph(String.valueOf(s.getCantidadUsuarios()))));
+            }
+
+            document.add(table);
+            document.close();
+
+            return baos.toByteArray();
+        } catch (Exception e) {
+            log.error("Error al generar PDF de reporte de habilidades", e);
             throw new RuntimeException("Error al generar el reporte PDF");
         }
     }
