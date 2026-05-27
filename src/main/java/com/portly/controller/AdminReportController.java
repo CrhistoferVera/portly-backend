@@ -59,4 +59,25 @@ public class AdminReportController {
                 .headers(headers)
                 .body(pdfBytes);
     }
+
+    @GetMapping("/templates")
+    public ResponseEntity<byte[]> generateTemplateReport(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(defaultValue = "Todas") String estado) {
+
+        byte[] pdfBytes = adminReportService.generateTemplateReportPdf(desde, hasta, estado);
+
+        if (pdfBytes.length == 0) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "reporte_plantillas.pdf");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
+    }
 }
