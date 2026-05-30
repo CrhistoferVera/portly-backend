@@ -30,7 +30,7 @@ public class ProfileController {
             Authentication authentication,
             @Valid @RequestBody CompleteOAuthProfileRequest request) {
         UUID usuarioId = (UUID) authentication.getPrincipal();
-        return ResponseEntity.ok(authService.completarPerfilOAuth(usuarioId, request.getProfesion(), request.getResena()));
+        return ResponseEntity.ok(authService.completarPerfilOAuth(usuarioId, request.getUsername(), request.getProfesion(), request.getResena()));
     }
 
     // POST /api/redes-sociales
