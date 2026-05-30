@@ -27,16 +27,18 @@ public class JwtService {
         this.expirationMs = expirationDays * 24 * 60 * 60 * 1000L;
     }
 
-    public String generateToken(UUID usuarioId, String email, String rol, boolean perfilCompleto) {
-        return Jwts.builder()
+    public String generateToken(UUID usuarioId, String email, String username, String rol, boolean perfilCompleto) {
+        var builder = Jwts.builder()
                 .subject(usuarioId.toString())
                 .claim("email", email)
                 .claim("rol", rol)
                 .claim("perfilCompleto", perfilCompleto)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expirationMs))
-                .signWith(key)
-                .compact();
+                .expiration(new Date(System.currentTimeMillis() + expirationMs));
+        if (username != null && !username.isBlank()) {
+            builder.claim("username", username);
+        }
+        return builder.signWith(key).compact();
     }
 
     public boolean validateToken(String token) {
