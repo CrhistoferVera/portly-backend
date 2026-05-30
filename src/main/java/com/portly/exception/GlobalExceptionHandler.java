@@ -20,6 +20,11 @@ public class GlobalExceptionHandler {
         return warnResponse(HttpStatus.CONFLICT, "Registro rechazado - email duplicado: {}", ex);
     }
 
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handleUsernameAlreadyExists(UsernameAlreadyExistsException ex) {
+        return warnResponse(HttpStatus.CONFLICT, "Registro rechazado - username duplicado: {}", ex);
+    }
+
     @ExceptionHandler(PasswordMismatchException.class)
     public ResponseEntity<Map<String, String>> handlePasswordMismatch(PasswordMismatchException ex) {
         return warnResponse(HttpStatus.BAD_REQUEST, "Credenciales inválidas: {}", ex);
