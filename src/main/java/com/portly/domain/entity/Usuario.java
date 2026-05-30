@@ -29,6 +29,9 @@ public class Usuario {
     @Column(name = "email", nullable = false, length = 150, unique = true)
     private String email;
 
+    @Column(name = "username", length = 50, unique = true)
+    private String username;
+
     @JsonIgnore
     @Column(name = "contrasena_encriptada", length = 255)
     private String contrasenaEncriptada;

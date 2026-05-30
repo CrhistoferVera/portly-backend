@@ -16,6 +16,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     boolean existsByEmail(String email);
 
+    Optional<Usuario> findByUsernameIgnoreCase(String username);
+
+    boolean existsByUsernameIgnoreCase(String username);
+
     @Query("SELECT u FROM Usuario u WHERE u.fechaCreacion >= :desde AND u.fechaCreacion <= :hasta AND (:estado IS NULL OR u.estado = :estado)")
     List<Usuario> findByFechaCreacionBetweenAndEstado(
         @Param("desde") LocalDateTime desde,
