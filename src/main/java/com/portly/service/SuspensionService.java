@@ -4,6 +4,7 @@ import com.portly.domain.entity.DenunciaAgrupada;
 import com.portly.domain.entity.Suspension;
 import com.portly.domain.entity.Usuario;
 import com.portly.domain.repository.DenunciaAgrupadaRepository;
+import com.portly.domain.repository.PortafolioRepository;
 import com.portly.domain.repository.SuspensionRepository;
 import com.portly.domain.repository.UsuarioRepository;
 import com.portly.dto.SuspensionResponse;
@@ -26,6 +27,7 @@ public class SuspensionService {
     private final SuspensionRepository suspensionRepository;
     private final UsuarioRepository usuarioRepository;
     private final DenunciaAgrupadaRepository denunciaAgrupadaRepository;
+    private final PortafolioRepository portafolioRepository;
 
     /**
      * Suspende un usuario. Crea registro de suspensión, actualiza estado del usuario
@@ -52,6 +54,13 @@ public class SuspensionService {
         // Actualizar estado del usuario
         usuario.setEstado("suspendido");
         usuarioRepository.save(usuario);
+
+        // Privatizar portafolios del usuario
+        List<com.portly.domain.entity.Portafolio> portfolios = portafolioRepository.findByUsuario_IdUsuarioOrderByFechaCreacionDesc(userId);
+        for (com.portly.domain.entity.Portafolio p : portfolios) {
+            p.setVisibilidad("PRIVADO");
+        }
+        portafolioRepository.saveAll(portfolios);
 
         // Actualizar ownerUserStatus en todas las denuncias agrupadas del usuario
         List<DenunciaAgrupada> denuncias = denunciaAgrupadaRepository
@@ -106,6 +115,60 @@ public class SuspensionService {
         denunciaAgrupadaRepository.saveAll(denuncias);
 
         log.info("Usuario id={} reactivado. Suspensión id={} cancelada", userId, suspension.getId());
+    }
+
+    /**
+     * Restringe un usuario (similar a suspender pero con estado restringido).
+     */
+    @Transactional
+    public SuspensionResponse restringirUsuario(UUID userId, String motivo, UUID adminId) {
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con id: " + userId));
+
+        // Verificar que no esté ya restringido
+        if ("restringido".equalsIgnoreCase(usuario.getEstado())) {
+            throw new IllegalStateException("El usuario ya se encuentra restringido");
+        }
+
+        // Crear registro de suspensión (usado también para restricción)
+        Suspension suspension = Suspension.builder()
+                .usuario(usuario)
+                .motivo(motivo)
+                .adminId(adminId.toString())
+                .build();
+        suspension = suspensionRepository.save(suspension);
+
+        // Actualizar estado del usuario a restringido
+        usuario.setEstado("restringido");
+        usuarioRepository.save(usuario);
+
+        // Privatizar portafolios del usuario
+        List<com.portly.domain.entity.Portafolio> portfolios = portafolioRepository.findByUsuario_IdUsuarioOrderByFechaCreacionDesc(userId);
+        for (com.portly.domain.entity.Portafolio p : portfolios) {
+            p.setVisibilidad("PRIVADO");
+        }
+        portafolioRepository.saveAll(portfolios);
+
+        // Actualizar ownerUserStatus en todas las denuncias agrupadas del usuario
+        List<DenunciaAgrupada> denuncias = denunciaAgrupadaRepository
+                .findAllByOwnerUsuario_IdUsuario(userId);
+        for (DenunciaAgrupada denuncia : denuncias) {
+            denuncia.setOwnerUserStatus("restringido");
+        }
+        denunciaAgrupadaRepository.saveAll(denuncias);
+
+        log.info("Usuario id={} restringido por admin={}, motivo='{}'", userId, adminId, motivo);
+
+        String userName = obtenerNombreUsuario(usuario);
+
+        return SuspensionResponse.builder()
+                .id(suspension.getId())
+                .userId(userId.toString())
+                .userName(userName)
+                .motivo(suspension.getMotivo())
+                .fechaSuspension(suspension.getFechaSuspension())
+                .adminId(suspension.getAdminId())
+                .build();
     }
 
     /**

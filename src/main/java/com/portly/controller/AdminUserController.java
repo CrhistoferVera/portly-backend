@@ -1,15 +1,16 @@
 package com.portly.controller;
 
 import com.portly.dto.AdminUserResponse;
+import com.portly.dto.PortafolioResponse;
 import com.portly.domain.entity.Usuario;
 import com.portly.domain.repository.UsuarioRepository;
+import com.portly.service.PortafolioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 public class AdminUserController {
 
     private final UsuarioRepository usuarioRepository;
+    private final PortafolioService portafolioService;
 
     @GetMapping
     public ResponseEntity<List<AdminUserResponse>> getRegisteredUsers() {
@@ -45,5 +47,10 @@ public class AdminUserController {
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{userId}/portfolios")
+    public ResponseEntity<List<PortafolioResponse>> getUserPortfolios(@PathVariable UUID userId) {
+        return ResponseEntity.ok(portafolioService.getAll(userId));
     }
 }

@@ -59,4 +59,24 @@ public class AdminSuspensionController {
         suspensionService.reactivarUsuario(userId);
         return ResponseEntity.ok(Map.of("message", "Cuenta reactivada exitosamente"));
     }
+
+    /**
+     * POST /api/admin/usuarios/{userId}/restringir
+     * Restringe la cuenta de un usuario.
+     */
+    @PostMapping("/usuarios/{userId}/restringir")
+    public ResponseEntity<Map<String, Object>> restringirUsuario(
+            @PathVariable UUID userId,
+            @Valid @RequestBody SuspenderUsuarioRequest request,
+            Authentication authentication) {
+
+        UUID adminId = (UUID) authentication.getPrincipal();
+        SuspensionResponse suspension = suspensionService.restringirUsuario(
+                userId, request.getMotivo(), adminId);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "message", "Usuario restringido exitosamente",
+                "suspension", suspension
+        ));
+    }
 }

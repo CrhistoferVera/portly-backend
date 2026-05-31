@@ -241,11 +241,16 @@ public class PortafolioService {
 
         if (!portafolio.getVisibilidad().equalsIgnoreCase("PUBLICO")) {
             boolean isOwner = false;
-            if (authentication != null && authentication.getPrincipal() instanceof UUID) {
-                UUID authUserId = (UUID) authentication.getPrincipal();
-                isOwner = portafolio.getUsuario().getIdUsuario().equals(authUserId);
+            boolean isAdmin = false;
+            if (authentication != null) {
+                if (authentication.getPrincipal() instanceof UUID) {
+                    UUID authUserId = (UUID) authentication.getPrincipal();
+                    isOwner = portafolio.getUsuario().getIdUsuario().equals(authUserId);
+                }
+                isAdmin = authentication.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
             }
-            if (!isOwner) {
+            if (!isOwner && !isAdmin) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Este portafolio es privado");
             }
         }

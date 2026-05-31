@@ -20,6 +20,7 @@ public class UsuarioProfileResponse {
     private Boolean   correoVerificado;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaUltimoAcceso;
+    private String    motivoSuspension;
 
     // datos del perfil
     private String nombre;

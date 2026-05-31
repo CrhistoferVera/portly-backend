@@ -31,6 +31,7 @@ public class ProfileService {
     private final ExperienciaLaboralRepository experienciaRepository;
     private final CloudinaryService           cloudinaryService;
     private final RedesSocialesRepository     redesSocialesRepository;
+    private final SuspensionRepository        suspensionRepository;
 
     // GET /api/profile — Obtener perfil completo del usuario autenticado
     @Transactional(readOnly = true)
@@ -323,6 +324,14 @@ public class ProfileService {
     // Metodos privados de mapeo
     private UsuarioProfileResponse buildResponse(Usuario usuario, PerfilUsuario perfil,
             List<ProveedorOauth> proveedores, List<EnlaceProfesional> enlaces, List<ExperienciaLaboral> exps) {
+        
+        String motivoSuspension = null;
+        if ("suspendido".equalsIgnoreCase(usuario.getEstado()) || "restringido".equalsIgnoreCase(usuario.getEstado())) {
+            motivoSuspension = suspensionRepository.findByUsuario_IdUsuarioAndCanceladaFalse(usuario.getIdUsuario())
+                    .map(Suspension::getMotivo)
+                    .orElse(null);
+        }
+
         return UsuarioProfileResponse.builder()
                 .idUsuario(usuario.getIdUsuario())
                 .email(usuario.getEmail())
@@ -331,6 +340,7 @@ public class ProfileService {
                 .correoVerificado(usuario.getCorreoVerificado())
                 .fechaCreacion(usuario.getFechaCreacion())
                 .fechaUltimoAcceso(usuario.getFechaUltimoAcceso())
+                .motivoSuspension(motivoSuspension)
                 .nombre(fromPerfil(perfil, PerfilUsuario::getNombre))
                 .apellido(fromPerfil(perfil, PerfilUsuario::getApellido))
                 .titularProfesional(fromPerfil(perfil, PerfilUsuario::getTitularProfesional))
