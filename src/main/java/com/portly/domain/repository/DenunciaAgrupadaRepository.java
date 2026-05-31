@@ -15,4 +15,5 @@ public interface DenunciaAgrupadaRepository extends JpaRepository<DenunciaAgrupa
     Optional<DenunciaAgrupada> findByPortafolio_IdPortafolioAndStatus(UUID portfolioId, String status);
 
     List<DenunciaAgrupada> findAllByOwnerUsuario_IdUsuario(UUID userId);
+    List<DenunciaAgrupada> findAllByOwnerUsuario_IdUsuarioAndStatus(UUID userId, String status);
 }

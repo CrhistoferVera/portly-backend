@@ -75,6 +75,12 @@ public class SuspensionService {
                 .findAllByOwnerUsuario_IdUsuario(userId);
         for (DenunciaAgrupada denuncia : denuncias) {
             denuncia.setOwnerUserStatus("suspendido");
+            if ("pendiente".equalsIgnoreCase(denuncia.getStatus())) {
+                denuncia.setStatus("revisado");
+                denuncia.setRevisionResultado("Usuario suspendido: " + motivo);
+                denuncia.setRevisionFecha(LocalDateTime.now());
+                denuncia.setRevisionAdminId(adminId.toString());
+            }
         }
         denunciaAgrupadaRepository.saveAll(denuncias);
 
@@ -178,6 +184,12 @@ public class SuspensionService {
                 .findAllByOwnerUsuario_IdUsuario(userId);
         for (DenunciaAgrupada denuncia : denuncias) {
             denuncia.setOwnerUserStatus("restringido");
+            if ("pendiente".equalsIgnoreCase(denuncia.getStatus())) {
+                denuncia.setStatus("revisado");
+                denuncia.setRevisionResultado("Usuario restringido: " + motivo);
+                denuncia.setRevisionFecha(LocalDateTime.now());
+                denuncia.setRevisionAdminId(adminId.toString());
+            }
         }
         denunciaAgrupadaRepository.saveAll(denuncias);
 

@@ -38,6 +38,15 @@ public class AdminDenunciaController {
     }
 
     /**
+     * GET /api/admin/denuncias/usuario/{userId}/historial
+     * Historial de denuncias de un usuario.
+     */
+    @GetMapping("/usuario/{userId}/historial")
+    public ResponseEntity<List<DenunciaAgrupadaResponse>> obtenerHistorialUsuario(@PathVariable UUID userId) {
+        return ResponseEntity.ok(denunciaService.obtenerHistorialUsuario(userId));
+    }
+
+    /**
      * PATCH /api/admin/denuncias/{id}/revisar
      * Marca una denuncia como revisada.
      */

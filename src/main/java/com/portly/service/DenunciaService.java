@@ -50,6 +50,29 @@ public class DenunciaService {
     }
 
     /**
+     * Obtiene el historial de denuncias agrupadas de un usuario (solo las ya revisadas).
+     */
+    public List<DenunciaAgrupadaResponse> obtenerHistorialUsuario(UUID userId) {
+        return denunciaAgrupadaRepository.findAllByOwnerUsuario_IdUsuario(userId)
+                .stream()
+                .filter(d -> "revisado".equalsIgnoreCase(d.getStatus()) || 
+                             "restringido".equalsIgnoreCase(d.getOwnerUserStatus()) || 
+                             "suspendido".equalsIgnoreCase(d.getOwnerUserStatus()))
+                .map(d -> {
+                    // Fix legacy data on the fly
+                    if (!"revisado".equalsIgnoreCase(d.getStatus())) {
+                        d.setStatus("revisado");
+                        if (d.getRevisionResultado() == null) {
+                            d.setRevisionResultado("Decisión administrativa: " + d.getOwnerUserStatus());
+                            d.setRevisionFecha(d.getUpdatedAt() != null ? d.getUpdatedAt() : LocalDateTime.now());
+                        }
+                    }
+                    return toResponse(d);
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Marca una denuncia agrupada como revisada.
      */
     @Transactional
