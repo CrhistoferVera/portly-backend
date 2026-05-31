@@ -57,6 +57,7 @@ public class Plantilla {
     @Column(name = "esquema_configuracion", columnDefinition = "TEXT", nullable = false)
     private TemplateSchema esquemaConfiguracion;
 
+    @Builder.Default
     @Column(name = "estado", length = 20)
     private String estado = "ACTIVA";
 }

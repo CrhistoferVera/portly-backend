@@ -42,6 +42,12 @@ class ProfileServiceTest {
     private ExperienciaLaboralRepository experienciaRepository;
     @Mock
     private CloudinaryService cloudinaryService;
+    @Mock
+    private RedesSocialesRepository redesSocialesRepository;
+    @Mock
+    private SuspensionRepository suspensionRepository;
+    @Mock
+    private ApelacionRepository apelacionRepository;
 
     @InjectMocks
     private ProfileService profileService;
