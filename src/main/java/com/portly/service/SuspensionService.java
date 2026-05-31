@@ -43,6 +43,14 @@ public class SuspensionService {
             throw new IllegalStateException("El usuario ya se encuentra suspendido");
         }
 
+        // Cancelar cualquier suspensión/restricción activa previa para evitar duplicados
+        List<Suspension> activeSuspensions = suspensionRepository.findAllByUsuario_IdUsuarioAndCanceladaFalse(userId);
+        for (Suspension s : activeSuspensions) {
+            s.setCancelada(true);
+            s.setFechaCancelacion(LocalDateTime.now());
+        }
+        suspensionRepository.saveAll(activeSuspensions);
+
         // Crear registro de suspensión
         Suspension suspension = Suspension.builder()
                 .usuario(usuario)
@@ -93,28 +101,36 @@ public class SuspensionService {
         Usuario usuario = usuarioRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con id: " + userId));
 
-        Suspension suspension = suspensionRepository.findByUsuario_IdUsuarioAndCanceladaFalse(userId)
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "No se encontró una suspensión activa para el usuario: " + userId));
-
-        // Marcar suspensión como cancelada
-        suspension.setCancelada(true);
-        suspension.setFechaCancelacion(LocalDateTime.now());
-        suspensionRepository.save(suspension);
+        List<Suspension> activeSuspensions = suspensionRepository.findAllByUsuario_IdUsuarioAndCanceladaFalse(userId);
+        if (activeSuspensions.isEmpty()) {
+            log.warn("No se encontró una suspensión activa para el usuario id={}. Se procederá a reactivar de todas formas.", userId);
+        } else {
+            // Marcar todas las suspensiones activas como canceladas
+            for (Suspension suspension : activeSuspensions) {
+                suspension.setCancelada(true);
+                suspension.setFechaCancelacion(LocalDateTime.now());
+            }
+            suspensionRepository.saveAll(activeSuspensions);
+        }
 
         // Actualizar estado del usuario
         usuario.setEstado("activo");
         usuarioRepository.save(usuario);
 
-        // Actualizar ownerUserStatus en denuncias agrupadas
+        // Actualizar ownerUserStatus en denuncias agrupadas y resolver las pendientes
         List<DenunciaAgrupada> denuncias = denunciaAgrupadaRepository
                 .findAllByOwnerUsuario_IdUsuario(userId);
         for (DenunciaAgrupada denuncia : denuncias) {
             denuncia.setOwnerUserStatus("activo");
+            if ("pendiente".equalsIgnoreCase(denuncia.getStatus())) {
+                denuncia.setStatus("revisado");
+                denuncia.setRevisionResultado("Reactivado tras apelación / revisión de cuenta");
+                denuncia.setRevisionFecha(LocalDateTime.now());
+            }
         }
         denunciaAgrupadaRepository.saveAll(denuncias);
 
-        log.info("Usuario id={} reactivado. Suspensión id={} cancelada", userId, suspension.getId());
+        log.info("Usuario id={} reactivado. {} suspensiones canceladas", userId, activeSuspensions.size());
     }
 
     /**
@@ -129,6 +145,14 @@ public class SuspensionService {
         if ("restringido".equalsIgnoreCase(usuario.getEstado())) {
             throw new IllegalStateException("El usuario ya se encuentra restringido");
         }
+
+        // Cancelar cualquier suspensión/restricción activa previa para evitar duplicados
+        List<Suspension> activeSuspensions = suspensionRepository.findAllByUsuario_IdUsuarioAndCanceladaFalse(userId);
+        for (Suspension s : activeSuspensions) {
+            s.setCancelada(true);
+            s.setFechaCancelacion(LocalDateTime.now());
+        }
+        suspensionRepository.saveAll(activeSuspensions);
 
         // Crear registro de suspensión (usado también para restricción)
         Suspension suspension = Suspension.builder()

@@ -32,6 +32,10 @@ public class ApelacionService {
         Usuario usuario = usuarioRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con email: " + request.getEmail()));
 
+        if (apelacionRepository.existsByUsuario_IdUsuarioAndEstadoApelacionIgnoreCase(usuario.getIdUsuario(), "pendiente")) {
+            throw new IllegalStateException("Ya tienes una apelación en trámite");
+        }
+
         Apelacion apelacion = Apelacion.builder()
                 .usuario(usuario)
                 .motivo(request.getMotivo())
@@ -110,7 +114,7 @@ public class ApelacionService {
                 .userEmail(u.getEmail())
                 .motivo(entity.getMotivo())
                 .fechaApelacion(entity.getFechaApelacion())
-                .estadoCuenta(entity.getTipoEstado())
+                .estadoCuenta(u.getEstado())
                 .estadoApelacion(entity.getEstadoApelacion())
                 .fechaResolucion(entity.getFechaResolucion())
                 .adminId(entity.getAdminId())

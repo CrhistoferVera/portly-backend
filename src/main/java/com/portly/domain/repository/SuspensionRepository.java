@@ -11,6 +11,8 @@ public interface SuspensionRepository extends JpaRepository<Suspension, Long> {
 
     Optional<Suspension> findByUsuario_IdUsuarioAndCanceladaFalse(UUID userId);
 
+    List<Suspension> findAllByUsuario_IdUsuarioAndCanceladaFalse(UUID userId);
+
     List<Suspension> findAllByCanceladaFalse();
 
     boolean existsByUsuario_IdUsuarioAndCanceladaFalse(UUID userId);

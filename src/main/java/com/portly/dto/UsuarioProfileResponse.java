@@ -21,6 +21,9 @@ public class UsuarioProfileResponse {
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaUltimoAcceso;
     private String    motivoSuspension;
+    private Boolean   apelacionPendiente;
+    private Boolean   apelacionAprobada;
+    private Long      idApelacionAprobada;
 
     // datos del perfil
     private String nombre;

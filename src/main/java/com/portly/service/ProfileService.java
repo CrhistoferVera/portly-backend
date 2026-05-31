@@ -32,6 +32,7 @@ public class ProfileService {
     private final CloudinaryService           cloudinaryService;
     private final RedesSocialesRepository     redesSocialesRepository;
     private final SuspensionRepository        suspensionRepository;
+    private final ApelacionRepository         apelacionRepository;
 
     // GET /api/profile — Obtener perfil completo del usuario autenticado
     @Transactional(readOnly = true)
@@ -327,10 +328,18 @@ public class ProfileService {
         
         String motivoSuspension = null;
         if ("suspendido".equalsIgnoreCase(usuario.getEstado()) || "restringido".equalsIgnoreCase(usuario.getEstado())) {
-            motivoSuspension = suspensionRepository.findByUsuario_IdUsuarioAndCanceladaFalse(usuario.getIdUsuario())
+            motivoSuspension = suspensionRepository.findAllByUsuario_IdUsuarioAndCanceladaFalse(usuario.getIdUsuario())
+                    .stream()
+                    .findFirst()
                     .map(Suspension::getMotivo)
                     .orElse(null);
         }
+
+        boolean apelacionPendiente = apelacionRepository.existsByUsuario_IdUsuarioAndEstadoApelacionIgnoreCase(usuario.getIdUsuario(), "pendiente");
+        boolean apelacionAprobada = apelacionRepository.existsByUsuario_IdUsuarioAndEstadoApelacionIgnoreCase(usuario.getIdUsuario(), "aprobada");
+        Long idApelacionAprobada = apelacionRepository.findFirstByUsuario_IdUsuarioAndEstadoApelacionIgnoreCaseOrderByIdDesc(usuario.getIdUsuario(), "aprobada")
+                .map(Apelacion::getId)
+                .orElse(null);
 
         return UsuarioProfileResponse.builder()
                 .idUsuario(usuario.getIdUsuario())
@@ -341,6 +350,9 @@ public class ProfileService {
                 .fechaCreacion(usuario.getFechaCreacion())
                 .fechaUltimoAcceso(usuario.getFechaUltimoAcceso())
                 .motivoSuspension(motivoSuspension)
+                .apelacionPendiente(apelacionPendiente)
+                .apelacionAprobada(apelacionAprobada)
+                .idApelacionAprobada(idApelacionAprobada)
                 .nombre(fromPerfil(perfil, PerfilUsuario::getNombre))
                 .apellido(fromPerfil(perfil, PerfilUsuario::getApellido))
                 .titularProfesional(fromPerfil(perfil, PerfilUsuario::getTitularProfesional))
