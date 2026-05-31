@@ -119,6 +119,47 @@ public class DataInitializer implements ApplicationRunner {
             p.setCantidadSecciones(8);
             return p;
         });
+
+        // ── Plantilla 5: Firma mínima ─────────────────────────────────────────
+        String idFirmaMinima = "template-firma-minima";
+        TemplateSchema schemaFirmaMinima = TemplateSchema.builder()
+                .colorScheme("firma-minima")
+                .fontFamily("Inter")
+                .sections(List.of(
+                        TemplateSection.builder().type(S_HERO)      .title("Presentación")         .visible(true).order(0).build(),
+                        TemplateSection.builder().type(S_ABOUT)     .title("Acerca de")            .visible(true).order(1).build(),
+                        TemplateSection.builder().type(S_EXPERIENCE).title("Experiencia")          .visible(true).order(2).build(),
+                        TemplateSection.builder().type(S_PROJECTS)  .title("Proyectos")             .visible(true).order(3).build(),
+                        TemplateSection.builder().type(S_SKILLS)    .title("Habilidades técnicas")  .visible(true).order(4).build(),
+                        TemplateSection.builder().type(S_SOFTSKILLS).title("Habilidades blandas")   .visible(true).order(5).build(),
+                        TemplateSection.builder().type(S_EDUCATION) .title("Formación académica")   .visible(true).order(6).build(),
+                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")              .visible(true).order(7).build()
+                ))
+                .build();
+
+        upsertPlantilla(idFirmaMinima, p -> {
+            if (p == null) {
+                return Plantilla.builder()
+                        .idPlantilla(idFirmaMinima)
+                        .nombre("Firma mínima")
+                        .descripcion(
+                                "Diseño minimalista de dos columnas con columna fija e índice de secciones. " +
+                                "Fondo oscuro, acentos en teal e Inter como tipografía. Ideal para desarrolladores " +
+                                "y perfiles técnicos que buscan claridad y enfoque en el contenido."
+                        )
+                        .etiquetas(List.of("Minimalista", "Desarrollador", "Dos columnas", "Oscuro", "Inter"))
+                        .imagenVistaPrevia("")
+                        .urlVistaPrevia("")
+                        .cantidadSecciones(8)
+                        .impacto("980")
+                        .tiempoConfiguracion("3 min")
+                        .esquemaConfiguracion(schemaFirmaMinima)
+                        .build();
+            }
+            p.setEsquemaConfiguracion(schemaFirmaMinima);
+            p.setCantidadSecciones(8);
+            return p;
+        });
     }
 
     private void eliminarPlantillasObsoletas() {
