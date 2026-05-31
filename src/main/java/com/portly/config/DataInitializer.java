@@ -160,6 +160,48 @@ public class DataInitializer implements ApplicationRunner {
             p.setCantidadSecciones(8);
             return p;
         });
+
+        // ── Plantilla 6: La red profesional ───────────────────────────────────
+        String idLaRed = "template-la-red-profesional";
+        TemplateSchema schemaLaRed = TemplateSchema.builder()
+                .colorScheme("la-red-profesional")
+                .fontFamily("Inter")
+                .sections(List.of(
+                        TemplateSection.builder().type(S_HERO)      .title("Inicio")                .visible(true).order(0).build(),
+                        TemplateSection.builder().type(S_SKILLS)    .title("Especialidades")       .visible(true).order(1).build(),
+                        TemplateSection.builder().type(S_ABOUT)     .title("Acerca de")            .visible(true).order(2).build(),
+                        TemplateSection.builder().type(S_PROJECTS)  .title("Proyectos")             .visible(true).order(3).build(),
+                        TemplateSection.builder().type(S_EXPERIENCE).title("Experiencia")          .visible(true).order(4).build(),
+                        TemplateSection.builder().type(S_SOFTSKILLS).title("Habilidades blandas")  .visible(true).order(5).build(),
+                        TemplateSection.builder().type(S_EDUCATION) .title("Formación académica")  .visible(true).order(6).build(),
+                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")              .visible(true).order(7).build()
+                ))
+                .build();
+
+        upsertPlantilla(idLaRed, p -> {
+            if (p == null) {
+                return Plantilla.builder()
+                        .idPlantilla(idLaRed)
+                        .nombre("La red profesional")
+                        .descripcion(
+                                "Diseño oscuro con hero impactante, header fijo y acentos púrpura. " +
+                                "Incluye carrusel automático de proyectos, cursor personalizado y " +
+                                "secciones tipo portafolio de desarrollador. Ideal para perfiles " +
+                                "técnicos que quieren destacar su trabajo y experiencia."
+                        )
+                        .etiquetas(List.of("Oscuro", "Desarrollador", "Púrpura", "Moderno", "Carrusel"))
+                        .imagenVistaPrevia("")
+                        .urlVistaPrevia("")
+                        .cantidadSecciones(8)
+                        .impacto("1.4k")
+                        .tiempoConfiguracion("4 min")
+                        .esquemaConfiguracion(schemaLaRed)
+                        .build();
+            }
+            p.setEsquemaConfiguracion(schemaLaRed);
+            p.setCantidadSecciones(8);
+            return p;
+        });
     }
 
     private void eliminarPlantillasObsoletas() {
