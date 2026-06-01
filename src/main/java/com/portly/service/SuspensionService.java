@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -28,6 +30,7 @@ public class SuspensionService {
     private final UsuarioRepository usuarioRepository;
     private final DenunciaAgrupadaRepository denunciaAgrupadaRepository;
     private final PortafolioRepository portafolioRepository;
+    private final EmailService emailService;
 
     /**
      * Suspende un usuario. Crea registro de suspensión, actualiza estado del usuario
@@ -87,6 +90,8 @@ public class SuspensionService {
         log.info("Usuario id={} suspendido por admin={}, motivo='{}'", userId, adminId, motivo);
 
         String userName = obtenerNombreUsuario(usuario);
+        
+        notificarDenunciantes(denuncias, userName, true);
 
         return SuspensionResponse.builder()
                 .id(suspension.getId())
@@ -137,6 +142,8 @@ public class SuspensionService {
         denunciaAgrupadaRepository.saveAll(denuncias);
 
         log.info("Usuario id={} reactivado. {} suspensiones canceladas", userId, activeSuspensions.size());
+        
+        emailService.enviarNotificacionReactivacionCuenta(usuario.getEmail(), obtenerNombreUsuario(usuario));
     }
 
     /**
@@ -196,6 +203,8 @@ public class SuspensionService {
         log.info("Usuario id={} restringido por admin={}, motivo='{}'", userId, adminId, motivo);
 
         String userName = obtenerNombreUsuario(usuario);
+        
+        notificarDenunciantes(denuncias, userName, false);
 
         return SuspensionResponse.builder()
                 .id(suspension.getId())
@@ -228,6 +237,37 @@ public class SuspensionService {
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private void notificarDenunciantes(List<DenunciaAgrupada> denuncias, String userName, boolean esSuspension) {
+        Set<String> correosNotificados = new HashSet<>();
+        for (DenunciaAgrupada denuncia : denuncias) {
+            for (com.portly.domain.entity.DenunciaIndividual ind : denuncia.getDenunciasIndividuales()) {
+                String creadoPor = ind.getCreadoPor();
+                if (creadoPor == null || creadoPor.isBlank()) continue;
+                
+                String emailDestino = null;
+                try {
+                    UUID id = UUID.fromString(creadoPor);
+                    emailDestino = usuarioRepository.findById(id)
+                            .map(Usuario::getEmail)
+                            .orElse(null);
+                } catch (IllegalArgumentException e) {
+                    if (creadoPor.contains("@")) {
+                        emailDestino = creadoPor;
+                    }
+                }
+                
+                if (emailDestino != null && !correosNotificados.contains(emailDestino)) {
+                    if (esSuspension) {
+                        emailService.enviarNotificacionSuspensionDenunciantes(emailDestino, userName);
+                    } else {
+                        emailService.enviarNotificacionRestriccionDenunciantes(emailDestino, userName);
+                    }
+                    correosNotificados.add(emailDestino);
+                }
+            }
+        }
+    }
 
     private String obtenerNombreUsuario(Usuario usuario) {
         if (usuario.getPerfil() != null) {

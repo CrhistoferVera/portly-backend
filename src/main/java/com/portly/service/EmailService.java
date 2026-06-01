@@ -94,4 +94,75 @@ public class EmailService {
             throw new RuntimeException(ex);
         }
     }
+    @Async
+    public void enviarNotificacionRestriccionDenunciantes(String destino, String nombreUsuarioRestringido) {
+        log.info("Enviando notificación de restricción al denunciante: destino={}", destino);
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("api-key", brevoApiKey);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String body = """
+                {
+                    "sender": {"name": "Portly", "email": "%s"},
+                    "to": [{"email": "%s"}],
+                    "subject": "Actualización sobre tu denuncia - Portly",
+                    "textContent": "Hola,\\n\\nTe informamos que, tras revisar tu denuncia, hemos tomado medidas. El usuario %s ha sido restringido en nuestra plataforma por infringir nuestras políticas.\\n\\nGracias por ayudarnos a mantener una comunidad segura."
+                }
+                """.formatted(correoRemitente, destino, nombreUsuarioRestringido);
+
+            HttpEntity<String> entity = new HttpEntity<>(body, headers);
+            restTemplate.postForEntity("https://api.brevo.com/v3/smtp/email", entity, String.class);
+        } catch (Exception ex) {
+            log.error("Error al enviar notificación de restricción: destino={}, error={}", destino, ex.getMessage());
+        }
+    }
+
+    @Async
+    public void enviarNotificacionSuspensionDenunciantes(String destino, String nombreUsuarioSuspendido) {
+        log.info("Enviando notificación de suspensión al denunciante: destino={}", destino);
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("api-key", brevoApiKey);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String body = """
+                {
+                    "sender": {"name": "Portly", "email": "%s"},
+                    "to": [{"email": "%s"}],
+                    "subject": "Actualización sobre tu denuncia - Portly",
+                    "textContent": "Hola,\\n\\nTe informamos que, tras revisar tu denuncia, hemos tomado medidas. El usuario %s ha sido suspendido de la plataforma por infringir nuestras políticas.\\n\\nGracias por ayudarnos a mantener una comunidad segura."
+                }
+                """.formatted(correoRemitente, destino, nombreUsuarioSuspendido);
+
+            HttpEntity<String> entity = new HttpEntity<>(body, headers);
+            restTemplate.postForEntity("https://api.brevo.com/v3/smtp/email", entity, String.class);
+        } catch (Exception ex) {
+            log.error("Error al enviar notificación de suspensión: destino={}, error={}", destino, ex.getMessage());
+        }
+    }
+
+    @Async
+    public void enviarNotificacionReactivacionCuenta(String destino, String nombreUsuario) {
+        log.info("Enviando notificación de reactivación de cuenta: destino={}", destino);
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("api-key", brevoApiKey);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String body = """
+                {
+                    "sender": {"name": "Portly", "email": "%s"},
+                    "to": [{"email": "%s"}],
+                    "subject": "Tu cuenta ha sido reactivada - Portly",
+                    "textContent": "Hola %s,\\n\\nTe informamos que tu cuenta ha sido reactivada exitosamente. Ya puedes volver a disfrutar de todas las funcionalidades de Portly.\\n\\nRecuerda cumplir siempre con nuestras políticas de la comunidad."
+                }
+                """.formatted(correoRemitente, destino, nombreUsuario);
+
+            HttpEntity<String> entity = new HttpEntity<>(body, headers);
+            restTemplate.postForEntity("https://api.brevo.com/v3/smtp/email", entity, String.class);
+        } catch (Exception ex) {
+            log.error("Error al enviar notificación de reactivación: destino={}, error={}", destino, ex.getMessage());
+        }
+    }
 }
