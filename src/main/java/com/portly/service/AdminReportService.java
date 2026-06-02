@@ -55,7 +55,7 @@ public class AdminReportService {
 
             // Metadatos
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-            document.add(new Paragraph("Fecha de generación: " + LocalDateTime.now().format(dtf)));
+            document.add(new Paragraph("Fecha de generación: " + java.time.ZonedDateTime.now(java.time.ZoneId.of("America/Santiago")).format(dtf)));
             document.add(new Paragraph(String.format("Filtros - Rango: %s a %s | Estado: %s",
                     desde.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                     hasta.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
@@ -127,7 +127,7 @@ public class AdminReportService {
             document.add(titulo);
 
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-            document.add(new Paragraph("Fecha de generación: " + LocalDateTime.now().format(dtf)));
+            document.add(new Paragraph("Fecha de generación: " + java.time.ZonedDateTime.now(java.time.ZoneId.of("America/Santiago")).format(dtf)));
             document.add(new Paragraph(String.format("Filtros - Rango: %s a %s | Tipo: %s",
                     desde.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                     hasta.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
@@ -183,7 +183,7 @@ public class AdminReportService {
             document.add(titulo);
 
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-            document.add(new Paragraph("Fecha de generación: " + LocalDateTime.now().format(dtf)));
+            document.add(new Paragraph("Fecha de generación: " + java.time.ZonedDateTime.now(java.time.ZoneId.of("America/Santiago")).format(dtf)));
             document.add(new Paragraph(String.format("Filtros - Rango: %s a %s | Estado: %s",
                     desde.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
                     hasta.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),
