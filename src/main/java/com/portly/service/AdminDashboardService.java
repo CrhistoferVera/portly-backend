@@ -24,7 +24,7 @@ public class AdminDashboardService {
 
         long usuariosRegistradosSemana = usuarioRepository.countByFechaCreacionAfter(desde);
         long portafoliosPublicosSemana = portafolioRepository.countPublicosDesde(desde);
-        long cuentasSuspendidas = usuarioRepository.countSuspendidos();
+        long cuentasSuspendidas = usuarioRepository.countCuentasBloqueadas();
 
         List<DashboardStatsResponse.PlantillaStats> plantillasMasUsadas =
                 portafolioRepository.findTopPlantillas(PageRequest.of(0, 3));

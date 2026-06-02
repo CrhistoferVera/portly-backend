@@ -19,4 +19,6 @@ public class AdminUserResponse {
     private LocalDateTime fechaCreacion;
     private String estado;
     private Boolean hasPublicPortfolio;
+    /** true si tiene un registro de suspensión activo (misma fuente que /usuarios-suspendidos) */
+    private Boolean suspensionActiva;
 }

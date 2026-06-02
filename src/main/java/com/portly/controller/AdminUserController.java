@@ -3,6 +3,7 @@ package com.portly.controller;
 import com.portly.dto.AdminUserResponse;
 import com.portly.dto.PortafolioResponse;
 import com.portly.domain.entity.Usuario;
+import com.portly.domain.repository.SuspensionRepository;
 import com.portly.domain.repository.UsuarioRepository;
 import com.portly.service.PortafolioService;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 public class AdminUserController {
 
     private final UsuarioRepository usuarioRepository;
+    private final SuspensionRepository suspensionRepository;
     private final PortafolioService portafolioService;
 
     @GetMapping
@@ -35,6 +37,8 @@ public class AdminUserController {
             
             boolean hasPublicPortfolio = u.getMisPortafolios() != null && u.getMisPortafolios().stream()
                 .anyMatch(p -> "PUBLICO".equalsIgnoreCase(p.getVisibilidad()));
+            boolean suspensionActiva = suspensionRepository
+                .existsByUsuario_IdUsuarioAndCanceladaFalse(u.getIdUsuario());
 
             return AdminUserResponse.builder()
                 .idUsuario(u.getIdUsuario())
@@ -43,6 +47,7 @@ public class AdminUserController {
                 .fechaCreacion(u.getFechaCreacion())
                 .estado(u.getEstado() != null ? u.getEstado() : "activo")
                 .hasPublicPortfolio(hasPublicPortfolio)
+                .suspensionActiva(suspensionActiva)
                 .build();
         }).collect(Collectors.toList());
 

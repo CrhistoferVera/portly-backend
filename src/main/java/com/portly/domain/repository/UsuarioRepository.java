@@ -1,14 +1,15 @@
 package com.portly.domain.repository;
 
-import com.portly.domain.entity.Usuario;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.portly.domain.entity.Usuario;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
@@ -32,4 +33,14 @@ public interface UsuarioRepository extends JpaRepository<Usuario, UUID> {
 
     @Query("SELECT COUNT(u) FROM Usuario u WHERE LOWER(u.estado) = 'suspendido'")
     long countSuspendidos();
+
+    @Query("""
+        SELECT COUNT(u) FROM Usuario u
+        WHERE LOWER(u.estado) IN ('suspendido', 'suspendida')
+           OR EXISTS (
+               SELECT 1 FROM Suspension s
+               WHERE s.usuario.idUsuario = u.idUsuario AND s.cancelada = false
+           )
+        """)
+    long countCuentasBloqueadas();
 }
