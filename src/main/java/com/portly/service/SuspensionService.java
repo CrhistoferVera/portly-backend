@@ -216,12 +216,10 @@ public class SuspensionService {
                 .build();
     }
 
-    /**
-     * Lista todos los usuarios con suspensiones activas.
-     */
     public List<SuspensionResponse> listarSuspendidos() {
         return suspensionRepository.findAllByCanceladaFalse()
                 .stream()
+                .filter(s -> "suspendido".equalsIgnoreCase(s.getUsuario().getEstado()))
                 .map(s -> {
                     String userName = obtenerNombreUsuario(s.getUsuario());
                     return SuspensionResponse.builder()
