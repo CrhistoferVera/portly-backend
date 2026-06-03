@@ -162,7 +162,7 @@ public class AdminReportService {
     public byte[] generateTemplateReportPdf(LocalDate desde, LocalDate hasta, String estado) {
         LocalDateTime fechaDesde = desde.atStartOfDay();
         LocalDateTime fechaHasta = hasta.atTime(23, 59, 59);
-        String estadoFiltro = "Todas".equalsIgnoreCase(estado) ? null : estado.toUpperCase();
+        String estadoFiltro = "Todas".equalsIgnoreCase(estado) ? null : estado.toUpperCase().substring(0, 5) + "%";
 
         List<com.portly.dto.TemplateReportDto> plantillas = portafolioRepository.getTemplateUsageReport(fechaDesde, fechaHasta, estadoFiltro);
 
