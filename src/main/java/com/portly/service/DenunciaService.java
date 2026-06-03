@@ -8,6 +8,7 @@ import com.portly.domain.entity.Usuario;
 import com.portly.domain.repository.DenunciaAgrupadaRepository;
 import com.portly.domain.repository.DenunciaIndividualRepository;
 import com.portly.domain.repository.PortafolioRepository;
+import com.portly.domain.repository.UsuarioRepository;
 import com.portly.dto.DenunciaAgrupadaResponse;
 import com.portly.dto.ReportarDenunciaRequest;
 import jakarta.persistence.EntityNotFoundException;
@@ -29,6 +30,8 @@ public class DenunciaService {
     private final DenunciaAgrupadaRepository denunciaAgrupadaRepository;
     private final DenunciaIndividualRepository denunciaIndividualRepository;
     private final PortafolioRepository portafolioRepository;
+    private final EmailService emailService;
+    private final UsuarioRepository usuarioRepository;
 
     /**
      * Lista todas las denuncias agrupadas con sus denuncias individuales.
@@ -91,6 +94,9 @@ public class DenunciaService {
 
         DenunciaAgrupada saved = denunciaAgrupadaRepository.save(denuncia);
         log.info("Denuncia id={} marcada como revisada por admin={}", id, adminId);
+        
+        notificarRevisionDenunciantes(saved);
+        
         return toResponse(saved);
     }
 
@@ -191,5 +197,30 @@ public class DenunciaService {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
+    }
+
+    private void notificarRevisionDenunciantes(DenunciaAgrupada denuncia) {
+        java.util.Set<String> correosNotificados = new java.util.HashSet<>();
+        for (DenunciaIndividual ind : denuncia.getDenunciasIndividuales()) {
+            String creadoPor = ind.getCreadoPor();
+            if (creadoPor == null || creadoPor.isBlank()) continue;
+            
+            String emailDestino = null;
+            try {
+                UUID id = UUID.fromString(creadoPor);
+                emailDestino = usuarioRepository.findById(id)
+                        .map(Usuario::getEmail)
+                        .orElse(null);
+            } catch (IllegalArgumentException e) {
+                if (creadoPor.contains("@")) {
+                    emailDestino = creadoPor;
+                }
+            }
+            
+            if (emailDestino != null && !correosNotificados.contains(emailDestino)) {
+                emailService.enviarNotificacionRevisionSinFaltas(emailDestino, denuncia.getPortfolioTitle());
+                correosNotificados.add(emailDestino);
+            }
+        }
     }
 }

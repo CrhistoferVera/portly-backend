@@ -33,7 +33,7 @@ public class AdminReportService {
     public byte[] generateUserReportPdf(LocalDate desde, LocalDate hasta, String estado) {
         LocalDateTime fechaDesde = desde.atStartOfDay();
         LocalDateTime fechaHasta = hasta.atTime(23, 59, 59);
-        String estadoFiltro = "Todos".equalsIgnoreCase(estado) ? null : estado.toUpperCase();
+        String estadoFiltro = "Todos".equalsIgnoreCase(estado) ? null : estado.toLowerCase();
 
         List<Usuario> usuarios = usuarioRepository.findByFechaCreacionBetweenAndEstado(fechaDesde, fechaHasta, estadoFiltro);
 
@@ -162,8 +162,7 @@ public class AdminReportService {
     public byte[] generateTemplateReportPdf(LocalDate desde, LocalDate hasta, String estado) {
         LocalDateTime fechaDesde = desde.atStartOfDay();
         LocalDateTime fechaHasta = hasta.atTime(23, 59, 59);
-        String estadoFiltro = "Todas".equalsIgnoreCase(estado) ? null : 
-            ("Activas".equalsIgnoreCase(estado) ? "ACTIVA" : "INACTIVA");
+        String estadoFiltro = "Todas".equalsIgnoreCase(estado) ? null : estado.toUpperCase().substring(0, 5) + "%";
 
         List<com.portly.dto.TemplateReportDto> plantillas = portafolioRepository.getTemplateUsageReport(fechaDesde, fechaHasta, estadoFiltro);
 

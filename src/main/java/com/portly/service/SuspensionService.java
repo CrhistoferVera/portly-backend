@@ -216,12 +216,10 @@ public class SuspensionService {
                 .build();
     }
 
-    /**
-     * Lista todos los usuarios con suspensiones activas.
-     */
     public List<SuspensionResponse> listarSuspendidos() {
         return suspensionRepository.findAllByCanceladaFalse()
                 .stream()
+                .filter(s -> "suspendido".equalsIgnoreCase(s.getUsuario().getEstado()))
                 .map(s -> {
                     String userName = obtenerNombreUsuario(s.getUsuario());
                     return SuspensionResponse.builder()
@@ -277,5 +275,17 @@ public class SuspensionService {
             return completo.isEmpty() ? "Sin Nombre" : completo;
         }
         return "Sin Nombre";
+    }
+
+    /**
+     * Envia un correo de suspensión al usuario suspendido.
+     */
+    public void enviarCorreoSuspensionCuenta(UUID userId, String motivo) {
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con id: " + userId));
+
+        String nombreUsuario = obtenerNombreUsuario(usuario);
+        emailService.enviarNotificacionSuspensionUsuario(usuario.getEmail(), nombreUsuario, motivo);
+        log.info("Correo de suspensión solicitado para usuario id={}, email={}", userId, usuario.getEmail());
     }
 }

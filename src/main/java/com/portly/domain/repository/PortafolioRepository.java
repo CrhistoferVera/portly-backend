@@ -53,7 +53,7 @@ public interface PortafolioRepository extends JpaRepository<Portafolio, UUID> {
     @Query("SELECT new com.portly.dto.TemplateReportDto(p.plantilla.nombre, COALESCE(p.plantilla.estado, 'ACTIVA'), COUNT(DISTINCT p.usuario.idUsuario)) " +
            "FROM Portafolio p " +
            "WHERE p.fechaCreacion BETWEEN :desde AND :hasta " +
-           "AND (:estado IS NULL OR UPPER(COALESCE(p.plantilla.estado, 'ACTIVA')) = :estado) " +
+           "AND (:estado IS NULL OR UPPER(COALESCE(p.plantilla.estado, 'ACTIVA')) LIKE :estado) " +
            "GROUP BY p.plantilla.nombre, COALESCE(p.plantilla.estado, 'ACTIVA') " +
            "ORDER BY COUNT(DISTINCT p.usuario.idUsuario) DESC")
     List<com.portly.dto.TemplateReportDto> getTemplateUsageReport(
