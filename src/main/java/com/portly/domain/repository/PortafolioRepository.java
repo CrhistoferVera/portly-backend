@@ -23,6 +23,8 @@ public interface PortafolioRepository extends JpaRepository<Portafolio, UUID> {
 
     java.util.Optional<Portafolio> findByUrlPublicaEndingWith(String suffix);
 
+    List<Portafolio> findByPerfilProfesional_IdPerfilProfesional(UUID idPerfilProfesional);
+
     @Query("SELECT p FROM Portafolio p JOIN p.usuario u LEFT JOIN u.perfil pf " +
            "WHERE p.visibilidad = 'PUBLICO' " +
            "AND u.estado != 'suspendido' " +
