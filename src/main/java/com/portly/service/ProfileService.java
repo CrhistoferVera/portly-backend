@@ -344,6 +344,7 @@ public class ProfileService {
         return UsuarioProfileResponse.builder()
                 .idUsuario(usuario.getIdUsuario())
                 .email(usuario.getEmail())
+                .username(usuario.getUsername())
                 .rol(usuario.getRol())
                 .estado(usuario.getEstado())
                 .correoVerificado(usuario.getCorreoVerificado())
