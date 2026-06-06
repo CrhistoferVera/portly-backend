@@ -61,6 +61,18 @@ public class UsuarioProfileResponse {
     // experiencia laboral
     private List<ExperienciaDto> experiencias;
 
+    // redes sociales
+    private RedesSocialesDto redesSociales;
+
+    @Data @Builder
+    public static class RedesSocialesDto {
+        private String instagram;
+        private String facebook;
+        private String youtube;
+        private String github;
+        private String linkedin;
+    }
+
 
     @Data @Builder
     public static class ProveedorDto {
