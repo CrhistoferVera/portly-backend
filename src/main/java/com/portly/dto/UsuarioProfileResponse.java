@@ -15,6 +15,7 @@ public class UsuarioProfileResponse {
 
     private UUID      idUsuario;
     private String    email;
+    private String    username;
     private String    rol;
     private String    estado;
     private Boolean   correoVerificado;
