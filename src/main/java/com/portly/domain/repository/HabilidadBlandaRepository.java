@@ -12,6 +12,8 @@ public interface HabilidadBlandaRepository extends JpaRepository<HabilidadBlanda
 
     boolean existsByUsuario_IdUsuarioAndNombreHabilidadIgnoreCase(UUID idUsuario, String nombreHabilidad);
 
+    java.util.Optional<HabilidadBlanda> findFirstByOrderByFechaCreacionAsc();
+
     @org.springframework.data.jpa.repository.Query("SELECT new com.portly.dto.SkillReportDto(hb.nombreHabilidad, 'Blandas', COUNT(hb)) " +
             "FROM HabilidadBlanda hb " +
             "WHERE hb.fechaCreacion BETWEEN :desde AND :hasta " +
