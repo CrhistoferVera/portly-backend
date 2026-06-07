@@ -29,6 +29,9 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
+    @org.springframework.beans.factory.annotation.Value("${app.frontend-url}")
+    private String frontendUrl;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -70,7 +73,8 @@ public class SecurityConfig {
             "https://portly-front.vercel.app",
             "https://portly-frontend-three.vercel.app",
             "https://*.vercel.app",
-            "https://*.easypanel.host"
+            "https://*.easypanel.host",
+            frontendUrl
         ));
         
         // Métodos HTTP permitidos
