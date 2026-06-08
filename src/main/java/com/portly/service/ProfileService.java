@@ -338,6 +338,7 @@ public class ProfileService {
                 .apelacionPendiente(apelacionPendiente)
                 .apelacionAprobada(apelacionAprobada)
                 .idApelacionAprobada(idApelacionAprobada)
+                .hasPassword(usuario.getContrasenaEncriptada() != null && !usuario.getContrasenaEncriptada().trim().isEmpty())
                 .nombre(fromPerfil(perfil, PerfilUsuario::getNombre))
                 .apellido(fromPerfil(perfil, PerfilUsuario::getApellido))
                 .titularProfesional(fromPerfil(perfil, PerfilUsuario::getTitularProfesional))

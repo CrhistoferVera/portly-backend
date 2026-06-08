@@ -25,6 +25,7 @@ public class UsuarioProfileResponse {
     private Boolean   apelacionPendiente;
     private Boolean   apelacionAprobada;
     private Long      idApelacionAprobada;
+    private Boolean   hasPassword;
 
     // datos del perfil
     private String nombre;
