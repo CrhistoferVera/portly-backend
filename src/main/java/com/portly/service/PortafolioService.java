@@ -291,8 +291,9 @@ public class PortafolioService {
         boolean showYoutube    = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarYoutube());
         boolean showTechSkills = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarHabilidadesTecnicas());
         boolean showSoftSkills = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarHabilidadesBlandas());
-        boolean showExperience = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarTrayectoria());
-        boolean showEducation  = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarFormacion());
+        boolean showExperience      = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarTrayectoria());
+        boolean showEducation       = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarFormacion());
+        boolean showActualizacion   = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarActualizacionAcademica());
 
         // Redes sociales del perfil (Instagram, Facebook, YouTube, LinkedIn, GitHub)
         Map<String, String> redesMap = java.util.Collections.emptyMap();
@@ -450,6 +451,22 @@ public class PortafolioService {
                                         .actualmenteEstudiando(f.getActualmenteEstudiando())
                                         .nivel(f.getNivel())
                                         .descripcion(f.getDescripcion())
+                                        .build())
+                                .collect(Collectors.toList())
+                        : List.of())
+                .actualizaciones(showActualizacion && u.getActualizaciones() != null
+                        ? u.getActualizaciones().stream()
+                                .filter(a -> isItemVisible(itemVis.getActualizacionItems(),
+                                        a.getIdActualizacionAcademica() != null ? a.getIdActualizacionAcademica().toString() : ""))
+                                .map(a -> PortafolioPublicoResponse.ActualizacionPublica.builder()
+                                        .idActualizacionAcademica(a.getIdActualizacionAcademica())
+                                        .institucion(a.getInstitucion())
+                                        .tipo(a.getTipo())
+                                        .titulo(a.getTitulo())
+                                        .fechaInicio(a.getFechaInicio() != null ? a.getFechaInicio().toString() : "")
+                                        .fechaFinalizacion(a.getFechaFinalizacion() != null ? a.getFechaFinalizacion().toString() : null)
+                                        .aunNoLoFinalice(a.getAunNoLoFinalice())
+                                        .descripcion(a.getDescripcion())
                                         .build())
                                 .collect(Collectors.toList())
                         : List.of())

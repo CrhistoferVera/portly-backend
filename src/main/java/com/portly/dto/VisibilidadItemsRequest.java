@@ -12,4 +12,5 @@ public class VisibilidadItemsRequest {
     private Map<String, Boolean> experienceItems;
     private Map<String, Boolean> educationItems;
     private Map<String, Boolean> projectItems;
+    private Map<String, Boolean> actualizacionItems;
 }

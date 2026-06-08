@@ -36,4 +36,5 @@ public class ActualizarPerfilRequest {
     private Boolean mostrarHabilidadesBlandas;
     private Boolean mostrarTrayectoria;
     private Boolean mostrarFormacion;
+    private Boolean mostrarActualizacionAcademica;
 }

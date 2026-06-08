@@ -116,6 +116,9 @@ public class ProfileService {
         if (request.getMostrarFormacion() != null) {
             perfil.setMostrarFormacion(request.getMostrarFormacion());
         }
+        if (request.getMostrarActualizacionAcademica() != null) {
+            perfil.setMostrarActualizacionAcademica(request.getMostrarActualizacionAcademica());
+        }
         perfil.setFechaActualizacion(LocalDateTime.now());
 
         perfilRepository.save(perfil);
@@ -358,6 +361,7 @@ public class ProfileService {
                 .mostrarHabilidadesBlandas(perfil != null && perfil.getMostrarHabilidadesBlandas() != null ? perfil.getMostrarHabilidadesBlandas() : true)
                 .mostrarTrayectoria(perfil != null && perfil.getMostrarTrayectoria() != null ? perfil.getMostrarTrayectoria() : true)
                 .mostrarFormacion(perfil != null && perfil.getMostrarFormacion() != null ? perfil.getMostrarFormacion() : true)
+                .mostrarActualizacionAcademica(perfil != null && perfil.getMostrarActualizacionAcademica() != null ? perfil.getMostrarActualizacionAcademica() : true)
                 .proveedores(proveedores.stream().map(p ->
                         UsuarioProfileResponse.ProveedorDto.builder()
                                 .nombreProveedor(p.getNombreProveedor())

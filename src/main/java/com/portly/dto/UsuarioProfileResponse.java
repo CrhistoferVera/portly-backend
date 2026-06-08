@@ -52,6 +52,7 @@ public class UsuarioProfileResponse {
     private Boolean mostrarHabilidadesBlandas;
     private Boolean mostrarTrayectoria;
     private Boolean mostrarFormacion;
+    private Boolean mostrarActualizacionAcademica;
 
     // proveedores OAuth vinculados (LinkedIn, GitHub, Google)
     private List<ProveedorDto> proveedores;
