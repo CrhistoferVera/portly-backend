@@ -19,14 +19,16 @@ import java.util.function.UnaryOperator;
 @RequiredArgsConstructor
 public class DataInitializer implements ApplicationRunner {
 
-    private static final String S_HERO       = "hero";
-    private static final String S_SKILLS     = "skills";
-    private static final String S_SOFTSKILLS = "softskills";
-    private static final String S_EXPERIENCE = "experience";
-    private static final String S_EDUCATION  = "education";
-    private static final String S_PROJECTS   = "projects";
-    private static final String S_ABOUT      = "about";
-    private static final String S_CONTACT    = "contact";
+    private static final String S_HERO            = "hero";
+    private static final String S_SKILLS          = "skills";
+    private static final String S_SOFTSKILLS      = "softskills";
+    private static final String S_EXPERIENCE      = "experience";
+    private static final String S_EDUCATION       = "education";
+    private static final String S_ACTUALIZACION        = "actualizacion";
+    private static final String T_ACTUALIZACION        = "Actualización académica";
+    private static final String S_PROJECTS        = "projects";
+    private static final String S_ABOUT           = "about";
+    private static final String S_CONTACT         = "contact";
     private static final String TAG_BRUTALISTA = "Brutalista";
 
     private final PlantillaRepository plantillaRepository;
@@ -50,9 +52,10 @@ public class DataInitializer implements ApplicationRunner {
                         TemplateSection.builder().type(S_SKILLS)    .title("Capacidades")        .visible(true).order(1).build(),
                         TemplateSection.builder().type(S_SOFTSKILLS).title("Habilidades")        .visible(true).order(2).build(),
                         TemplateSection.builder().type(S_EXPERIENCE).title("Experiencia")        .visible(true).order(3).build(),
-                        TemplateSection.builder().type(S_EDUCATION) .title("Formación")          .visible(true).order(4).build(),
-                        TemplateSection.builder().type(S_PROJECTS)  .title("Proyectos")          .visible(true).order(5).build(),
-                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")           .visible(true).order(6).build()
+                        TemplateSection.builder().type(S_EDUCATION)      .title("Formación")               .visible(true).order(4).build(),
+                        TemplateSection.builder().type(S_ACTUALIZACION) .title(T_ACTUALIZACION) .visible(true).order(5).build(),
+                        TemplateSection.builder().type(S_PROJECTS)  .title("Proyectos")          .visible(true).order(6).build(),
+                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")           .visible(true).order(7).build()
                 ))
                 .build();
 
@@ -68,14 +71,14 @@ public class DataInitializer implements ApplicationRunner {
                         .etiquetas(List.of(TAG_BRUTALISTA, "Moderno", "Grotesk", "Portafolio"))
                         .imagenVistaPrevia("")
                         .urlVistaPrevia("")
-                        .cantidadSecciones(7)
+                        .cantidadSecciones(8)
                         .impacto("2.1k")
                         .tiempoConfiguracion("4 min")
                         .esquemaConfiguracion(schemaTercera)
                         .build();
             }
             p.setEsquemaConfiguracion(schemaTercera);
-            p.setCantidadSecciones(7);
+            p.setCantidadSecciones(8);
             return p;
         });
 
@@ -89,10 +92,11 @@ public class DataInitializer implements ApplicationRunner {
                         TemplateSection.builder().type(S_SKILLS)    .title("Habilidades técnicas")  .visible(true).order(1).build(),
                         TemplateSection.builder().type(S_SOFTSKILLS).title("Habilidades blandas")   .visible(true).order(2).build(),
                         TemplateSection.builder().type(S_EXPERIENCE).title("Experiencia")           .visible(true).order(3).build(),
-                        TemplateSection.builder().type(S_EDUCATION) .title("Formación académica")   .visible(true).order(4).build(),
-                        TemplateSection.builder().type(S_PROJECTS)  .title("Proyectos")             .visible(true).order(5).build(),
-                        TemplateSection.builder().type(S_ABOUT)     .title("Sobre mí")              .visible(true).order(6).build(),
-                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")              .visible(true).order(7).build()
+                        TemplateSection.builder().type(S_EDUCATION)      .title("Formación académica")     .visible(true).order(4).build(),
+                        TemplateSection.builder().type(S_ACTUALIZACION) .title(T_ACTUALIZACION) .visible(true).order(5).build(),
+                        TemplateSection.builder().type(S_PROJECTS)  .title("Proyectos")             .visible(true).order(6).build(),
+                        TemplateSection.builder().type(S_ABOUT)     .title("Sobre mí")              .visible(true).order(7).build(),
+                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")              .visible(true).order(8).build()
                 ))
                 .build();
 
@@ -109,14 +113,14 @@ public class DataInitializer implements ApplicationRunner {
                         .etiquetas(List.of("Profesional", "Corporativo", "Azul", "Limpio", "Moderno"))
                         .imagenVistaPrevia("")
                         .urlVistaPrevia("")
-                        .cantidadSecciones(8)
+                        .cantidadSecciones(9)
                         .impacto("1.2k")
                         .tiempoConfiguracion("3 min")
                         .esquemaConfiguracion(schemaCorporate)
                         .build();
             }
             p.setEsquemaConfiguracion(schemaCorporate);
-            p.setCantidadSecciones(8);
+            p.setCantidadSecciones(9);
             return p;
         });
 
@@ -132,8 +136,9 @@ public class DataInitializer implements ApplicationRunner {
                         TemplateSection.builder().type(S_PROJECTS)  .title("Proyectos")             .visible(true).order(3).build(),
                         TemplateSection.builder().type(S_SKILLS)    .title("Habilidades técnicas")  .visible(true).order(4).build(),
                         TemplateSection.builder().type(S_SOFTSKILLS).title("Habilidades blandas")   .visible(true).order(5).build(),
-                        TemplateSection.builder().type(S_EDUCATION) .title("Formación académica")   .visible(true).order(6).build(),
-                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")              .visible(true).order(7).build()
+                        TemplateSection.builder().type(S_EDUCATION)      .title("Formación académica")     .visible(true).order(6).build(),
+                        TemplateSection.builder().type(S_ACTUALIZACION) .title(T_ACTUALIZACION) .visible(true).order(7).build(),
+                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")              .visible(true).order(8).build()
                 ))
                 .build();
 
@@ -150,14 +155,14 @@ public class DataInitializer implements ApplicationRunner {
                         .etiquetas(List.of("Minimalista", "Desarrollador", "Dos columnas", "Oscuro", "Inter"))
                         .imagenVistaPrevia("")
                         .urlVistaPrevia("")
-                        .cantidadSecciones(8)
+                        .cantidadSecciones(9)
                         .impacto("980")
                         .tiempoConfiguracion("3 min")
                         .esquemaConfiguracion(schemaFirmaMinima)
                         .build();
             }
             p.setEsquemaConfiguracion(schemaFirmaMinima);
-            p.setCantidadSecciones(8);
+            p.setCantidadSecciones(9);
             return p;
         });
 
@@ -173,8 +178,9 @@ public class DataInitializer implements ApplicationRunner {
                         TemplateSection.builder().type(S_PROJECTS)  .title("Proyectos")             .visible(true).order(3).build(),
                         TemplateSection.builder().type(S_EXPERIENCE).title("Experiencia")          .visible(true).order(4).build(),
                         TemplateSection.builder().type(S_SOFTSKILLS).title("Habilidades blandas")  .visible(true).order(5).build(),
-                        TemplateSection.builder().type(S_EDUCATION) .title("Formación académica")  .visible(true).order(6).build(),
-                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")              .visible(true).order(7).build()
+                        TemplateSection.builder().type(S_EDUCATION)      .title("Formación académica")  .visible(true).order(6).build(),
+                        TemplateSection.builder().type(S_ACTUALIZACION) .title(T_ACTUALIZACION)       .visible(true).order(7).build(),
+                        TemplateSection.builder().type(S_CONTACT)   .title("Contacto")              .visible(true).order(8).build()
                 ))
                 .build();
 
@@ -192,14 +198,14 @@ public class DataInitializer implements ApplicationRunner {
                         .etiquetas(List.of("Oscuro", "Desarrollador", "Púrpura", "Moderno", "Carrusel"))
                         .imagenVistaPrevia("")
                         .urlVistaPrevia("")
-                        .cantidadSecciones(8)
+                        .cantidadSecciones(9)
                         .impacto("1.4k")
                         .tiempoConfiguracion("4 min")
                         .esquemaConfiguracion(schemaLaRed)
                         .build();
             }
             p.setEsquemaConfiguracion(schemaLaRed);
-            p.setCantidadSecciones(8);
+            p.setCantidadSecciones(9);
             return p;
         });
     }

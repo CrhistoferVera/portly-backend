@@ -533,6 +533,7 @@ public class PortafolioService {
                         .softSkillItems(parsed.getSoftSkillItems())
                         .experienceItems(parsed.getExperienceItems())
                         .educationItems(parsed.getEducationItems())
+                        .actualizacionItems(parsed.getActualizacionItems())
                         .projectItems(parsed.getProjectItems())
                         .build();
             } catch (JsonProcessingException e) {

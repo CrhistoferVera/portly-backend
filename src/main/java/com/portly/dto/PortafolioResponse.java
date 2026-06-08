@@ -33,6 +33,7 @@ public class PortafolioResponse {
         private Map<String, Boolean> softSkillItems;
         private Map<String, Boolean> experienceItems;
         private Map<String, Boolean> educationItems;
+        private Map<String, Boolean> actualizacionItems;
         private Map<String, Boolean> projectItems;
     }
 }
