@@ -10,6 +10,14 @@ import lombok.Setter;
 @NoArgsConstructor
 public class RegisterRequest {
 
+    @NotBlank(message = "El nombre de usuario es obligatorio")
+    @Size(min = 3, max = 30, message = "El nombre de usuario debe tener entre 3 y 30 caracteres")
+    @jakarta.validation.constraints.Pattern(
+        regexp = "^[a-zA-Z0-9_]+$",
+        message = "Solo se permiten letras, números y guión bajo (_)"
+    )
+    private String username;
+
     @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")
     private String nombre;

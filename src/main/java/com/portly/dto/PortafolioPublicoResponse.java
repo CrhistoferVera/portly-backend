@@ -15,6 +15,7 @@ public class PortafolioPublicoResponse {
     private String visibilidad;
     private String templateNombre;
     private TemplateSchema templateSchema;
+    private boolean hasPendingReport;
     
     private UsuarioPublico usuario;
     private List<SkillPublica> skills;
@@ -22,6 +23,7 @@ public class PortafolioPublicoResponse {
     private List<ExperienciaPublica> experiencias;
     private List<ProyectoPublico> proyectos;
     private List<FormacionPublica> formaciones;
+    private List<ActualizacionPublica> actualizaciones;
 
     @Getter @Builder public static class UsuarioPublico {
         private String nombre;
@@ -99,6 +101,17 @@ public class PortafolioPublicoResponse {
         private String fechaEgreso;
         private boolean actualmenteEstudiando;
         private String nivel;
+        private String descripcion;
+    }
+
+    @Getter @Builder public static class ActualizacionPublica {
+        private Long idActualizacionAcademica;
+        private String institucion;
+        private String tipo;
+        private String titulo;
+        private String fechaInicio;
+        private String fechaFinalizacion;
+        private boolean aunNoLoFinalice;
         private String descripcion;
     }
 }

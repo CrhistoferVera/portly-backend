@@ -6,10 +6,15 @@ import com.portly.domain.entity.Plantilla;
 import com.portly.domain.entity.Portafolio;
 import com.portly.domain.entity.Usuario;
 import com.portly.domain.entity.PerfilUsuario;
+import com.portly.domain.entity.PerfilProfesional;
+import com.portly.domain.repository.PerfilProfesionalRepository;
 import com.portly.domain.repository.PlantillaRepository;
 import com.portly.domain.repository.PortafolioRepository;
 import com.portly.domain.repository.RedesSocialesRepository;
 import com.portly.domain.repository.UsuarioRepository;
+import com.portly.domain.repository.DenunciaAgrupadaRepository;
+import com.portly.domain.repository.DenunciaIndividualRepository;
+import com.portly.domain.entity.DenunciaAgrupada;
 import com.portly.dto.PortafolioRequest;
 import com.portly.dto.PortafolioResponse;
 import com.portly.dto.PortafolioPublicoResponse;
@@ -43,8 +48,11 @@ public class PortafolioService {
 
     private final PortafolioRepository portafolioRepository;
     private final PlantillaRepository plantillaRepository;
+    private final PerfilProfesionalRepository perfilProfesionalRepository;
     private final UsuarioRepository usuarioRepository;
     private final RedesSocialesRepository redesSocialesRepository;
+    private final DenunciaAgrupadaRepository denunciaAgrupadaRepository;
+    private final DenunciaIndividualRepository denunciaIndividualRepository;
     private final ObjectMapper objectMapper;
 
     @Value("${app.frontend-url}")
@@ -76,9 +84,22 @@ public class PortafolioService {
 
         String urlPublica = generarUrlPublica(usuario);
 
+        // Perfil profesional opcional: si viene, debe pertenecer al usuario.
+        PerfilProfesional perfilProfesional = null;
+        String perfilProfesionalId = request.getPerfilProfesionalId();
+        if (perfilProfesionalId != null && !perfilProfesionalId.isBlank()) {
+            perfilProfesional = perfilProfesionalRepository.findById(UUID.fromString(perfilProfesionalId))
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Perfil profesional no encontrado"));
+            if (!perfilProfesional.getUsuario().getIdUsuario().equals(idUsuario)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "No tienes permiso para usar este perfil profesional");
+            }
+        }
+
         Portafolio portafolio = Portafolio.builder()
                 .usuario(usuario)
                 .plantilla(plantilla)
+                .perfilProfesional(perfilProfesional)
                 .nombre(request.getNombre())
                 .visibilidad(visibilidad)
                 .urlPublica(urlPublica)
@@ -171,7 +192,9 @@ public class PortafolioService {
 
     /** Obtiene el portafolio público con toda su data, aplicando filtros de visibilidad. */
     @Transactional(readOnly = true)
-    public ExploreSearchResult searchPortafolios(String q, String sort, int page, int limit) {
+    public ExploreSearchResult searchPortafolios(String q, String sort, int page, int limit,
+                                                 String nacionalidad, String gradoAcademico,
+                                                 String habilidadesTecnicas, String habilidadesBlandas) {
         // Page is 1-indexed from frontend, so subtract 1 for Spring Data JPA
         int pageNumber = page > 0 ? page - 1 : 0;
         
@@ -185,7 +208,8 @@ public class PortafolioService {
         
         Pageable pageable = PageRequest.of(pageNumber, limit, Sort.by(direction, sortBy));
         
-        Page<Portafolio> portafoliosPage = portafolioRepository.searchPublicPortafolios(q, pageable);
+        Page<Portafolio> portafoliosPage = portafolioRepository.searchPublicPortafolios(
+                q, nacionalidad, gradoAcademico, habilidadesTecnicas, habilidadesBlandas, pageable);
         
         List<ExplorePortfolio> portfolios = portafoliosPage.getContent().stream().map(p -> {
             PerfilUsuario perfil = p.getUsuario() != null ? p.getUsuario().getPerfil() : null;
@@ -233,17 +257,26 @@ public class PortafolioService {
 
         if (!portafolio.getVisibilidad().equalsIgnoreCase("PUBLICO")) {
             boolean isOwner = false;
-            if (authentication != null && authentication.getPrincipal() instanceof UUID) {
-                UUID authUserId = (UUID) authentication.getPrincipal();
-                isOwner = portafolio.getUsuario().getIdUsuario().equals(authUserId);
+            boolean isAdmin = false;
+            if (authentication != null) {
+                if (authentication.getPrincipal() instanceof UUID) {
+                    UUID authUserId = (UUID) authentication.getPrincipal();
+                    isOwner = portafolio.getUsuario().getIdUsuario().equals(authUserId);
+                }
+                isAdmin = authentication.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
             }
-            if (!isOwner) {
+            if (!isOwner && !isAdmin) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Este portafolio es privado");
             }
         }
 
         Usuario u = portafolio.getUsuario();
         PerfilUsuario perfil = u.getPerfil();
+
+        // Perfil profesional asignado al portafolio (puede ser null → fallback al perfil global).
+        // Solo sobreescribe titular, descripción y foto; las redes y contacto siguen siendo globales.
+        PerfilProfesional pp = portafolio.getPerfilProfesional();
 
         // Filtros de visibilidad de sección (desde PerfilUsuario)
         boolean showEmail      = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarCorreo());
@@ -258,8 +291,9 @@ public class PortafolioService {
         boolean showYoutube    = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarYoutube());
         boolean showTechSkills = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarHabilidadesTecnicas());
         boolean showSoftSkills = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarHabilidadesBlandas());
-        boolean showExperience = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarTrayectoria());
-        boolean showEducation  = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarFormacion());
+        boolean showExperience      = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarTrayectoria());
+        boolean showEducation       = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarFormacion());
+        boolean showActualizacion   = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarActualizacionAcademica());
 
         // Redes sociales del perfil (Instagram, Facebook, YouTube, LinkedIn, GitHub)
         Map<String, String> redesMap = java.util.Collections.emptyMap();
@@ -285,18 +319,37 @@ public class PortafolioService {
                     : perfil.getTelefono();
         }
 
+        // Check if the current user has a pending report
+        boolean hasPendingReport = false;
+        if (authentication != null && authentication.getPrincipal() instanceof UUID) {
+            String reporterId = authentication.getPrincipal().toString();
+            hasPendingReport = denunciaAgrupadaRepository
+                    .findByPortafolio_IdPortafolioAndStatus(portafolio.getIdPortafolio(), "pendiente")
+                    .map(agrupada -> denunciaIndividualRepository.existsByDenunciaAgrupada_IdAndCreadoPor(agrupada.getId(), reporterId))
+                    .orElse(false);
+        }
+
         return PortafolioPublicoResponse.builder()
                 .id(portafolio.getIdPortafolio().toString())
                 .nombre(portafolio.getNombre())
                 .visibilidad(portafolio.getVisibilidad())
                 .templateNombre(portafolio.getPlantilla().getNombre())
                 .templateSchema(portafolio.getPlantilla().getEsquemaConfiguracion())
+                .hasPendingReport(hasPendingReport)
                 .usuario(PortafolioPublicoResponse.UsuarioPublico.builder()
                         .nombre(perfil != null ? perfil.getNombre() : "")
                         .apellido(perfil != null ? perfil.getApellido() : "")
-                        .profesion(showProfession && perfil != null ? perfil.getTitularProfesional() : null)
-                        .descripcion(showBio && perfil != null ? perfil.getAcercaDeMi() : null)
-                        .avatarUrl(perfil != null ? perfil.getEnlaceFoto() : "")
+                        .profesion(showProfession
+                                ? (pp != null ? pp.getTitularProfesional()
+                                              : (perfil != null ? perfil.getTitularProfesional() : null))
+                                : null)
+                        .descripcion(showBio
+                                ? (pp != null ? pp.getAcercaDeMi()
+                                              : (perfil != null ? perfil.getAcercaDeMi() : null))
+                                : null)
+                        .avatarUrl(pp != null && pp.getFotoUrl() != null && !pp.getFotoUrl().isBlank()
+                                ? pp.getFotoUrl()
+                                : (perfil != null ? perfil.getEnlaceFoto() : ""))
                         .email(showEmail ? u.getEmail() : null)
                         .telefono(showPhone ? telefono : null)
                         .pais(showCountry && perfil != null ? perfil.getPais() : null)
@@ -398,6 +451,22 @@ public class PortafolioService {
                                         .actualmenteEstudiando(f.getActualmenteEstudiando())
                                         .nivel(f.getNivel())
                                         .descripcion(f.getDescripcion())
+                                        .build())
+                                .collect(Collectors.toList())
+                        : List.of())
+                .actualizaciones(showActualizacion && u.getActualizaciones() != null
+                        ? u.getActualizaciones().stream()
+                                .filter(a -> isItemVisible(itemVis.getActualizacionItems(),
+                                        a.getIdActualizacionAcademica() != null ? a.getIdActualizacionAcademica().toString() : ""))
+                                .map(a -> PortafolioPublicoResponse.ActualizacionPublica.builder()
+                                        .idActualizacionAcademica(a.getIdActualizacionAcademica())
+                                        .institucion(a.getInstitucion())
+                                        .tipo(a.getTipo())
+                                        .titulo(a.getTitulo())
+                                        .fechaInicio(a.getFechaInicio() != null ? a.getFechaInicio().toString() : "")
+                                        .fechaFinalizacion(a.getFechaFinalizacion() != null ? a.getFechaFinalizacion().toString() : null)
+                                        .aunNoLoFinalice(a.getAunNoLoFinalice())
+                                        .descripcion(a.getDescripcion())
                                         .build())
                                 .collect(Collectors.toList())
                         : List.of())

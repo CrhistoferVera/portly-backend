@@ -1,11 +1,13 @@
 package com.portly.domain.repository;
 
 import com.portly.domain.entity.Portafolio;
+import com.portly.dto.DashboardStatsResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,12 +23,45 @@ public interface PortafolioRepository extends JpaRepository<Portafolio, UUID> {
 
     java.util.Optional<Portafolio> findByUrlPublicaEndingWith(String suffix);
 
+    List<Portafolio> findByPerfilProfesional_IdPerfilProfesional(UUID idPerfilProfesional);
+
+    java.util.Optional<Portafolio> findFirstByOrderByFechaCreacionAsc();
+
     @Query("SELECT p FROM Portafolio p JOIN p.usuario u LEFT JOIN u.perfil pf " +
            "WHERE p.visibilidad = 'PUBLICO' " +
+           "AND u.estado != 'suspendido' " +
            "AND (:q IS NULL OR :q = '' " +
            "OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(pf.nombre) LIKE LOWER(CONCAT('%', :q, '%')) " +
            "OR LOWER(pf.apellido) LIKE LOWER(CONCAT('%', :q, '%')) " +
-           "OR LOWER(pf.titularProfesional) LIKE LOWER(CONCAT('%', :q, '%')))")
-    Page<Portafolio> searchPublicPortafolios(@Param("q") String q, Pageable pageable);
+           "OR LOWER(pf.titularProfesional) LIKE LOWER(CONCAT('%', :q, '%'))) " +
+           "AND (:nacionalidad IS NULL OR :nacionalidad = '' OR pf.pais = :nacionalidad) " +
+           "AND (:gradoAcademico IS NULL OR :gradoAcademico = '' OR EXISTS (SELECT 1 FROM u.formaciones f WHERE f.nivel = :gradoAcademico)) " +
+           "AND (:habilidadesTecnicas IS NULL OR :habilidadesTecnicas = '' OR EXISTS (SELECT 1 FROM u.habilidades h WHERE h.nombre = :habilidadesTecnicas)) " +
+           "AND (:habilidadesBlandas IS NULL OR :habilidadesBlandas = '' OR EXISTS (SELECT 1 FROM u.habilidadesBlandas hb WHERE hb.nombreHabilidad = :habilidadesBlandas))")
+    Page<Portafolio> searchPublicPortafolios(
+            @Param("q") String q,
+            @Param("nacionalidad") String nacionalidad,
+            @Param("gradoAcademico") String gradoAcademico,
+            @Param("habilidadesTecnicas") String habilidadesTecnicas,
+            @Param("habilidadesBlandas") String habilidadesBlandas,
+            Pageable pageable);
+
+    @Query("SELECT COUNT(p) FROM Portafolio p WHERE p.visibilidad = 'PUBLICO' AND p.fechaCreacion >= :desde")
+    long countPublicosDesde(@Param("desde") LocalDateTime desde);
+
+    @Query("SELECT new com.portly.dto.DashboardStatsResponse$PlantillaStats(p.plantilla.nombre, COUNT(p)) " +
+           "FROM Portafolio p GROUP BY p.plantilla.nombre ORDER BY COUNT(p) DESC")
+    List<DashboardStatsResponse.PlantillaStats> findTopPlantillas(Pageable pageable);
+
+    @Query("SELECT new com.portly.dto.TemplateReportDto(p.plantilla.nombre, COALESCE(p.plantilla.estado, 'ACTIVA'), COUNT(DISTINCT p.usuario.idUsuario)) " +
+           "FROM Portafolio p " +
+           "WHERE p.fechaCreacion BETWEEN :desde AND :hasta " +
+           "AND (:estado IS NULL OR UPPER(COALESCE(p.plantilla.estado, 'ACTIVA')) LIKE :estado) " +
+           "GROUP BY p.plantilla.nombre, COALESCE(p.plantilla.estado, 'ACTIVA') " +
+           "ORDER BY COUNT(DISTINCT p.usuario.idUsuario) DESC")
+    List<com.portly.dto.TemplateReportDto> getTemplateUsageReport(
+            @Param("desde") LocalDateTime desde,
+            @Param("hasta") LocalDateTime hasta,
+            @Param("estado") String estado);
 }

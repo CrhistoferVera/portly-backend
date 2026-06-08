@@ -83,8 +83,14 @@ public class PortafolioController {
     public ResponseEntity<ExploreSearchResult> search(
             @RequestParam(required = false) String q,
             @RequestParam(required = false, defaultValue = "recientes") String sort,
+            @RequestParam(required = false) String nacionalidad,
+            @RequestParam(required = false) String gradoAcademico,
+            @RequestParam(required = false) String habilidadesTecnicas,
+            @RequestParam(required = false) String habilidadesBlandas,
             @RequestParam(required = false, defaultValue = "1") int page,
             @RequestParam(required = false, defaultValue = "12") int limit) {
-        return ResponseEntity.ok(portafolioService.searchPortafolios(q, sort, page, limit));
+        return ResponseEntity.ok(portafolioService.searchPortafolios(
+                q, sort, page, limit, 
+                nacionalidad, gradoAcademico, habilidadesTecnicas, habilidadesBlandas));
     }
 }

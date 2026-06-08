@@ -116,6 +116,21 @@
 			<artifactId>cloudinary-http45</artifactId>
 			<version>1.39.0</version>
 		</dependency>
+
+		<!-- iText 7 para generación de PDF -->
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>itext7-core</artifactId>
+			<version>7.2.5</version>
+			<type>pom</type>
+		</dependency>
+
+		<!-- JFreeChart para generación de gráficas en PDF -->
+		<dependency>
+			<groupId>org.jfree</groupId>
+			<artifactId>jfreechart</artifactId>
+			<version>1.5.4</version>
+		</dependency>
 	</dependencies>
 
 	<build>

@@ -30,7 +30,7 @@ public class ProfileController {
             Authentication authentication,
             @Valid @RequestBody CompleteOAuthProfileRequest request) {
         UUID usuarioId = (UUID) authentication.getPrincipal();
-        return ResponseEntity.ok(authService.completarPerfilOAuth(usuarioId, request.getProfesion(), request.getResena()));
+        return ResponseEntity.ok(authService.completarPerfilOAuth(usuarioId, request.getUsername(), request.getProfesion(), request.getResena()));
     }
 
     // POST /api/redes-sociales
@@ -43,12 +43,6 @@ public class ProfileController {
         return ResponseEntity.ok().build();
     }
 
-    // POST /api/redes-sociales/user
-    @PostMapping("/redes-sociales/user")
-    public ResponseEntity<RedesSocialesRequest> obtenerRedesSocialesUser(@RequestBody ForgotPasswordRequest request) {
-        RedesSocialesRequest response = profileService.obtenerRedesSocialesPorEmail(request.getEmail());
-        return ResponseEntity.ok(response);
-    }
 
     // GET /api/profile
     // Obtener el perfil completo del usuario autenticado

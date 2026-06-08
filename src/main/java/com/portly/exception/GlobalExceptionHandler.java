@@ -20,6 +20,11 @@ public class GlobalExceptionHandler {
         return warnResponse(HttpStatus.CONFLICT, "Registro rechazado - email duplicado: {}", ex);
     }
 
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handleUsernameAlreadyExists(UsernameAlreadyExistsException ex) {
+        return warnResponse(HttpStatus.CONFLICT, "Registro rechazado - username duplicado: {}", ex);
+    }
+
     @ExceptionHandler(PasswordMismatchException.class)
     public ResponseEntity<Map<String, String>> handlePasswordMismatch(PasswordMismatchException ex) {
         return warnResponse(HttpStatus.BAD_REQUEST, "Credenciales inválidas: {}", ex);
@@ -48,6 +53,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
         return warnResponse(HttpStatus.BAD_REQUEST, "Argumento ilegal: {}", ex);
+    }
+
+    @ExceptionHandler(jakarta.persistence.EntityNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleEntityNotFound(jakarta.persistence.EntityNotFoundException ex) {
+        return warnResponse(HttpStatus.NOT_FOUND, "Entidad no encontrada: {}", ex);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalState(IllegalStateException ex) {
+        return warnResponse(HttpStatus.CONFLICT, "Conflicto de estado: {}", ex);
     }
 
     @ExceptionHandler(RuntimeException.class)

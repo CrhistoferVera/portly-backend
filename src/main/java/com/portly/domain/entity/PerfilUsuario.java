@@ -118,6 +118,10 @@ public class PerfilUsuario {
     @Column(name = "mostrar_formacion")
     private Boolean mostrarFormacion = true;
 
+    @Builder.Default
+    @Column(name = "mostrar_actualizacion_academica")
+    private Boolean mostrarActualizacionAcademica = true;
+
     @Column(name = "fecha_actualizacion", nullable = false)
     private LocalDateTime fechaActualizacion;
 }

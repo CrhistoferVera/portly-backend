@@ -30,12 +30,26 @@ public interface VisitaPortafolioRepository extends JpaRepository<VisitaPortafol
             @Param("desde") LocalDateTime desde,
             @Param("hasta") LocalDateTime hasta);
 
-    /** Visitas agrupadas por día y hora para el gráfico de 24h */
+    /** Visitas agrupadas por día y hora para el gráfico de 24h (obsoleto, usar 15m) */
     @Query("SELECT EXTRACT(DAY FROM v.fechaVisita) AS dia, EXTRACT(HOUR FROM v.fechaVisita) AS hora, COUNT(v) AS total " +
            "FROM VisitaPortafolio v " +
            "WHERE v.idPortafolio = :id AND v.fechaVisita BETWEEN :desde AND :hasta " +
            "GROUP BY EXTRACT(DAY FROM v.fechaVisita), EXTRACT(HOUR FROM v.fechaVisita) ORDER BY dia, hora")
     List<Object[]> countByHour(
+            @Param("id") UUID idPortafolio,
+            @Param("desde") LocalDateTime desde,
+            @Param("hasta") LocalDateTime hasta);
+
+    /** Visitas agrupadas por bloques de 15 minutos para el gráfico de 24h */
+    @Query("SELECT EXTRACT(DAY FROM v.fechaVisita) AS dia, " +
+           "EXTRACT(HOUR FROM v.fechaVisita) AS hora, " +
+           "FLOOR(EXTRACT(MINUTE FROM v.fechaVisita) / 15) AS intervalo, " +
+           "COUNT(v) AS total " +
+           "FROM VisitaPortafolio v " +
+           "WHERE v.idPortafolio = :id AND v.fechaVisita BETWEEN :desde AND :hasta " +
+           "GROUP BY EXTRACT(DAY FROM v.fechaVisita), EXTRACT(HOUR FROM v.fechaVisita), FLOOR(EXTRACT(MINUTE FROM v.fechaVisita) / 15) " +
+           "ORDER BY dia, hora, intervalo")
+    List<Object[]> countBy15Minutes(
             @Param("id") UUID idPortafolio,
             @Param("desde") LocalDateTime desde,
             @Param("hasta") LocalDateTime hasta);

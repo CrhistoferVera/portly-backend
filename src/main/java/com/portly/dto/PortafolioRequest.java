@@ -22,4 +22,7 @@ public class PortafolioRequest {
 
     @NotBlank(message = "La visibilidad es obligatoria")
     private String visibilidad;
+
+    /** ID del perfil profesional a mostrar (opcional; null = perfil global). */
+    private String perfilProfesionalId;
 }

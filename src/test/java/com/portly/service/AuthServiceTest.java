@@ -73,6 +73,7 @@ class AuthServiceTest {
 
         private RegisterRequest request() {
             RegisterRequest r = new RegisterRequest();
+            r.setUsername("juan_perez");
             r.setNombre("Juan");
             r.setApellido("Perez");
             r.setProfesion("Desarrollador");
@@ -88,10 +89,11 @@ class AuthServiceTest {
         void registroExitoso() {
             RegisterRequest req = request();
             when(usuarioRepository.existsByEmail(EMAIL)).thenReturn(false);
+            when(usuarioRepository.existsByUsernameIgnoreCase(anyString())).thenReturn(false);
             when(passwordEncoder.encode(PASSWORD)).thenReturn("$encoded$");
             when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuarioBase());
             when(perfilUsuarioRepository.save(any(PerfilUsuario.class))).thenReturn(new PerfilUsuario());
-            when(jwtService.generateToken(any(UUID.class), anyString(), anyString(), anyBoolean())).thenReturn("jwt-token");
+            when(jwtService.generateToken(any(UUID.class), anyString(), any(), anyString(), anyBoolean())).thenReturn("jwt-token");
 
             AuthResponse response = authService.register(req);
 
@@ -134,7 +136,7 @@ class AuthServiceTest {
 
         private LoginRequest request() {
             LoginRequest r = new LoginRequest();
-            r.setCorreoElectronico(EMAIL);
+            r.setIdentifier(EMAIL);  // usa email (contiene @), el servicio redirige a findByEmail
             r.setContraseña(PASSWORD);
             return r;
         }
@@ -144,7 +146,7 @@ class AuthServiceTest {
         void loginExitoso() {
             when(usuarioRepository.findByEmail(EMAIL)).thenReturn(Optional.of(usuarioBase()));
             when(passwordEncoder.matches(PASSWORD, "$encoded$")).thenReturn(true);
-            when(jwtService.generateToken(any(UUID.class), anyString(), anyString(), anyBoolean())).thenReturn("jwt-token");
+            when(jwtService.generateToken(any(UUID.class), anyString(), any(), anyString(), anyBoolean())).thenReturn("jwt-token");
 
             AuthResponse response = authService.login(request());
 

@@ -25,6 +25,7 @@ import com.portly.exception.PasswordMismatchException;
 import com.portly.exception.InvalidCodeException;
 import com.portly.exception.CodeExpiredException;
 import com.portly.exception.SamePasswordException;
+import com.portly.exception.UsernameAlreadyExistsException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,8 +52,14 @@ public class AuthService {
             throw new EmailAlreadyExistsException(request.getCorreoElectronico());
         }
 
+        String username = request.getUsername().toLowerCase();
+        if (usuarioRepository.existsByUsernameIgnoreCase(username)) {
+            throw new UsernameAlreadyExistsException(username);
+        }
+
         Usuario usuario = Usuario.builder()
                 .email(request.getCorreoElectronico())
+                .username(username)
                 .contrasenaEncriptada(passwordEncoder.encode(request.getContrasena()))
                 .rol("usuario")
                 .estado("activo")
@@ -61,7 +68,7 @@ public class AuthService {
                 .fechaCreacion(LocalDateTime.now())
                 .build();
         usuario = usuarioRepository.save(usuario);
-        log.info("Nuevo usuario registrado: email={}", request.getCorreoElectronico());
+        log.info("Nuevo usuario registrado: email={}, username={}", request.getCorreoElectronico(), username);
 
         PerfilUsuario perfil = PerfilUsuario.builder()
                 .usuario(usuario)
@@ -77,25 +84,50 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest body) {
-        Usuario usuario = buscarUsuarioPorEmail(body.getCorreoElectronico());
+        String identifier = body.getIdentifier().trim();
+        Usuario usuario;
+
+        if (identifier.contains("@")) {
+            // Tratamos como correo electrónico
+            usuario = usuarioRepository.findByEmail(identifier.toLowerCase())
+                    .orElseThrow(() -> new EmailDoesNotExistException(identifier));
+        } else {
+            // Tratamos como nombre de usuario
+            usuario = usuarioRepository.findByUsernameIgnoreCase(identifier)
+                    .orElseThrow(() -> new RuntimeException("No se encontró ninguna cuenta con ese nombre de usuario"));
+        }
+
+        if (usuario.getContrasenaEncriptada() == null || usuario.getContrasenaEncriptada().isEmpty()) {
+            throw new RuntimeException("Esta cuenta fue creada con un proveedor externo (Google, GitHub, LinkedIn). Usa ese método para ingresar.");
+        }
+
         if (!passwordEncoder.matches(body.getContraseña(), usuario.getContrasenaEncriptada())) {
-            log.warn("Intento de login fallido: email={}", body.getCorreoElectronico());
+            log.warn("Intento de login fallido: identifier={}", identifier);
             throw new PasswordMismatchException();
         }
-        log.info("Login exitoso: email={}", body.getCorreoElectronico());
+        log.info("Login exitoso: identifier={}", identifier);
         return generateTokenResponse(usuario);
     }
 
     public AuthResponse generateTokenResponse(Usuario usuario) {
         boolean perfilCompleto = usuario.getPerfilCompleto() == null || usuario.getPerfilCompleto();
-        String token = jwtService.generateToken(usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol(), perfilCompleto);
+        String token = jwtService.generateToken(usuario.getIdUsuario(), usuario.getEmail(), usuario.getUsername(), usuario.getRol(), perfilCompleto);
         return new AuthResponse(token, usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol());
     }
 
     @Transactional
-    public AuthResponse completarPerfilOAuth(java.util.UUID idUsuario, String profesion, String resena) {
+    public AuthResponse completarPerfilOAuth(java.util.UUID idUsuario, String username, String profesion, String resena) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        String usernameLower = username.toLowerCase();
+        // Verificar que el username no esté en uso por otro usuario
+        usuarioRepository.findByUsernameIgnoreCase(usernameLower).ifPresent(existing -> {
+            if (!existing.getIdUsuario().equals(idUsuario)) {
+                throw new UsernameAlreadyExistsException(usernameLower);
+            }
+        });
+        usuario.setUsername(usernameLower);
 
         PerfilUsuario perfil = perfilUsuarioRepository.findByUsuario_IdUsuario(idUsuario)
                 .orElseThrow(() -> new RuntimeException("Perfil no encontrado"));
@@ -108,7 +140,7 @@ public class AuthService {
         usuario.setPerfilCompleto(true);
         usuarioRepository.save(usuario);
 
-        log.info("Perfil OAuth completado: idUsuario={}", idUsuario);
+        log.info("Perfil OAuth completado: idUsuario={}, username={}", idUsuario, usernameLower);
         return generateTokenResponse(usuario);
     }
 

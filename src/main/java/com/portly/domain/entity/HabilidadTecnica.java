@@ -28,4 +28,14 @@ public class HabilidadTecnica {
 
     @Column(name = "nivel", nullable = false, length = 50)
     private String nivel;
+
+    @Column(name = "fecha_creacion", nullable = true, updatable = false)
+    private java.time.LocalDateTime fechaCreacion;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.fechaCreacion == null) {
+            this.fechaCreacion = java.time.LocalDateTime.now();
+        }
+    }
 }

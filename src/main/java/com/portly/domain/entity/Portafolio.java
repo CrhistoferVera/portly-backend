@@ -40,6 +40,11 @@ public class Portafolio {
                 foreignKey = @ForeignKey(name = "fk_portafolio_plantilla"))
     private Plantilla plantilla;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_perfil_profesional", nullable = true,
+                foreignKey = @ForeignKey(name = "fk_portafolio_perfil_profesional"))
+    private PerfilProfesional perfilProfesional;
+
     @Column(name = "nombre", nullable = false, length = 200)
     private String nombre;
 

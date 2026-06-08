@@ -15,11 +15,17 @@ public class UsuarioProfileResponse {
 
     private UUID      idUsuario;
     private String    email;
+    private String    username;
     private String    rol;
     private String    estado;
     private Boolean   correoVerificado;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaUltimoAcceso;
+    private String    motivoSuspension;
+    private Boolean   apelacionPendiente;
+    private Boolean   apelacionAprobada;
+    private Long      idApelacionAprobada;
+    private Boolean   hasPassword;
 
     // datos del perfil
     private String nombre;
@@ -47,6 +53,7 @@ public class UsuarioProfileResponse {
     private Boolean mostrarHabilidadesBlandas;
     private Boolean mostrarTrayectoria;
     private Boolean mostrarFormacion;
+    private Boolean mostrarActualizacionAcademica;
 
     // proveedores OAuth vinculados (LinkedIn, GitHub, Google)
     private List<ProveedorDto> proveedores;
@@ -56,6 +63,18 @@ public class UsuarioProfileResponse {
 
     // experiencia laboral
     private List<ExperienciaDto> experiencias;
+
+    // redes sociales
+    private RedesSocialesDto redesSociales;
+
+    @Data @Builder
+    public static class RedesSocialesDto {
+        private String instagram;
+        private String facebook;
+        private String youtube;
+        private String github;
+        private String linkedin;
+    }
 
 
     @Data @Builder

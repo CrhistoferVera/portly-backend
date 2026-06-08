@@ -187,7 +187,7 @@ public class AuthController {
             Usuario usuario = usuarioService.findOrCreate(userInfo);
             boolean perfilCompleto = usuario.getPerfilCompleto() == null || usuario.getPerfilCompleto();
             String jwt = jwtService.generateToken(
-                    usuario.getIdUsuario(), usuario.getEmail(), usuario.getRol(), perfilCompleto);
+                    usuario.getIdUsuario(), usuario.getEmail(), usuario.getUsername(), usuario.getRol(), perfilCompleto);
             response.sendRedirect(frontendUrl + "/auth/callback?token=" + jwt);
         } catch (Exception e) {
             log.error("Error en callback OAuth {}: {}", provider.getProviderName(), e.getMessage());

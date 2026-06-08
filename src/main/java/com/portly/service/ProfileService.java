@@ -31,6 +31,8 @@ public class ProfileService {
     private final ExperienciaLaboralRepository experienciaRepository;
     private final CloudinaryService           cloudinaryService;
     private final RedesSocialesRepository     redesSocialesRepository;
+    private final SuspensionRepository        suspensionRepository;
+    private final ApelacionRepository         apelacionRepository;
 
     // GET /api/profile — Obtener perfil completo del usuario autenticado
     @Transactional(readOnly = true)
@@ -114,6 +116,9 @@ public class ProfileService {
         if (request.getMostrarFormacion() != null) {
             perfil.setMostrarFormacion(request.getMostrarFormacion());
         }
+        if (request.getMostrarActualizacionAcademica() != null) {
+            perfil.setMostrarActualizacionAcademica(request.getMostrarActualizacionAcademica());
+        }
         perfil.setFechaActualizacion(LocalDateTime.now());
 
         perfilRepository.save(perfil);
@@ -159,40 +164,6 @@ public class ProfileService {
         }
     }
 
-    // POST /api/redes-sociales/user — Obtener redes sociales por email
-    @Transactional(readOnly = true)
-    public RedesSocialesRequest obtenerRedesSocialesPorEmail(String email) {
-        List<RedesSociales> redes = redesSocialesRepository.findByPerfilUsuario_Usuario_Email(email);
-        RedesSocialesRequest request = new RedesSocialesRequest();
-        request.setGmail(email);
-        if (redes == null || redes.isEmpty()) {
-            return request;
-        }
-
-        for (RedesSociales red : redes) {
-            String nombre = red.getNombre().toLowerCase();
-            switch (nombre) {
-                case "instagram":
-                    request.setInstagram(red.getEnlace());
-                    break;
-                case "facebook":
-                    request.setFacebook(red.getEnlace());
-                    break;
-                case "youtube":
-                    request.setYoutube(red.getEnlace());
-                    break;
-                case "github":
-                    request.setGithub(red.getEnlace());
-                    break;
-                case "linkedin":
-                    request.setLinkedin(red.getEnlace());
-                    break;
-                default:
-                    break;
-            }
-        }
-        return request;
-    }
 
     @Transactional
     public UsuarioProfileResponse subirAvatar(UUID idUsuario, MultipartFile file) {
@@ -317,20 +288,57 @@ public class ProfileService {
         List<EnlaceProfesional>  enlaces     = enlaceRepository.findByUsuario_IdUsuario(idUsuario)
                 .stream().filter(EnlaceProfesional::getEsVisible).collect(Collectors.toList());
         List<ExperienciaLaboral> exps        = experienciaRepository.findByUsuario_IdUsuario(idUsuario);
-        return buildResponse(usuario, perfil, proveedores, enlaces, exps);
+        List<RedesSociales> redes = redesSocialesRepository.findByPerfilUsuario_Usuario_Email(usuario.getEmail());
+        return buildResponse(usuario, perfil, proveedores, enlaces, exps, redes);
     }
 
     // Metodos privados de mapeo
     private UsuarioProfileResponse buildResponse(Usuario usuario, PerfilUsuario perfil,
-            List<ProveedorOauth> proveedores, List<EnlaceProfesional> enlaces, List<ExperienciaLaboral> exps) {
+            List<ProveedorOauth> proveedores, List<EnlaceProfesional> enlaces, List<ExperienciaLaboral> exps, List<RedesSociales> redes) {
+        
+        String motivoSuspension = null;
+        if ("suspendido".equalsIgnoreCase(usuario.getEstado()) || "restringido".equalsIgnoreCase(usuario.getEstado())) {
+            motivoSuspension = suspensionRepository.findAllByUsuario_IdUsuarioAndCanceladaFalse(usuario.getIdUsuario())
+                    .stream()
+                    .findFirst()
+                    .map(Suspension::getMotivo)
+                    .orElse(null);
+        }
+
+        boolean apelacionPendiente = apelacionRepository.existsByUsuario_IdUsuarioAndEstadoApelacionIgnoreCase(usuario.getIdUsuario(), "pendiente");
+        boolean apelacionAprobada = apelacionRepository.existsByUsuario_IdUsuarioAndEstadoApelacionIgnoreCase(usuario.getIdUsuario(), "aprobada");
+        Long idApelacionAprobada = apelacionRepository.findFirstByUsuario_IdUsuarioAndEstadoApelacionIgnoreCaseOrderByIdDesc(usuario.getIdUsuario(), "aprobada")
+                .map(Apelacion::getId)
+                .orElse(null);
+
+        UsuarioProfileResponse.RedesSocialesDto redesDto = UsuarioProfileResponse.RedesSocialesDto.builder().build();
+        if (redes != null) {
+            for (RedesSociales red : redes) {
+                String nombre = red.getNombre().toLowerCase();
+                switch (nombre) {
+                    case "instagram": redesDto.setInstagram(red.getEnlace()); break;
+                    case "facebook": redesDto.setFacebook(red.getEnlace()); break;
+                    case "youtube": redesDto.setYoutube(red.getEnlace()); break;
+                    case "github": redesDto.setGithub(red.getEnlace()); break;
+                    case "linkedin": redesDto.setLinkedin(red.getEnlace()); break;
+                }
+            }
+        }
+
         return UsuarioProfileResponse.builder()
                 .idUsuario(usuario.getIdUsuario())
                 .email(usuario.getEmail())
+                .username(usuario.getUsername())
                 .rol(usuario.getRol())
                 .estado(usuario.getEstado())
                 .correoVerificado(usuario.getCorreoVerificado())
                 .fechaCreacion(usuario.getFechaCreacion())
                 .fechaUltimoAcceso(usuario.getFechaUltimoAcceso())
+                .motivoSuspension(motivoSuspension)
+                .apelacionPendiente(apelacionPendiente)
+                .apelacionAprobada(apelacionAprobada)
+                .idApelacionAprobada(idApelacionAprobada)
+                .hasPassword(usuario.getContrasenaEncriptada() != null && !usuario.getContrasenaEncriptada().trim().isEmpty())
                 .nombre(fromPerfil(perfil, PerfilUsuario::getNombre))
                 .apellido(fromPerfil(perfil, PerfilUsuario::getApellido))
                 .titularProfesional(fromPerfil(perfil, PerfilUsuario::getTitularProfesional))
@@ -354,6 +362,7 @@ public class ProfileService {
                 .mostrarHabilidadesBlandas(perfil != null && perfil.getMostrarHabilidadesBlandas() != null ? perfil.getMostrarHabilidadesBlandas() : true)
                 .mostrarTrayectoria(perfil != null && perfil.getMostrarTrayectoria() != null ? perfil.getMostrarTrayectoria() : true)
                 .mostrarFormacion(perfil != null && perfil.getMostrarFormacion() != null ? perfil.getMostrarFormacion() : true)
+                .mostrarActualizacionAcademica(perfil != null && perfil.getMostrarActualizacionAcademica() != null ? perfil.getMostrarActualizacionAcademica() : true)
                 .proveedores(proveedores.stream().map(p ->
                         UsuarioProfileResponse.ProveedorDto.builder()
                                 .nombreProveedor(p.getNombreProveedor())
@@ -362,6 +371,7 @@ public class ProfileService {
                                 .metadatos(p.getMetadatos())
                                 .build()
                 ).collect(Collectors.toList()))
+                .redesSociales(redesDto)
                 .enlaces(enlaces.stream().map(this::toEnlaceDto).collect(Collectors.toList()))
                 .experiencias(exps.stream().map(this::toExperienciaDto).collect(Collectors.toList()))
                 .build();
