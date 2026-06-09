@@ -32,6 +32,7 @@ public class DenunciaService {
     private final PortafolioRepository portafolioRepository;
     private final EmailService emailService;
     private final UsuarioRepository usuarioRepository;
+    private final NotificacionService notificacionService;
 
     /**
      * Lista todas las denuncias agrupadas con sus denuncias individuales.
@@ -218,6 +219,14 @@ public class DenunciaService {
             }
             
             if (emailDestino != null && !correosNotificados.contains(emailDestino)) {
+                try {
+                    UUID denuncianteId = UUID.fromString(creadoPor);
+                    String msjDenunciante = "Tras revisar tu denuncia sobre el portafolio '" + denuncia.getPortfolioTitle() + "', determinamos que no incumple nuestras políticas comunitarias.";
+                    notificacionService.crearNotificacion(denuncianteId, msjDenunciante);
+                } catch (Exception e) {
+                    log.warn("No se pudo enviar notificación in-app a denunciante {}: {}", creadoPor, e.getMessage());
+                }
+
                 emailService.enviarNotificacionRevisionSinFaltas(emailDestino, denuncia.getPortfolioTitle());
                 correosNotificados.add(emailDestino);
             }

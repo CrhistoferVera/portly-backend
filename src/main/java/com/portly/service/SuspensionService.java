@@ -31,6 +31,7 @@ public class SuspensionService {
     private final DenunciaAgrupadaRepository denunciaAgrupadaRepository;
     private final PortafolioRepository portafolioRepository;
     private final EmailService emailService;
+    private final NotificacionService notificacionService;
 
     /**
      * Suspende un usuario. Crea registro de suspensión, actualiza estado del usuario
@@ -141,6 +142,9 @@ public class SuspensionService {
         }
         denunciaAgrupadaRepository.saveAll(denuncias);
 
+        String msjReactivado = "Tu cuenta ha sido reactivada exitosamente. Ya puedes volver a disfrutar de todas las funcionalidades de Portly.";
+        notificacionService.crearNotificacion(userId, msjReactivado);
+
         log.info("Usuario id={} reactivado. {} suspensiones canceladas", userId, activeSuspensions.size());
         
         emailService.enviarNotificacionReactivacionCuenta(usuario.getEmail(), obtenerNombreUsuario(usuario));
@@ -200,6 +204,9 @@ public class SuspensionService {
         }
         denunciaAgrupadaRepository.saveAll(denuncias);
 
+        String msjRestringido = "Tu cuenta ha sido restringida debido a infracciones a nuestras políticas de la comunidad. Motivo: " + motivo;
+        notificacionService.crearNotificacion(userId, msjRestringido);
+
         log.info("Usuario id={} restringido por admin={}, motivo='{}'", userId, adminId, motivo);
 
         String userName = obtenerNombreUsuario(usuario);
@@ -256,6 +263,16 @@ public class SuspensionService {
                 }
                 
                 if (emailDestino != null && !correosNotificados.contains(emailDestino)) {
+                    try {
+                        UUID denuncianteId = UUID.fromString(creadoPor);
+                        String msjDenunciante = esSuspension
+                                ? "Te informamos que, tras revisar tu denuncia, hemos tomado medidas. El usuario " + userName + " ha sido suspendido de la plataforma."
+                                : "Te informamos que, tras revisar tu denuncia, hemos tomado medidas. El usuario " + userName + " ha sido restringido en nuestra plataforma.";
+                        notificacionService.crearNotificacion(denuncianteId, msjDenunciante);
+                    } catch (Exception e) {
+                        log.warn("No se pudo enviar notificación in-app a denunciante {}: {}", creadoPor, e.getMessage());
+                    }
+
                     if (esSuspension) {
                         emailService.enviarNotificacionSuspensionDenunciantes(emailDestino, userName);
                     } else {
