@@ -293,4 +293,16 @@ public class SuspensionService {
         }
         return "Sin Nombre";
     }
+
+    /**
+     * Envia un correo de suspensión al usuario suspendido.
+     */
+    public void enviarCorreoSuspensionCuenta(UUID userId, String motivo) {
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado con id: " + userId));
+
+        String nombreUsuario = obtenerNombreUsuario(usuario);
+        emailService.enviarNotificacionSuspensionUsuario(usuario.getEmail(), nombreUsuario, motivo);
+        log.info("Correo de suspensión solicitado para usuario id={}, email={}", userId, usuario.getEmail());
+    }
 }

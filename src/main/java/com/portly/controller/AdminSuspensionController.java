@@ -79,4 +79,17 @@ public class AdminSuspensionController {
                 "suspension", suspension
         ));
     }
+
+    /**
+     * POST /api/admin/usuarios/{userId}/enviar-correo-suspension
+     * Envia correo de notificación al usuario suspendido.
+     */
+    @PostMapping("/usuarios/{userId}/enviar-correo-suspension")
+    public ResponseEntity<Map<String, String>> enviarCorreoSuspension(
+            @PathVariable UUID userId,
+            @RequestBody Map<String, String> body) {
+        String motivo = body.get("motivo");
+        suspensionService.enviarCorreoSuspensionCuenta(userId, motivo);
+        return ResponseEntity.ok(Map.of("message", "Correo de suspensión enviado exitosamente al usuario"));
+    }
 }

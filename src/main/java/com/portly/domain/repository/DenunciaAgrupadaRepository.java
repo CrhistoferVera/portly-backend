@@ -11,6 +11,8 @@ public interface DenunciaAgrupadaRepository extends JpaRepository<DenunciaAgrupa
 
     List<DenunciaAgrupada> findAllByOrderByCreatedAtDesc();
 
+    long countByStatus(String status);
+
     Optional<DenunciaAgrupada> findByPortafolio_IdPortafolio(UUID portfolioId);
     Optional<DenunciaAgrupada> findByPortafolio_IdPortafolioAndStatus(UUID portfolioId, String status);
 

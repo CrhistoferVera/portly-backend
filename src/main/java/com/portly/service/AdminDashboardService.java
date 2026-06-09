@@ -1,5 +1,6 @@
 package com.portly.service;
 
+import com.portly.domain.repository.DenunciaAgrupadaRepository;
 import com.portly.domain.repository.PerfilUsuarioRepository;
 import com.portly.domain.repository.PortafolioRepository;
 import com.portly.domain.repository.UsuarioRepository;
@@ -18,13 +19,15 @@ public class AdminDashboardService {
     private final UsuarioRepository usuarioRepository;
     private final PortafolioRepository portafolioRepository;
     private final PerfilUsuarioRepository perfilUsuarioRepository;
+    private final DenunciaAgrupadaRepository denunciaAgrupadaRepository;
 
     public DashboardStatsResponse getDashboardStats() {
         LocalDateTime desde = LocalDateTime.now().minusDays(7);
 
         long usuariosRegistradosSemana = usuarioRepository.countByFechaCreacionAfter(desde);
         long portafoliosPublicosSemana = portafolioRepository.countPublicosDesde(desde);
-        long cuentasSuspendidas = usuarioRepository.countSuspendidos();
+        long cuentasSuspendidas = usuarioRepository.countCuentasBloqueadas();
+        long denunciasPendientes = denunciaAgrupadaRepository.countByStatus("pendiente");
 
         List<DashboardStatsResponse.PlantillaStats> plantillasMasUsadas =
                 portafolioRepository.findTopPlantillas(PageRequest.of(0, 3));
@@ -35,7 +38,7 @@ public class AdminDashboardService {
         return DashboardStatsResponse.builder()
                 .usuariosRegistradosSemana(usuariosRegistradosSemana)
                 .portafoliosPublicosSemana(portafoliosPublicosSemana)
-                .denunciasPendientes(0)
+                .denunciasPendientes(denunciasPendientes)
                 .cuentasSuspendidas(cuentasSuspendidas)
                 .plantillasMasUsadas(plantillasMasUsadas)
                 .profesionesMasRegistradas(profesionesMasRegistradas)

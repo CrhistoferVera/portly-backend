@@ -6,6 +6,8 @@ import com.portly.domain.entity.Plantilla;
 import com.portly.domain.entity.Portafolio;
 import com.portly.domain.entity.Usuario;
 import com.portly.domain.entity.PerfilUsuario;
+import com.portly.domain.entity.PerfilProfesional;
+import com.portly.domain.repository.PerfilProfesionalRepository;
 import com.portly.domain.repository.PlantillaRepository;
 import com.portly.domain.repository.PortafolioRepository;
 import com.portly.domain.repository.RedesSocialesRepository;
@@ -46,6 +48,7 @@ public class PortafolioService {
 
     private final PortafolioRepository portafolioRepository;
     private final PlantillaRepository plantillaRepository;
+    private final PerfilProfesionalRepository perfilProfesionalRepository;
     private final UsuarioRepository usuarioRepository;
     private final RedesSocialesRepository redesSocialesRepository;
     private final DenunciaAgrupadaRepository denunciaAgrupadaRepository;
@@ -81,9 +84,22 @@ public class PortafolioService {
 
         String urlPublica = generarUrlPublica(usuario);
 
+        // Perfil profesional opcional: si viene, debe pertenecer al usuario.
+        PerfilProfesional perfilProfesional = null;
+        String perfilProfesionalId = request.getPerfilProfesionalId();
+        if (perfilProfesionalId != null && !perfilProfesionalId.isBlank()) {
+            perfilProfesional = perfilProfesionalRepository.findById(UUID.fromString(perfilProfesionalId))
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Perfil profesional no encontrado"));
+            if (!perfilProfesional.getUsuario().getIdUsuario().equals(idUsuario)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "No tienes permiso para usar este perfil profesional");
+            }
+        }
+
         Portafolio portafolio = Portafolio.builder()
                 .usuario(usuario)
                 .plantilla(plantilla)
+                .perfilProfesional(perfilProfesional)
                 .nombre(request.getNombre())
                 .visibilidad(visibilidad)
                 .urlPublica(urlPublica)
@@ -258,6 +274,10 @@ public class PortafolioService {
         Usuario u = portafolio.getUsuario();
         PerfilUsuario perfil = u.getPerfil();
 
+        // Perfil profesional asignado al portafolio (puede ser null → fallback al perfil global).
+        // Solo sobreescribe titular, descripción y foto; las redes y contacto siguen siendo globales.
+        PerfilProfesional pp = portafolio.getPerfilProfesional();
+
         // Filtros de visibilidad de sección (desde PerfilUsuario)
         boolean showEmail      = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarCorreo());
         boolean showProfession = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarProfesion());
@@ -271,8 +291,9 @@ public class PortafolioService {
         boolean showYoutube    = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarYoutube());
         boolean showTechSkills = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarHabilidadesTecnicas());
         boolean showSoftSkills = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarHabilidadesBlandas());
-        boolean showExperience = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarTrayectoria());
-        boolean showEducation  = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarFormacion());
+        boolean showExperience      = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarTrayectoria());
+        boolean showEducation       = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarFormacion());
+        boolean showActualizacion   = perfil == null || !Boolean.FALSE.equals(perfil.getMostrarActualizacionAcademica());
 
         // Redes sociales del perfil (Instagram, Facebook, YouTube, LinkedIn, GitHub)
         Map<String, String> redesMap = java.util.Collections.emptyMap();
@@ -318,9 +339,17 @@ public class PortafolioService {
                 .usuario(PortafolioPublicoResponse.UsuarioPublico.builder()
                         .nombre(perfil != null ? perfil.getNombre() : "")
                         .apellido(perfil != null ? perfil.getApellido() : "")
-                        .profesion(showProfession && perfil != null ? perfil.getTitularProfesional() : null)
-                        .descripcion(showBio && perfil != null ? perfil.getAcercaDeMi() : null)
-                        .avatarUrl(perfil != null ? perfil.getEnlaceFoto() : "")
+                        .profesion(showProfession
+                                ? (pp != null ? pp.getTitularProfesional()
+                                              : (perfil != null ? perfil.getTitularProfesional() : null))
+                                : null)
+                        .descripcion(showBio
+                                ? (pp != null ? pp.getAcercaDeMi()
+                                              : (perfil != null ? perfil.getAcercaDeMi() : null))
+                                : null)
+                        .avatarUrl(pp != null && pp.getFotoUrl() != null && !pp.getFotoUrl().isBlank()
+                                ? pp.getFotoUrl()
+                                : (perfil != null ? perfil.getEnlaceFoto() : ""))
                         .email(showEmail ? u.getEmail() : null)
                         .telefono(showPhone ? telefono : null)
                         .pais(showCountry && perfil != null ? perfil.getPais() : null)
@@ -425,6 +454,22 @@ public class PortafolioService {
                                         .build())
                                 .collect(Collectors.toList())
                         : List.of())
+                .actualizaciones(showActualizacion && u.getActualizaciones() != null
+                        ? u.getActualizaciones().stream()
+                                .filter(a -> isItemVisible(itemVis.getActualizacionItems(),
+                                        a.getIdActualizacionAcademica() != null ? a.getIdActualizacionAcademica().toString() : ""))
+                                .map(a -> PortafolioPublicoResponse.ActualizacionPublica.builder()
+                                        .idActualizacionAcademica(a.getIdActualizacionAcademica())
+                                        .institucion(a.getInstitucion())
+                                        .tipo(a.getTipo())
+                                        .titulo(a.getTitulo())
+                                        .fechaInicio(a.getFechaInicio() != null ? a.getFechaInicio().toString() : "")
+                                        .fechaFinalizacion(a.getFechaFinalizacion() != null ? a.getFechaFinalizacion().toString() : null)
+                                        .aunNoLoFinalice(a.getAunNoLoFinalice())
+                                        .descripcion(a.getDescripcion())
+                                        .build())
+                                .collect(Collectors.toList())
+                        : List.of())
                 .build();
     }
 
@@ -488,6 +533,7 @@ public class PortafolioService {
                         .softSkillItems(parsed.getSoftSkillItems())
                         .experienceItems(parsed.getExperienceItems())
                         .educationItems(parsed.getEducationItems())
+                        .actualizacionItems(parsed.getActualizacionItems())
                         .projectItems(parsed.getProjectItems())
                         .build();
             } catch (JsonProcessingException e) {

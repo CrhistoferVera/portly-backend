@@ -189,4 +189,28 @@ public class EmailService {
             log.error("Error al enviar notificación de revisión sin faltas: destino={}, error={}", destino, ex.getMessage());
         }
     }
+
+    @Async
+    public void enviarNotificacionSuspensionUsuario(String destino, String nombreUsuario, String motivo) {
+        log.info("Enviando notificación de suspensión al usuario suspendido: destino={}", destino);
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("api-key", brevoApiKey);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            String body = """
+                {
+                    "sender": {"name": "Portly", "email": "%s"},
+                    "to": [{"email": "%s"}],
+                    "subject": "Tu cuenta ha sido suspendida - Portly",
+                    "textContent": "Hola %s,\\n\\nLamentamos informarte que tu cuenta en Portly ha sido suspendida por infringir nuestras políticas de comunidad.\\n\\nMotivo de la suspensión: %s\\n\\nSi consideras que se trata de un error, puedes contactar al soporte técnico respondiendo a este correo."
+                }
+                """.formatted(correoRemitente, destino, nombreUsuario, motivo.replace("\"", "\\\"").replace("\n", "\\n"));
+
+            HttpEntity<String> entity = new HttpEntity<>(body, headers);
+            restTemplate.postForEntity("https://api.brevo.com/v3/smtp/email", entity, String.class);
+        } catch (Exception ex) {
+            log.error("Error al enviar notificación de suspensión al usuario: destino={}, error={}", destino, ex.getMessage());
+        }
+    }
 }
